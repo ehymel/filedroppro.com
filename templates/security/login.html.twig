@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <h1>Login</h1>
+        </div>
+        <div class="row">
+            <div {{ stimulus_controller('login', {
+                    checkUsernameUrl: path('app_login_check_username'),
+                    webauthnResultUrl: path('webauthn.controller.request.request.login')
+                }) }}
+                 class="col-xxl-4 col-md-6 col-12">
+                {% if error %}
+                    <div class="alert alert-danger">
+                        {{ error.messageKey|trans(error.messageData, 'security') }}
+                    </div>
+                {% endif %}
+
+                <form action="{{ path('security_login') }}" method="post"
+                      data-login-target="form"
+                      data-action="submit->login#onSubmit"
+                    {{ stimulus_controller('@web-auth/webauthn-stimulus', {
+                        requestOptionsUrl: path('webauthn.controller.request.request.login'),
+                        requestResultField: '#assertion-payload',
+                        useBrowserAutofill: true
+                    }) }}
+                >
+                    <div data-login-target="stepUsername" class="form-floating">
+                        <input type="text"
+                               id="username"
+                               name="_username"
+                               required="required"
+                               placeholder="Username"
+                               class="form-control mb-2"
+                               value="{{ last_username }}"
+                               autocomplete="username webauthn"
+                               data-login-target="username"
+                               data-action="keydown.enter->login#checkUsername:prevent" />
+                        <label for="username" class="form-label required">Username</label>
+
+                        <button type="button" data-login-target="continueBtn" data-action="login#checkUsername" class="btn btn-success">Continue</button>
+                    </div>
+
+                    <div data-login-target="stepPasskey" class="d-none form-floating">
+                        <p class="ms-2 mb-3 larger">
+                            Welcome back, <strong data-login-target="displayUsername"></strong>!
+                            <a href="#" data-action="login#resetForm" class="small">(Not you?)</a>
+                        </p>
+
+                        <button type="button" class="btn btn-success" {{ stimulus_action('@web-auth/webauthn-stimulus', 'signin') }}>
+                            Sign in via passkey
+                        </button>
+
+                        <a href="#" data-action="login#showPasswordFallback" class="float-end mt-2">Use password instead</a>
+                    </div>
+
+                    <div data-login-target="stepPassword" class="d-none"
+                         data-controller="turnstile"
+                         data-turnstile-sitekey-value="{{ cloudflare_turnstile_site_key }}"
+                    >
+                        <p class="ms-2 mb-3 larger">
+                            Enter the password for <strong data-login-target="displayUsername"></strong>
+                            <a href="#" data-action="login#resetForm" class="small">(Not you?)</a>
+                        </p>
+                        <div class="form-floating">
+                            <input type="password"
+                                   id="password"
+                                   name="_password"
+                                   placeholder="Password"
+                                   class="form-control mb-2"
+                                   autocomplete="current-password"
+                                   data-login-target="password" />
+                            <label for="password" class="form-label required">Password</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <div id="turnstile-widget"
+                                 data-turnstile-target="widget"></div>
+                        </div>
+
+                        <button type="submit" data-turnstile-target="submit" class="btn btn-success">Login <span class="fa fa-lock"></span></button>
+
+                        <a href="{{ path('user_request_reset_pw') }}" class="float-end mt-2">Forgot password?</a>
+                    </div>
+
+                    <div data-login-target="rememberMeDiv" class="d-none my-4">
+                        <label>
+                            <input type="checkbox" data-login-target="rememberMe" name="_remember_me"> Remember me on this device
+                        </label>
+                    </div>
+
+                    <input type="hidden" id="assertion-payload" name="_assertion" data-login-target="assertion">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                </form>
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class=" alert alert-secondary">
+                <h4>Passkey Information</h4>
+                <p>
+                    Passkeys are highly recommended for login, and may eventually be required.
+                </p>
+                <p>
+                    To set up a passkey, login using your password as usual, then click your name at the top right of the
+                    page, then select "Manage Passkeys" and then "Register a new Passkey". The next time you login
+                    you will be prompted to use your passkey.
+                </p>
+
+                <h4 class="mt-5">2-Factor Authentication Information</h4>
+                <p>
+                    If you login with a password, you will then need to provide an authentication code to access the site.
+                </p>
+                <p>
+                    Authentication codes can be sent to your email (default) or your cell phone, or can be provided by
+                    an authenticator app. You can configure this to your liking after you log in by clicking your name
+                    at the top right of the page and selecting "Manage 2fa".
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{# templates/admin/_breadcrumbs.html.twig #}
+{% set route = app.request.attributes.get('_route') %}
+
+{% if route starts with 'admin_' %}
+    {% set labels = {
+        'user': 'Users',
+        'client': 'Clients',
+        'tenant': 'Tenants',
+    } %}
+
+    {% set entities_with_list = ['user', 'tenant'] %}
+
+    <div class="container mt-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('homepage') }}">Home</a></li>
+
+                {% if route == 'admin_home' %}
+                    <li class="breadcrumb-item active" aria-current="page">Admin</li>
+                {% else %}
+                    <li class="breadcrumb-item"><a href="{{ path('admin_home') }}">Admin</a></li>
+
+                    {% set parts = route|split('_') %}
+
+                    {# Special case for complex routes #}
+                    {% if parts|length >= 3 %}
+                        {% set entity = parts[1] %}
+                        {% set action = parts[2] %}
+
+                        {% set entity_label = labels[entity] ?? entity|capitalize %}
+
+                        {% if action in ['list', 'main', 'index'] %}
+                            <li class="breadcrumb-item active" aria-current="page">{{ entity_label }}</li>
+                        {% else %}
+                            <li class="breadcrumb-item">
+                                {% if entity in entities_with_list %}
+                                    {% set list_route = 'admin_' ~ entity ~ '_list' %}
+                                    <a href="{{ path(list_route) }}">{{ entity_label }}</a>
+                                {% else %}
+                                    {{ entity_label }}
+                                {% endif %}
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ action|capitalize }}</li>
+                        {% endif %}
+                    {% elseif parts|length == 2 %}
+                        <li class="breadcrumb-item active" aria-current="page">{{ labels[parts[1]] ?? parts[1]|capitalize }}</li>
+                    {% endif %}
+                {% endif %}
+            </ol>
+        </nav>
+    </div>
+{% endif %}

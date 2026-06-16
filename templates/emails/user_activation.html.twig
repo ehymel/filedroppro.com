@@ -1,0 +1,36 @@
+<div>
+    Dear {{ user.name }},
+    <br>
+    <br>
+
+    An account has been created for you on the Oncology Support website.
+    <br>
+
+    Please make a note of your username: <b>{{ user.username }}</b>
+    <br>
+    <br>
+
+    You must activate your account using the link below before your first login.
+    Once your account is activated, you will be asked to create a password.
+    If you ever forget your password, there are links on the site to reset it.
+    <br>
+    <br>
+
+    Click <a href="{{ url('user_activate', {'id': user.id, 'hash': hash}) }}">here</a> to activate your Oncology Support account.
+    <br>
+    <br>
+
+    You may need to copy and paste the link below into the address bar of a web browser if you cannot click the activation link.
+    <br>
+
+    <a href="{{ url('security_login') }}">{{ url('security_login') }}</a>
+    <br>
+    <br>
+    <br>
+
+    <h3>Having trouble logging in?</h3>
+    You can try:
+    <ul>
+        <li><a href="{{ url('security_login') }}">Request password change email</a></li>
+    </ul>
+</div>

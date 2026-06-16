@@ -1,0 +1,9 @@
+{% apply inky_to_html|inline_css(source('@styles/email.css')) %}
+<container>
+    <row class="header">
+        <columns>
+            Here is your login authentication code: {{ authCode }}
+        </columns>
+    </row>
+</container>
+{% endapply %}

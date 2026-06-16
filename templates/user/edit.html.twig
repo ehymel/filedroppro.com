@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col-6" {{ stimulus_controller('sweetalert', {
+                submitAsync: true,
+                listUrl: app.request.headers.get('referer'),
+                deleteUrl: ''
+            }) }}
+            >
+                <h1>Edit Account Information</h1>
+
+                <strong>Username</strong>
+                <br>
+                {{ app.user ? app.user.userIdentifier : '' }}
+                <br><br>
+
+                {{ form_start(form) }}
+                    {{ form_row(form.firstName) }}
+                    {{ form_row(form.lastName) }}
+                    {{ form_row(form.credentials) }}
+                    {{ form_row(form.email) }}
+                    {{ form_row(form.cellNumber) }}
+                    {{ form_row(form.plainPassword.first, {
+                        'label': 'Password (blank for no change)',
+                        'row_attr': {'class': 'form-floating'},
+                    }) }}
+                    {{ form_row(form.plainPassword.second, {
+                        'label': 'Repeat password',
+                        'row_attr': {'class': 'form-floating'},
+                    }) }}
+
+                    <button type="submit" class="btn btn-primary mt-3" formnovalidate>Update</button>
+                    &nbsp;&nbsp;
+                    <button type="button" class="btn btn-primary mt-3" data-action="sweetalert#cancel">Cancel</button>
+                {{ form_end(form) }}
+            </div>
+            <div class="row ms-1 mt-4">
+                <a href="{{ path('2fa_manage') }}">Mange two-factor authentication</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -27,4 +27,6 @@ return [
     '@hotwired/stimulus' => ['version' => '3.2.2'],
     '@symfony/stimulus-bundle' => ['path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js'],
     '@hotwired/turbo' => ['version' => '8.0.23'],
+    'sortable-tablesort' => ['version' => '4.1.7'],
+    'sortable-tablesort/dist/sortable.min.css' => ['version' => '4.1.7', 'type' => 'css'],
 ];
