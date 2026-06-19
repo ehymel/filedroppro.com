@@ -1,0 +1,78 @@
+.form-error-message {
+  color: red;
+}
+
+.form-error-icon {
+  background-color: red;
+}
+
+.popover {
+  max-width: 400px;
+}
+
+.popover.in {
+  background-color: #8fdf82;
+}
+
+._tooltip table {
+  padding: 0;
+  margin: 0;
+}
+
+._tooltip th, ._tooltip td {
+  border: 0 !important;
+  padding: 1px 2px 1px 5px !important;
+}
+
+._tooltip th {
+  width: 40%;
+  white-space: nowrap;
+  vertical-align: top !important;
+  /*text-align: right !important;*/
+}
+
+li.nav-item.active {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-bottom-color: #fff;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: -1px;
+}
+
+nav.navbar {
+  padding: 0 1rem;
+  border-bottom: 1px solid #81B9BA;
+}
+
+.nav-link {
+  color: #337ab7 !important;
+}
+
+.nav-link:hover, .dropdown-item:hover {
+  background-color: #ddd;
+}
+
+.modal-body button {
+  display: none;
+}
+
+.ts-control > .item, .ts-control > input[type=text], .has-items .ts-control > input[type=text] {
+  margin-top: 15px !important;
+}
+
+textarea {
+  height: auto!important;
+  field-sizing: content;
+}
+
+input, select, div.ts-wrapper {
+    background-color: #e0e0f060!important;
+}
+
+input.form-check-input:checked {
+    background-color: #22222299!important;
+}
+
+div.ts-dropdown {
+    background-color: #f0f0f6;
+}

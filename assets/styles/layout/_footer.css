@@ -1,0 +1,14 @@
+.footer {
+  border-top: 2px solid #cccccc55;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  text-align: end;
+  z-index: 1000;
+  padding: 0.25em;
+}
+
+.footer-text {
+  color: #5e5e5e;
+  font-size: 1.1em;
+}

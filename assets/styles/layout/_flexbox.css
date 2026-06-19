@@ -1,0 +1,13 @@
+.flexheader {
+  display: -webkit-flex;
+  display: flex;
+}
+
+.flexheader {
+  margin: 0 auto;
+  text-align: left;
+  /*background-color: #81B9BA;*/
+  border-bottom: 3px solid #81B9BA;
+  padding: 2px;
+  justify-content: space-between;
+}

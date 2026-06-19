@@ -1,0 +1,151 @@
+div.table-wrapper {
+  overflow: auto;
+  height: auto;
+  max-height: 600px;
+  clear: both;
+}
+
+table {
+  --color: #d0d0f5;
+  border-collapse: collapse;
+  width: auto;
+  text-align: start;
+}
+
+table.filter {
+  width: auto;
+}
+
+caption {
+  caption-side: top;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+table.filter td:not(:first-child) {
+  border-left: 1px solid #cccccc;
+}
+
+td.numeric, th.numeric {
+  text-align: right;
+}
+
+table.table-comparison th {
+  text-align: center;
+  white-space: nowrap;
+}
+
+table.table-comparison th:first-child {
+  text-align: left;
+}
+
+table.table-comparison td {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+table.table-comparison thead th.suppress, table.table-comparison tbody td.suppress {
+  opacity: 0.25;
+}
+
+span.fa.fa-sort {
+  color: #0044ffaa !important;
+}
+
+table.table-scroll {
+  table-layout: fixed;
+}
+
+table.table-scroll thead th, table.table-scroll tfoot th {
+  vertical-align: bottom;
+  padding-left: 4px;
+}
+
+table.table-scroll thead tr th:not(:first-child) {
+  width: 9rem;
+}
+
+table.table-scroll thead tr th:first-child {
+  width: 6rem;
+}
+
+table.table-scroll thead, table.table-scroll tfoot {
+  border: 2px solid var(--color);
+  border-block-end: 2px solid;
+  background: var(--color);
+}
+
+table.table-scroll tbody th, table.table-scroll tbody td {
+  border: 1px solid lightgrey;
+  padding: 0.5rem;
+  vertical-align: bottom;
+}
+
+table.table-scroll tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--color), transparent 60%);
+}
+
+table.table-scroll thead tr:first-child {
+  position: sticky;
+  top: 0;
+  background: var(--color);
+  z-index: 10;
+}
+
+table.table-scroll thead th:first-child, table.table-scroll tbody tr th {
+  position: sticky;
+  left: 0;
+}
+
+/*table.table-scroll thead th:first-child {*/
+/*  background: var(--color);*/
+/*}*/
+
+table.table-scroll tbody tr th:first-child {
+  background: white;
+}
+
+.table-summary {
+  border-collapse: collapse !important;
+  padding: 0;
+  margin-left: 10px;
+}
+
+.table-summary tr:hover td {
+  background-color: #f5f5f5;
+}
+
+.table-summary th {
+  font-size: 0.8em;
+  font-weight: bold;
+  text-align: left;
+  background: #d9edf7;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  margin: 0;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 3px 3px 3px 6px;
+}
+
+.table-summary td {
+  font-size: 1em;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  margin: 0;
+  white-space: nowrap;
+  padding: 1px;
+}
+
+.table-summary td.numeric {
+  text-align: center;
+}
+
+.lborder {
+  border-left: 2px solid black !important;
+}
+
+.rborder {
+  border-right: 2px solid black !important;
+}

@@ -1,0 +1,120 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.logo-icon {
+  height: 50px;
+  width: auto;
+  margin: 7px 20px 0 3px;
+}
+
+.main-content {
+  min-height: 300px;
+  margin-top: 10px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.larger {
+  font-size: 1.3em;
+}
+
+.small {
+  font-size: 0.8em;
+}
+
+.indent-left {
+  margin-left: 10px;
+}
+
+.padded {
+  padding: 3px 0 3px 4px;
+  border-top: 1px solid #ccc;
+}
+
+.padded:nth-of-type(even) {
+  background-color: #eeeeee;
+}
+
+.border-1, .border-2 {
+  border: 1px solid #81B9BA;
+  border-radius: 5px;
+  /*margin: 5px;*/
+  margin-top: 5px;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.bg-grey {
+  background-color: #e5e5e5;
+  margin: 7px;
+  padding: 2px;
+  border-top: 1px solid #81B9BA;
+  border-bottom: 1px solid #81B9BA;
+}
+
+.bg-red {
+  background-color: #ff7f7f;
+}
+
+.bg-white{
+  background-color: #ffffff;
+}
+
+.bg-pink {
+  background-color: #ff7fdd;
+}
+
+.bg-green {
+  background-color: #00ff00;
+}
+
+div.navigation {
+  margin: 0 0 15px 0;
+}
+
+div.navigation span.current {
+  background-color: rgba(0,0,0,.05);
+}
+
+div.navigation span.first, div.navigation span.previous,
+div.navigation span.last, div.navigation span.next {
+  padding: 1px 5px 1px 5px;
+}
+
+div.navigation span.previous {
+  border-width: 0 2px 0 0;
+  border-color: #dee2e6;
+  border-style: solid;
+}
+
+div.navigation span.current, div.navigation span.page {
+  border-width: 2px 2px 2px 0;
+  border-color: #dee2e6;
+  border-style: solid;
+  padding: 1px 5px 1px 5px;
+}
+
+div.canvas-container {
+  height: 350px;
+}
+
+button.enabled, button.notenabled {
+  border: 0;
+  border-radius: 15px;
+}
+
+button.enabled {
+  background-color: #00ff0022;
+}
+
+button.notenabled {
+  background-color: #ff000022;
+}
