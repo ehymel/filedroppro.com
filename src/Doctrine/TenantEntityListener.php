@@ -32,7 +32,7 @@ class TenantEntityListener
             return;
         }
 
-        if ($entity->getTenant() !== null) {
+        if ($entity->tenant !== null) {
             return;
         }
 
