@@ -80,10 +80,4 @@ class SecurityController extends AbstractController
     {
         // never called, so nothing needed here.
     }
-
-    #[Route(path: '/register', name: 'register')]
-    public function register(): Response
-    {
-        return new Response();
-    }
 }

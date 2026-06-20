@@ -6,27 +6,20 @@ use App\Entity\Invitation;
 use App\Entity\Tenant;
 use App\Entity\User;
 use App\Form\User\RegistrationFormType;
-use App\Repository\InvitationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\HttpKernel\Attribute\RateLimit;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'register')]
-    public function register(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $em, RateLimiterFactoryInterface $registrationLimiter): Response
+    #[RateLimit(limiter: 'registration_limiter')]
+    public function register(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $em): Response
     {
-        // Apply strict registration form rate limiting to block automated credential attacks or brute-force code scanners
-        $limiter = $registrationLimiter->create($request->getClientIp());
-        if (false === $limiter->consume(1)->isAccepted()) {
-            throw new TooManyRequestsHttpException();
-        }
-
         $token = $request->query->get('token');
         $invitation = null;
         $tenant = null;
@@ -43,10 +36,9 @@ class RegistrationController extends AbstractController
                 $this->addFlash('danger', 'This secure invitation link is invalid or has expired.');
                 return $this->redirectToRoute('register'); // Strip bad token and reload form
             }
+
             $user = new User();
-            if ($invitation) {
-                $user->email = $invitation->email; // Force invite email
-            }
+            $user->email = $invitation->email; // Force invite email
 
             // Initialize the form, dynamically passing options based on whether we have an active invitation payload
             $form = $this->createForm(RegistrationFormType::class, $user, [
@@ -131,7 +123,7 @@ class RegistrationController extends AbstractController
         }
 
         return $this->render('user/register.html.twig', [
-            'registrationForm' => $form->createView(),
+            'registrationForm' => $form,
             'hasInvitation' => (bool)$invitation,
             'tenantName' => $tenant ? $tenant->firmName : null
         ]);
