@@ -24,11 +24,11 @@
                     {{ form_row(form.cellNumber) }}
                     {{ form_row(form.plainPassword.first, {
                         'label': 'Password (blank for no change)',
-                        'row_attr': {'class': 'form-floating'},
+                        'row_attr': {'class': 'form-floating mb-2'},
                     }) }}
                     {{ form_row(form.plainPassword.second, {
                         'label': 'Repeat password',
-                        'row_attr': {'class': 'form-floating'},
+                        'row_attr': {'class': 'form-floating mb-2'},
                     }) }}
 
                     <button type="submit" class="btn btn-primary mt-3" formnovalidate>Update</button>

@@ -21,28 +21,28 @@ class UserEditForm extends AbstractType
     {
         $builder
             ->add('lastName', null, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('firstName', null, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('credentials', null, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
 //            ->add('username')
             ->add('email', EmailType::class, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
                 'label' => [
                     'data-help' => 'Leave blank for no change',
                 ],
-                'row_attr' => ['class' => 'form-floating'],
+//                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('cellNumber', TelType::class, [
                 'label' => 'Cell #',
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
         ;
     }

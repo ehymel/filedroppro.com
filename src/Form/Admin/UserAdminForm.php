@@ -17,16 +17,16 @@ class UserAdminForm extends AbstractType
     {
         $builder
             ->add('username', null, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('lastName', null, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('firstName', null, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('credentials', null, [
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('email', EmailType::class, [
                 'row_attr' => ['class' => 'form-floating mb-2'],
@@ -34,20 +34,17 @@ class UserAdminForm extends AbstractType
             ->add('isVisible', CheckboxType::class, [
                 'label' => 'Is this user visible in user lists?',
                 'required' => false,
-                'row_attr' => ['class' => 'form-floating'],
             ])
             ->add('isActivated', CheckboxType::class, [
                 'label' => 'Has this user activated his/her account?',
                 'disabled' => true,
                 'required' => false,
-                'row_attr' => ['class' => 'form-floating'],
             ])
             ->add('roles', ChoiceType::class, [
                 'label' => 'Role of this user?',
                 'choices' => [
-                    'Clerk' => 'ROLE_CLERK',
-                    'Doctor' => 'ROLE_DOCTOR',
-                    'Manager' => 'ROLE_MANAGER',
+                    'Admin' => 'ROLE_ADMIN',
+                    'User' => 'ROLE_USER',
                 ],
                 'multiple' => true,
                 'expanded' => true, // make it checkboxes
@@ -55,7 +52,7 @@ class UserAdminForm extends AbstractType
             ])
             ->add('cellNumber', TelType::class, [
                 'label' => 'Cell #',
-                'row_attr' => ['class' => 'form-floating'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
         ;
     }
