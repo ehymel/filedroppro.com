@@ -12,7 +12,7 @@ class AppFixtures extends Fixture
     {
         $user = new User();
         $user->username = 'ehymel';
-        $user->password = '';
+        $user->password = '$2y$13$u0bvX5hd9Kvj1m.ntMWQQeZTUMhH5Vw1IkPVXC2TBPPBDHPPNptPS';
         $user->firstName = 'Ernest';
         $user->lastName = 'Hymel';
         $user->roles = ['ROLE_SUPERUSER'];

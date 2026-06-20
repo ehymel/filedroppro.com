@@ -1,15 +1,5 @@
-{% for msg in app.flashes('info') %}
-    <div class="alert alert-info">
-        {{ msg|raw }}
-    </div>
-{% endfor %}
-{% for msg in app.flashes('success') %}
-    <div class="alert alert-success">
-        {{ msg|raw }}
-    </div>
-{% endfor %}
-{% for msg in app.flashes('danger') %}
-    <div class="alert alert-danger">
-        {{ msg|raw }}
+{% for label, message in app.flashes %}
+    <div class="alert alert-{{ label }}">
+        {{ message }}
     </div>
 {% endfor %}

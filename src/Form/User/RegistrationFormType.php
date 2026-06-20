@@ -4,6 +4,8 @@ namespace App\Form\User;
 
 use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -14,6 +16,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
@@ -25,9 +28,12 @@ class RegistrationFormType extends AbstractType
             ->add('email', EmailType::class, [
                 'label' => 'Email Address',
                 'disabled' => $options['has_invitation'], // Lock email if registering via secure invite
+                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
+                'label' => ['data-help' => 'Must be a strong password. This master password derives your local encryption key.'],
+                'help' => 'Must be a strong password. This master password derives your local encryption key.',
                 'mapped' => false,
                 'invalid_message' => 'The password fields must match.',
                 'options' => ['attr' => ['class' => 'password-field']],
@@ -37,6 +43,28 @@ class RegistrationFormType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please enter a password'),
                     new Length(min: 12, max: 4096, minMessage: 'For security, your password must be at least {{ limit }} characters')
+                ],
+                'row_attr' => ['class' => 'form-floating mb-2'],
+            ])
+            ->add('agreeTerms', CheckboxType::class, [
+                'mapped' => false,
+                'label' => 'I acknowledge the E2EE encryption policies and agree to keep my master password secure.',
+                'constraints' => [
+                    new IsTrue(message: 'You must acknowledge our encryption policy and terms of use to register.'),
+                ],
+                'row_attr' => ['class' => 'mt-4'],
+            ])
+            // Hidden fields for receiving client-side generated E2EE keys
+            ->add('publicKey', HiddenType::class, [
+                'mapped' => false,
+                'constraints' => [
+                    new NotBlank(message:  'E2EE Public Key validation failed. Please check that JavaScript is enabled and your browser supports the Web Crypto API.'),
+                ],
+            ])
+            ->add('encryptedPrivateKey', HiddenType::class, [
+                'mapped' => false,
+                'constraints' => [
+                    new NotBlank(message: 'E2EE Encrypted Private Key envelope generation failed. Please refresh and try again.'),
                 ],
             ]);
 
@@ -58,13 +86,16 @@ class RegistrationFormType extends AbstractType
                     'label' => 'Firm / Practice Name',
                     'mapped' => false,
                     'required' => false,
-                    'attr' => ['placeholder' => 'e.g. Apex Medical Clinic']
+                    'attr' => ['placeholder' => 'e.g. Apex Medical Clinic'],
+                    'row_attr' => ['class' => 'form-floating mb-2'],
                 ])
                 ->add('joinCode', TextType::class, [
                     'label' => 'Organization Join Code',
                     'mapped' => false,
                     'required' => false,
-                    'attr' => ['placeholder' => 'e.g. TX-XYZ-1234']
+                    'attr' => ['placeholder' => 'e.g. TX-XYZ-1234'],
+                    'row_attr' => ['class' => 'form-floating mb-2'],
+                    'help' => 'Ask your organization administrator for their unique secure join code.'
                 ]);
 
             // Add POST_SUBMIT event listener to enforce strict conditional validation

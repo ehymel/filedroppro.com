@@ -16,7 +16,6 @@ class UserPasswordSetForm extends AbstractType
         $builder
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
-                'row_attr' => ['class' => 'form-floating'],
             ]);
     }
 

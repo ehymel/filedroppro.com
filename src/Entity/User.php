@@ -120,7 +120,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     }
 
     #[ORM\Column(length: 20)]
-    #[Assert\Choice(['active', 'pending_approval', 'suspended'])]
+    #[Assert\Choice(choices: ['active', 'pending_approval', 'suspended'])]
     public string $status = 'pending_approval';
 
     /**

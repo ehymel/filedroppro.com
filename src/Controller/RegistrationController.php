@@ -2,138 +2,133 @@
 
 namespace App\Controller;
 
-use App\Entity\Invitation;
 use App\Entity\Tenant;
 use App\Entity\User;
+use App\Entity\UserKey;
+use App\Entity\Invitation;
 use App\Form\User\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\RateLimit;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class RegistrationController extends AbstractController
 {
-    /**
-     * Handles the secure multi-path tenant registration process.
-     */
-    #[Route('/register', name: 'app_register', methods: ['GET', 'POST'])]
-    #[RateLimit(limiter: 'registrationLimiter')]
-    public function register(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager): Response {
+    #[Route('/register', name: 'app_register')]
+    public function register(
+        Request $request,
+        UserPasswordHasherInterface $userPasswordHasher,
+        EntityManagerInterface $entityManager
+    ): Response {
         $token = $request->query->get('token');
+        $hasInvitation = false;
+        $tenantName = '';
         $invitation = null;
-        $tenant = null;
 
-        // Route A: Verify secure single-use invitation token
         if ($token) {
-            /** @var Invitation $invitation */
             $invitation = $entityManager->getRepository(Invitation::class)->findOneBy([
                 'token' => $token,
                 'used' => false
             ]);
 
-            // Ensure invitation exists and has not expired
-            if ($invitation && $invitation->expiresAt > new \DateTimeImmutable()) {
-                $tenant = $invitation->tenant;
-            } else {
-                $this->addFlash('danger', 'This secure invitation link is invalid or has expired.');
-                return $this->redirectToRoute('app_register'); // Strip bad token and reload form
+            if ($invitation && $invitation->getExpiresAt() > new \DateTimeImmutable()) {
+                $hasInvitation = true;
+                $tenantName = $invitation->getTenant()->getFirmName();
             }
         }
 
         $user = new User();
-        if ($invitation) {
-            $user->email = $invitation->email; // Force invite email
-        }
-
-        // Initialize the form, dynamically passing options based on whether we have an active invitation payload
         $form = $this->createForm(RegistrationFormType::class, $user, [
-            'has_invitation' => (bool)$invitation
+            'has_invitation' => $hasInvitation,
         ]);
+
+        if ($hasInvitation && $invitation) {
+            $form->get('email')->setData($invitation->getEmail());
+        }
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Hash the raw client-side password before storing
-            $plainPassword = $form->get('plainPassword')->getData();
-            $user->password = $passwordHasher->hashPassword($user, $plainPassword);
-
-            if ($invitation) {
-                // Scenario 1: User registering via secure invitation link
+            // 1. Process Tenant setup depending on the selected registration path
+            if ($hasInvitation && $invitation) {
+                $tenant = $invitation->getTenant();
                 $user->tenant = $tenant;
+                $user->status = 'active'; // Approved by invitation
+                $invitation->setUsed(true);
                 $user->roles = ['ROLE_USER'];
-
-                // Active on creation as they have been pre-screened and invited by an Admin
-                $user->status = 'active';
-                $invitation->used = true;
-
-                $entityManager->persist($user);
-                $this->addFlash('success', 'Your account has been securely set up! You can now log in.');
-
             } else {
                 $mode = $form->get('registrationMode')->getData();
 
                 if ($mode === 'new') {
-                    // Scenario 2: Register a new primary Tenant (The Firm)
-                    $firmName = $form->get('firmName')->getData();
+                    $tenant = new Tenant();
+                    $tenant->firmName = $form->get('firmName')->getData();
+                    $tenant->status = 'active';
 
-                    $newTenant = new Tenant();
-                    $newTenant->firmName = $firmName;
-                    $newTenant->status = 'active';
+                    // Generate a unique 12-character uppercase Join Code for the new firm
+                    $uniqueJoinCode = 'TX-' . strtoupper(bin2hex(random_bytes(4)));
+                    $tenant->joinCode = $uniqueJoinCode;
+                    $entityManager->persist($tenant);
 
-                    // Generate a high-entropy secure unique Join Code for out-of-band requests
-                    $secureRandomCode = strtoupper(substr(bin2hex(random_bytes(5)), 0, 10));
-                    $newTenant->joinCode = 'TX-' . $secureRandomCode; // Prefix TX for region
-
-                    $user->tenant = $newTenant;
-                    $user->roles = ['ROLE_ADMIN']; // The creator of the tenant defaults to administrator
-                    $user->status = 'active';
-
-                    $entityManager->persist($newTenant);
-                    $entityManager->persist($user);
-
-                    $this->addFlash('success', sprintf('Firm registration successful! Your Secure Organization Join Code is: %s. Keep this safe!', $newTenant->joinCode));
-
-                } elseif ($mode === 'join') {
-                    // Scenario 3: Requesting to join an existing Tenant using a blind lookup
-                    $joinCode = trim((string) $form->get('joinCode')->getData());
-
-                    $targetTenant = $entityManager->getRepository(Tenant::class)->findOneBy([
+                    $user->tenant = $tenant;
+                    $user->status = 'active'; // Admins are active by default on creation
+                    $user->roles = ['ROLE_ADMIN'];
+                } else {
+                    $joinCode = strtoupper(trim((string)$form->get('joinCode')->getData()));
+                    $tenant = $entityManager->getRepository(Tenant::class)->findOneBy([
                         'joinCode' => $joinCode
                     ]);
 
-                    // Double-Blind Feedback Pattern: Prevent database timing scans and user mapping
-                    // We introduce a standardized delay to secure the response timing
-                    usleep(random_int(100000, 400000)); // Sleep between 100ms - 400ms
-
-                    if (!$targetTenant) {
-                        // Deliver a generic success message so malicious actors cannot verify if a join code is valid
-                        $this->addFlash('success', 'Registration submitted. If a matching organization was found, your join request is now awaiting administrator approval.');
+                    // Anti-Bruteforce timing decoy and blind response for missing join codes
+                    if (!$tenant) {
+                        usleep(random_int(500000, 1500000));
+                        $this->addFlash('success', 'If a matching company was found, your request has been dispatched to administrators.');
                         return $this->redirectToRoute('security_login');
                     }
 
-                    $user->tenant = $targetTenant;
+                    $user->tenant = $tenant;
+                    $user->status = 'pending_approval'; // Requires existing admin verification
                     $user->roles = ['ROLE_USER'];
-
-                    // Crucial: Must be manually approved by the tenant admin before they can access files or fetch public keys
-                    $user->status = 'pending_approval';
-
-                    $entityManager->persist($user);
-
-                    $this->addFlash('success', 'Registration submitted. Your account is now awaiting administrator approval.');
                 }
             }
 
+            // 2. Extract and bind the secure E2EE keys generated in-browser via Javascript
+            $publicKey = $form->get('publicKey')->getData();
+            $encryptedPrivateKey = $form->get('encryptedPrivateKey')->getData();
+
+            if ($publicKey && $encryptedPrivateKey) {
+                $userKey = new UserKey();
+                $userKey->publicKey = $publicKey;
+                $userKey->encryptedPrivateKey = $encryptedPrivateKey;
+                $userKey->user = $user;
+
+                $user->userKey = $userKey;
+                $entityManager->persist($userKey);
+            } else {
+                $this->addFlash('danger', 'Cryptographic key generation was interrupted in your browser. Account creation aborted.');
+                return $this->redirectToRoute('app_register', $token ? ['token' => $token] : []);
+            }
+
+            // 3. Hash password and persist user
+            $user->password = $userPasswordHasher->hashPassword($user, $form->get('plainPassword')->getData());
+
+            $entityManager->persist($user);
             $entityManager->flush();
-            return $this->redirectToRoute('security_login'); // Direct to login for standard Web Crypto initialization
+
+            if (!$hasInvitation && isset($mode) && $mode === 'join') {
+                $this->addFlash('success', 'Your request to join the organization has been dispatched to administrators for approval.');
+                return $this->redirectToRoute('security_login');
+            }
+
+            $this->addFlash('success', 'Account registered successfully! Please log in to initialize your secure session.');
+            return $this->redirectToRoute('security_login');
         }
 
         return $this->render('user/register.html.twig', [
-            'registrationForm' => $form->createView(),
-            'hasInvitation' => (bool)$invitation,
-            'tenantName' => $tenant?->firmName
+            'registrationForm' => $form,
+            'hasInvitation' => $hasInvitation,
+            'tenantName' => $tenantName,
         ]);
     }
 }

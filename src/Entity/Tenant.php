@@ -42,6 +42,6 @@ class Tenant extends MappedSuperclassBase
     #[ORM\OneToMany(targetEntity: Client::class, mappedBy: 'tenant', cascade: ['persist', 'remove'])]
     public Collection $clients;
 
-    #[ORM\Column(length: 64, unique: true)]
+    #[ORM\Column(length: 64, unique: true, nullable: true)]
     public ?string $joinCode = null; // e.g. "TX-LAW-1092"
 }

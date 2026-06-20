@@ -38,7 +38,6 @@ class UserEditForm extends AbstractType
                 'label' => [
                     'data-help' => 'Leave blank for no change',
                 ],
-//                'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('cellNumber', TelType::class, [
                 'label' => 'Cell #',
