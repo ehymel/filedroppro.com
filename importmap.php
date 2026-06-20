@@ -23,10 +23,9 @@
  * }>
  */
 return [
-
     'app' => ['path' => './assets/app.js', 'entrypoint' => true],
-    '@hotwired/stimulus' => ['version' => '3.2.2'],
     '@symfony/stimulus-bundle' => ['path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js'],
+    '@hotwired/stimulus' => ['version' => '3.2.2'],
     '@hotwired/turbo' => ['version' => '8.0.23'],
     '@popperjs/core' => ['version' => '2.11.8'],
     'bootstrap' => ['version' => '5.3.8'],
@@ -39,4 +38,5 @@ return [
     'sweetalert2' => ['version' => '11.26.25'],
     '@simplewebauthn/browser' => ['version' => '13.3.0'],
     '@web-auth/webauthn-stimulus' => ['version' => '5.3.5'],
+    'jquery' => ['version' => '3.7.1'],
 ];

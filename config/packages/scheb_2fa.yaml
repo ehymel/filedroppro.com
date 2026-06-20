@@ -12,7 +12,7 @@ scheb_two_factor:
     email:
         enabled: true
         mailer: App\Service\AuthCodeMailer
-        sender_email: info@oncologysupport.com
+        sender_email: info@filedroppro.com
         sender_name: 'FileDrop Pro'
         digits: 6
         template: 'security/2fa_email_form.html.twig'

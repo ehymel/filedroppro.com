@@ -9,6 +9,7 @@
 parameters:
     session_max_idle_time: 7200      // force logout after 2 hours (7200 = 2 * 60 * 60)
     locale: en
+    global_from_email: 'FileDrop Pro <info@filedroppro.com>'
 
 services:
     # default configuration for services in *this* file
