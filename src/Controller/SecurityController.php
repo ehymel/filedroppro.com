@@ -64,9 +64,6 @@ class SecurityController extends AbstractController
         ]);
     }
 
-    /**
-     * Redirect users after login based on various checks.
-     */
     #[Route(path: '/login/redirect', name: 'login_redirect')]
     public function loginRedirect(): RedirectResponse
     {
@@ -82,5 +79,11 @@ class SecurityController extends AbstractController
     public function logout()
     {
         // never called, so nothing needed here.
+    }
+
+    #[Route(path: '/register', name: 'register')]
+    public function register(): Response
+    {
+        return new Response();
     }
 }

@@ -2,12 +2,52 @@
 
 {% block body %}
 <div class="container">
-    <h1>Welcome</h1>
     <div class="row">
-        <div class="larger">
-            <ul>
+        <div class="col-auto">
+            <img src="{{ asset('images/FDP_logo_250.png') }}" alt="logo">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8 mt-2" style="font-size: 2.0em;">
+            The ultra-simple, HIPAA/SOC2-compliant document drop.
+            <br />
+            Send a secure, encrypted upload link to your clients in one click.
+            <br />
+            No portal account required for them to upload.
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-8">
+            <h2>Features</h2>
+            <ul class="larger">
+                <li><span class="bold larger">Security:</span> FileDrop Pro features two-factor and passkey authentication, intrusion detection,
+                    and data encryption. All data is encrypted in transit and at rest.</li>
 
+                <li><span class="bold larger">Availability:</span> FileDrop Pro is hosted on AWS with uptime monitoring, disaster recovery plans,
+                    and regular backup.</li>
+
+                <li><span class="bold larger">Confidentiality:</span> Is access to data strictly restricted to personnel that you specify. Since data
+                    is stored in an encrypted state, it is not accessible by any other party.
+
+                <li><span class="bold larger">Privacy:</span> No personal information is shared with third parties.</li>
             </ul>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-8">
+            <h2>Pricing</h2>
+            <ul class="larger">
+                <li><span class="bold larger">Free:</span> Up to 100 files or 1 GB. No credit card required.</li>
+                <li><span class="bold larger">Pro:</span> $49/month for up to 50 GB</li>
+                <li><span class="bold larger">Enterprise:</span> $99/month for up to 500 GB</li>
+                <li><span class="bold larger">Custom:</span> Contact us for custom pricing</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-8">
+            <h2>Try it for free</h2>
+            <a href="{{ path('register') }}" class="btn btn-primary ms-4">Sign up</a>
         </div>
     </div>
 </div>

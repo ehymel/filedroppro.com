@@ -10,7 +10,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class DefaultController extends AbstractController
 {
     #[Route(path: '/', name: 'homepage')]
-    #[IsGranted('ROLE_USER')]
     public function index(): Response
     {
         return $this->render('main/homepage.html.twig');
