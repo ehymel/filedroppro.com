@@ -95,7 +95,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     public ?string $emailAuthCode = null;
 
     #[ORM\ManyToOne(targetEntity: Tenant::class, inversedBy: 'users')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     public ?Tenant $tenant = null;
 
     /**
