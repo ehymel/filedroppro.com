@@ -189,7 +189,7 @@ class UserController extends AbstractController
             // now send link to password reset page email with above hash
             $email = new TemplatedEmail()
                 ->to($user->email)
-                ->subject('Oncology Support Password Reset')
+                ->subject('FileDrop Pro Password Reset')
                 ->htmlTemplate('emails/user_reset_password.html.twig')
                 ->context([
                     'user' => $user,

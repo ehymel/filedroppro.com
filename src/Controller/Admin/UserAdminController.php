@@ -132,7 +132,7 @@ class UserAdminController extends AbstractController
 
         $email = new TemplatedEmail()
             ->to($_user->email)
-            ->subject('Oncology Support Account Activation')
+            ->subject('FileDrop Pro Account Activation')
             ->htmlTemplate('emails/user_activation.html.twig')
             ->context([
                 'user' => $_user,
