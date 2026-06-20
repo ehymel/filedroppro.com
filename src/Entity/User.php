@@ -16,6 +16,7 @@ use Stringable;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -30,8 +31,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
         $this->logins = new ArrayCollection();
     }
 
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private(set) ?int $id = null;
+    #[ORM\Id]
+    #[ORM\Column(type: 'uuid', unique: true)]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    public ?Uuid $id = null;
 
     #[ORM\Column(unique: true)]
     #[Assert\NotBlank(groups: ['Registration'])]
@@ -89,6 +93,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
 
     #[ORM\Column(nullable: true)]
     public ?string $emailAuthCode = null;
+
+    #[ORM\ManyToOne(targetEntity: Tenant::class, inversedBy: 'users')]
+    #[ORM\JoinColumn(nullable: false)]
+    public ?Tenant $tenant = null;
+
+    /**
+     * Many-to-Many access bridge (Client_Access) to assign staff to specific clients.
+     */
+    #[ORM\ManyToMany(targetEntity: Client::class, mappedBy: 'users')]
+    public Collection $clients;
+
+    /**
+     * One-to-One relationship to cryptographic keys.
+     * Kept in a separate table to optimize standard user sessions.
+     */
+    #[ORM\OneToOne(targetEntity: UserKey::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
+    public ?UserKey $userKey = null {
+        set(?UserKey $userKey) {
+            // Set the owning side of the relationship if necessary
+            if ($userKey->user !== $this) {
+                $userKey->user = $this;
+            }
+            $this->userKey = $userKey;
+        }
+    }
 
     /**
      * A visual identifier that represents this user.
