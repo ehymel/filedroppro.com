@@ -5,7 +5,8 @@ namespace App\Controller;
 use App\Entity\Invitation;
 use App\Entity\User;
 use App\Form\InvitationFormType;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\InvitationRepository;
+use App\Repository\UserRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,7 +15,6 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Uid\Uuid;
 
 /**
  * Handles the secure administrative invitation workflow.
@@ -24,7 +24,7 @@ use Symfony\Component\Uid\Uuid;
 #[IsGranted('ROLE_ADMIN')]
 class InvitationController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $em, private readonly MailerInterface $mailer) {}
+    public function __construct(private readonly InvitationRepository $invitationRepository, private readonly MailerInterface $mailer, private readonly UserRepository $userRepository) {}
 
     #[Route('/', name: 'list', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
@@ -40,13 +40,21 @@ class InvitationController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $email = $form->get('email')->getData();
 
-            // Check if there's already an active, unused invitation outstanding for this email
-            $existingInvitation = $this->em->getRepository(Invitation::class)->findOneBy([
+            // Guard 1: Check if a registered user with this email already exists in the database
+            $existingUser = $this->userRepository->findOneByEmail($email);
+
+            if ($existingUser) {
+                $this->addFlash('danger', sprintf('A registered user with the email "%s" already exists on the platform.', $email));
+                return $this->redirectToRoute('admin_invitation_list');
+            }
+
+            // Guard 2: Check if there's already an active, unused invitation outstanding for this email
+            $existingInvitation = $this->invitationRepository->findOneBy([
                 'email' => $email,
                 'used' => false,
             ]);
 
-            if ($existingInvitation && $existingInvitation->getExpiresAt() > new \DateTimeImmutable()) {
+            if ($existingInvitation && $existingInvitation->expiresAt > new \DateTimeImmutable()) {
                 $this->addFlash('danger', sprintf('An active invitation is already outstanding for %s.', $email));
                 return $this->redirectToRoute('admin_invitation_list');
             }
@@ -63,13 +71,11 @@ class InvitationController extends AbstractController
             $invitation->expiresAt = new \DateTimeImmutable('+48 hours');
             $invitation->used = false;
 
-            $this->em->persist($invitation);
-            $this->em->flush();
+            $this->invitationRepository->save($invitation, true);
 
             // Construct the absolute registration URL to send to the user
             $registrationUrl = $this->generateUrl(
-                'register',
-                ['token' => $token],
+                'register', ['token' => $token],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
 
@@ -77,9 +83,7 @@ class InvitationController extends AbstractController
                 ->to($email)
                 ->subject('FileDrop Pro Portal Invitation')
                 ->htmlTemplate('emails/user_invitation.html.twig')
-                ->context([
-                    'registrationUrl' => $registrationUrl,
-                ]);
+                ->context(['registrationUrl' => $registrationUrl]);
             $this->mailer->send($templatedEmail);
 
             $this->addFlash('success', sprintf('Invitation created successfully for %s!', $email));
@@ -92,13 +96,10 @@ class InvitationController extends AbstractController
 
         // 2. Fetch outstanding invitations
         // Thanks to our custom TenantFilter, this list automatically isolates to invitations matching $tenant!
-        $invitations = $this->em->getRepository(Invitation::class)->findBy(
-            [],
-            ['expiresAt' => 'DESC']
-        );
+        $invitations = $this->invitationRepository->findAllSortedByExpiresAt();
 
         return $this->render('admin/invitation/manage.html.twig', [
-            'invitationForm' => $form->createView(),
+            'invitationForm' => $form,
             'invitations' => $invitations,
             'tenant' => $tenant,
         ]);
@@ -107,11 +108,8 @@ class InvitationController extends AbstractController
     #[Route('/revoke/{id}', name: 'revoke', methods: ['POST'])]
     public function revoke(Invitation $invitation, Request $request): Response
     {
-        // Enforce CSRF security token validation
         if ($this->isCsrfTokenValid('revoke_invitation_' . $invitation->id->toString(), $request->request->get('_token'))) {
-            // Delete the invitation from the database
-            $this->em->remove($invitation);
-            $this->em->flush();
+            $this->invitationRepository->remove($invitation, true);
 
             $this->addFlash('success', 'Invitation has been successfully revoked.');
         } else {
