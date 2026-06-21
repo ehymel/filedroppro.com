@@ -81,7 +81,7 @@ final class LoginAuthenticator extends WebauthnAuthenticator
 
         if ($rememberMeRequested) {
             // Explicitly enable the badge so Symfony generates the REMEMBERME cookie
-            $passport->addBadge((new RememberMeBadge())->enable());
+            $passport->addBadge(new RememberMeBadge()->enable());
         }
 
         return $passport;

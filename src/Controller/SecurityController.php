@@ -15,21 +15,21 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
-    #[Route(path: '/login/check-username', name: 'app_login_check_username', methods: ['POST'])]
-    public function checkUsername(Request $request, UserRepository $userRepository, WebauthnCredentialRepository $credentialRepository): JsonResponse
+    #[Route(path: '/login/check-email', name: 'app_login_check_email', methods: ['POST'])]
+    public function checkEmail(Request $request, UserRepository $userRepository, WebauthnCredentialRepository $credentialRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $username = $data['username'] ?? '';
+        $email = $data['email'] ?? '';
 
-        if (!$username) {
+        if (!$email) {
             return new JsonResponse(['hasPasskey' => false]);
         }
 
-        $user = $userRepository->findOneBy(['username' => $username]);
+        $user = $userRepository->findOneBy(['email' => $email]);
 
         if (!$user) {
             // If the user doesn't exist, gracefully fallback to the password UI
-            // This prevents user enumeration attacks (hackers guessing valid usernames)
+            // This prevents user enumeration attacks (hackers guessing valid email addresses)
             return new JsonResponse(['hasPasskey' => false]);
         }
 
@@ -55,11 +55,11 @@ class SecurityController extends AbstractController
 
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
-        // last username entered by the user
-        $lastUsername = $authenticationUtils->getLastUsername();
+        // last email entered by the user
+        $lastEmail = $authenticationUtils->getLastUsername();
 
         return $this->render('security/login.html.twig', [
-            'last_username' => $lastUsername,
+            'last_email' => $lastEmail,
             'error' => $error,
         ]);
     }

@@ -12,11 +12,9 @@ class UserPasswordResetRequestForm extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('_username', null, [
-                'row_attr' => ['class' => 'form-floating'],
-            ])
             ->add('_email', EmailType::class, [
                 'row_attr' => ['class' => 'form-floating'],
+                'label' => 'Email Address',
             ])
         ;
     }

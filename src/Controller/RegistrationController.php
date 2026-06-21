@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class RegistrationController extends AbstractController
 {
-    #[Route('/register', name: 'app_register')]
+    #[Route('/register', name: 'register')]
     public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
@@ -107,7 +107,7 @@ class RegistrationController extends AbstractController
                 $entityManager->persist($userKey);
             } else {
                 $this->addFlash('danger', 'Cryptographic key generation was interrupted in your browser. Account creation aborted.');
-                return $this->redirectToRoute('app_register', $token ? ['token' => $token] : []);
+                return $this->redirectToRoute('register', $token ? ['token' => $token] : []);
             }
 
             // 3. Hash password and persist user

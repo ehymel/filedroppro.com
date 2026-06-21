@@ -16,9 +16,6 @@ class UserAdminForm extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('username', null, [
-                'row_attr' => ['class' => 'form-floating mb-2'],
-            ])
             ->add('lastName', null, [
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])

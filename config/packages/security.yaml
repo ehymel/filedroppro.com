@@ -8,7 +8,7 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
-                property: username
+                property: email
 
     firewalls:
         dev:
@@ -21,6 +21,7 @@ security:
             form_login:
                 login_path: security_login
                 check_path: security_login
+                username_parameter: '_email'
                 enable_csrf: true
             custom_authenticator: 'App\Security\LoginAuthenticator'
             remember_me:

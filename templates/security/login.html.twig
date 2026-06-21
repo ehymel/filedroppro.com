@@ -7,7 +7,7 @@
         </div>
         <div class="row">
             <div {{ stimulus_controller('login', {
-                    checkUsernameUrl: path('app_login_check_username'),
+                    checkEmailUrl: path('app_login_check_email'),
                     webauthnResultUrl: path('webauthn.controller.request.request.login')
                 }) }}
                  class="col-xxl-4 col-md-6 col-12">
@@ -20,31 +20,32 @@
                 <form action="{{ path('security_login') }}" method="post"
                       data-login-target="form"
                       data-action="submit->login#onSubmit"
+                      novalidate
                     {{ stimulus_controller('@web-auth/webauthn-stimulus', {
                         requestOptionsUrl: path('webauthn.controller.request.request.login'),
                         requestResultField: '#assertion-payload',
                         useBrowserAutofill: true
                     }) }}
                 >
-                    <div data-login-target="stepUsername" class="form-floating">
-                        <input type="text"
-                               id="username"
-                               name="_username"
+                    <div data-login-target="stepEmail" class="form-floating">
+                        <input type="email"
+                               id="email"
+                               name="_email"
                                required="required"
-                               placeholder="Username"
+                               placeholder="Email Address"
                                class="form-control mb-2"
-                               value="{{ last_username }}"
-                               autocomplete="username webauthn"
-                               data-login-target="username"
-                               data-action="keydown.enter->login#checkUsername:prevent" />
-                        <label for="username" class="form-label required">Username</label>
+                               value="{{ last_email }}"
+                               autocomplete="email webauthn"
+                               data-login-target="email"
+                               data-action="keydown.enter->login#checkEmail:prevent" />
+                        <label for="email" class="form-label required">Email Address</label>
 
-                        <button type="button" data-login-target="continueBtn" data-action="login#checkUsername" class="btn btn-success">Continue</button>
+                        <button type="button" data-login-target="continueBtn" data-action="login#checkEmail" class="btn btn-success">Continue</button>
                     </div>
 
                     <div data-login-target="stepPasskey" class="d-none form-floating">
                         <p class="ms-2 mb-3 larger">
-                            Welcome back, <strong data-login-target="displayUsername"></strong>!
+                            Welcome back, <strong data-login-target="displayEmail"></strong>!
                             <a href="#" data-action="login#resetForm" class="small">(Not you?)</a>
                         </p>
 
@@ -60,7 +61,7 @@
                          data-turnstile-sitekey-value="{{ cloudflare_turnstile_site_key }}"
                     >
                         <p class="ms-2 mb-3 larger">
-                            Enter the password for <strong data-login-target="displayUsername"></strong>
+                            Enter the password for <strong data-login-target="displayEmail"></strong>
                             <a href="#" data-action="login#resetForm" class="small">(Not you?)</a>
                         </p>
                         <div class="form-floating">
@@ -79,7 +80,7 @@
                                  data-turnstile-target="widget"></div>
                         </div>
 
-                        <button type="submit" data-turnstile-target="submit" class="btn btn-success">Login <span class="fa fa-lock"></span></button>
+                        <button type="submit" data-turnstile-target="submit" formnovalidate class="btn btn-success">Login <span class="fa fa-lock"></span></button>
 
                         <a href="{{ path('user_request_reset_pw') }}" class="float-end mt-2">Forgot password?</a>
                     </div>

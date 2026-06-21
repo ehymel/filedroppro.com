@@ -1,14 +1,15 @@
 import { Controller } from '@hotwired/stimulus';
 import Swal from 'sweetalert2';
+import { generateCsrfHeaders } from './csrf_protection_controller.js';
 
 export default class extends Controller {
     static targets = [
-        'form', 'stepUsername', 'stepPasskey', 'stepPassword', 'displayUsername',
-        'username', 'password', 'continueBtn', 'assertion', 'rememberMe', 'rememberMeDiv', 'error'
+        'form', 'stepEmail', 'stepPasskey', 'stepPassword', 'displayEmail',
+        'email', 'password', 'continueBtn', 'assertion', 'rememberMe', 'rememberMeDiv', 'error'
     ];
 
     static values = {
-        checkUsernameUrl: String,
+        checkEmailUrl: String,
         webauthnResultUrl: String
     };
 
@@ -26,7 +27,7 @@ export default class extends Controller {
         };
     }
 
-    async checkUsername(event) {
+    async checkEmail(event) {
         if (event) {
             event.preventDefault();
 
@@ -35,25 +36,36 @@ export default class extends Controller {
             await new Promise(resolve => setTimeout(resolve, 50));
         }
 
-        const username = this.usernameTarget.value.trim();
+        const email = this.emailTarget.value.trim();
+        const password = this.passwordTarget.value;
 
         if (this.hasErrorTarget) {
             this.errorTarget.classList.add('d-none');
         }
 
-        if (!username) {
+        if (!email) {
             Swal.fire({
-                title: 'Username Required',
-                text: 'Please enter your username to continue.',
+                title: 'Email Address Required',
+                text: 'Please enter your email address to continue.',
                 icon: 'warning',
                 confirmButtonColor: '#0d6efd'
             });
             return;
         }
 
-        if (this.hasDisplayUsernameTarget) {
-            this.displayUsernameTargets.forEach(el => {
-                el.innerText = username;
+        if (this.stepPasswordTarget.classList.contains('d-none') === false && !password) {
+            Swal.fire({
+                title: 'Password Required',
+                text: 'Please enter your password to login.',
+                icon: 'warning',
+                confirmButtonColor: '#0d6efd'
+            });
+            return;
+        }
+
+        if (this.hasDisplayEmailTarget) {
+            this.displayEmailTargets.forEach(el => {
+                el.innerText = email;
             });
         }
 
@@ -61,16 +73,19 @@ export default class extends Controller {
         this.continueBtnTarget.innerText = 'Checking...';
 
         try {
-            const response = await fetch(this.checkUsernameUrlValue, {
+            const response = await fetch(this.checkEmailUrlValue, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username })
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...generateCsrfHeaders(this.formTarget)
+                },
+                body: JSON.stringify({ email: email })
             });
 
             const data = await response.json();
 
             // Transition UI
-            this.stepUsernameTarget.classList.add('d-none');
+            this.stepEmailTarget.classList.add('d-none');
 
             if (data.hasPasskey) {
                 this.stepPasskeyTarget.classList.remove('d-none');
@@ -81,8 +96,8 @@ export default class extends Controller {
                 this.passwordTarget.focus();
             }
         } catch (error) {
-            console.error('Error checking username:', error);
-            // this.stepUsernameTarget.classList.remove('d-none');
+            console.error('Error checking email:', error);
+            // this.stepEmailTarget.classList.remove('d-none');
             this.stepPasswordTarget.classList.remove('d-none');
         }
     }
@@ -126,7 +141,8 @@ export default class extends Controller {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    ...generateCsrfHeaders(this.formTarget)
                 },
                 body: assertion
             });
@@ -177,13 +193,13 @@ export default class extends Controller {
 
         this.stepPasskeyTarget.classList.add('d-none');
         this.stepPasswordTarget.classList.add('d-none');
-        this.stepUsernameTarget.classList.remove('d-none');
+        this.stepEmailTarget.classList.remove('d-none');
 
         this.continueBtnTarget.disabled = false;
         this.continueBtnTarget.innerText = 'Continue';
 
         this.passwordTarget.value = '';
-        this.usernameTarget.value = '';
-        this.usernameTarget.focus();
+        this.emailTarget.value = '';
+        this.emailTarget.focus();
     }
 }

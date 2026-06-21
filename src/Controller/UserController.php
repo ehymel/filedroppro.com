@@ -114,7 +114,7 @@ class UserController extends AbstractController
 
         return $this->render('user/password_set.html.twig', [
             'form' => $form,
-            'username' => $user->getUserIdentifier(),
+            'email' => $user->getUserIdentifier(),
         ]);
     }
 
@@ -155,7 +155,7 @@ class UserController extends AbstractController
 
         return $this->render('user/password_reset.html.twig', [
             'form' => $form,
-            'username' => $user->getUserIdentifier(),
+            'email' => $user->getUserIdentifier(),
         ]);
     }
 
@@ -168,12 +168,12 @@ class UserController extends AbstractController
         if ($form->isSubmitted()) {
             $data = $form->getData();
 
-            $user = $userRepository->findOneByEmailOrUsername($data['_username'], $data['_email']);
+            $user = $userRepository->findOneByEmail($data['_email']);
 
             if (!$user instanceof User) {
                 $this->addFlash(
                     'danger',
-                    'No user found with that username or email. Try again?'
+                    'No user found with that email address. Try again?'
                 );
 
                 return $this->redirectToRoute('user_request_reset_pw');

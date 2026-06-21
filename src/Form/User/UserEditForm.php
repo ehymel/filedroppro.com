@@ -15,7 +15,7 @@ class UserEditForm extends AbstractType
 {
     /**
      * Used for user to edit their own profile;
-     * Does not allow change of username or roles.
+     * Does not allow change of roles.
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -29,7 +29,6 @@ class UserEditForm extends AbstractType
             ->add('credentials', null, [
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])
-//            ->add('username')
             ->add('email', EmailType::class, [
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])

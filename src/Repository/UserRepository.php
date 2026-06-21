@@ -43,13 +43,6 @@ class UserRepository extends ServiceEntityRepository implements PublicKeyCredent
         }
     }
 
-    public function createAlphabeticalUsernameQueryBuilder(): QueryBuilder
-    {
-        return $this->createQueryBuilder('user')
-            ->addOrderBy('user.username', 'ASC')
-            ;
-    }
-
     public function createAlphabeticalUserQueryBuilder(): QueryBuilder
     {
         return $this->createQueryBuilder('user')
@@ -58,17 +51,9 @@ class UserRepository extends ServiceEntityRepository implements PublicKeyCredent
             ;
     }
 
-    public function findOneByEmailOrUsername($username, $email): ?User
+    public function findOneByEmail(string $email): ?User
     {
-        $q = $this->createQueryBuilder('user')
-            ->where('user.username = :username')
-            ->orWhere('user.email = :email')
-            ->setParameter('username', $username)
-            ->setParameter('email', $email)
-            ->getQuery()
-            ;
-
-        return $q->getOneOrNullResult();
+        return $this->findOneBy(['email' => $email]);
     }
 
     /**
@@ -76,8 +61,7 @@ class UserRepository extends ServiceEntityRepository implements PublicKeyCredent
      */
     public function findOneByUsername(string $username): ?PublicKeyCredentialUserEntity
     {
-        /** @var ?User $user */
-        $user = $this->findOneBy(['username' => $username]);
+        $user = $this->findOneByEmail($username);
 
         return $this->getUserEntity($user);
     }
@@ -87,8 +71,7 @@ class UserRepository extends ServiceEntityRepository implements PublicKeyCredent
      */
     public function findOneByUserHandle(string $userHandle): ?PublicKeyCredentialUserEntity
     {
-        /** @var ?User $user */
-        $user = $this->findOneBy(['username' => $userHandle]);
+        $user = $this->findOneByEmail($userHandle);
 
         return $this->getUserEntity($user);
     }

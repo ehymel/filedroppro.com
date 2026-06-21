@@ -21,7 +21,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: 'This email address is already in use.')]
-#[UniqueEntity(fields: ['username'], message: 'This username address is already in use.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwoFactorInterface, EmailTwoFactorInterface, TwoFactorTextInterface, Stringable
 {
     // can impersonate another user in url by adding ?_switch_user=jsmith to impersonate jsmith
@@ -37,9 +36,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     public ?Uuid $id = null;
 
-    #[ORM\Column(unique: true)]
-    #[Assert\NotBlank(groups: ['Registration'])]
-    public ?string $username = null;
 
     #[ORM\Column]
     #[Assert\NotBlank, Assert\Email]
@@ -130,7 +126,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->username;
+        return (string) $this->email;
     }
 
     public function getRoles(): array
