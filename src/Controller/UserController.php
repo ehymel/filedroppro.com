@@ -201,7 +201,7 @@ class UserController extends AbstractController
 
             $this->addFlash(
                 'success',
-                'Activation email sent.'
+                'If an account matching your email exists, then an email was just sent that contains a link that you can use to reset your password.'
             );
 
             return $this->redirect('/login');
