@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Welcome!{% endblock %}</title>
+    <title>FileDrop Pro {% block title %}Welcome!{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('images/FDP_icon.ico') }}" />
     {% block stylesheets %}
     {% endblock %}
@@ -76,7 +76,7 @@
 
                 </ul>
                 <ul class="navbar-nav ms-auto">
-                    {% if is_granted('ROLE_ADMIN') %}
+                    {% if is_granted('ROLE_SUPERUSER') %}
                         <li class="nav-item{{ currentRoute matches '{^admin_(?![user|import])}' ? ' active bold'}}">
                             <a class="nav-link" href="{{ path('admin_home') }}">Site Admin</a>
                         </li>
@@ -89,8 +89,6 @@
         </nav>
     {% endif %}
 {% endblock %}
-
-{{ include('admin/_breadcrumbs.html.twig') }}
 
 <div class="main-content">
     {{ include('flash_messages.html.twig') }}

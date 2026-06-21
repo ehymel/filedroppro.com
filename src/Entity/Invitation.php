@@ -22,7 +22,7 @@ class Invitation extends MappedSuperclassBase
     #[ORM\Column(length: 180)]
     public ?string $email = null;
 
-    #[ORM\Column(length: 64, unique: true)]
+    #[ORM\Column(length: 80, unique: true)]
     public ?string $token = null;
 
     #[ORM\Column]

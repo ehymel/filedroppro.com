@@ -1,0 +1,115 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Manage Invitations{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1>Administrative Portal</h1>
+                <h2>{{ tenant.firmName }}</h2>
+                <p>Generate and manage secure single-use entry tokens for your internal staff.</p>
+                <p class="bold" style="color: darkolivegreen;">Tenant Security Active</p>
+            </div>
+        </div>
+
+        {% include 'flash_messages.html.twig' %}
+
+        {# Visual Key Recovery/Copy Assist if just generated #}
+        {% if app.flashes('invitation_link') is not empty %}
+            {% for link in app.flashes('invitation_link') %}
+                <div>
+                    <h3>Share Secure Invitation Link</h3>
+                    <p>Copy and share this pre-approved link with your new staff member. This link will expire in 48 hours.</p>
+                    <div>
+                        <label for="shareable-link-input"></label>
+                        <input type="text" readonly value="{{ link }}" id="shareable-link-input">
+                        <button onclick="copyToClipboard()">Copy Link</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <div class="col-5">
+                <h3>Invite Staff Member</h3>
+                <p>Invitations grant bypass access to security-joining restrictions and lock new user configurations directly to your business profile.</p>
+
+                {{ form_start(invitationForm) }}
+                    {{ form_row(invitationForm.email) }}
+                    <button type="submit" class="btn btn-primary ms-4">Generate Secure Token and Send Email Invitation</button>
+                {{ form_end(invitationForm) }}
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class="col-8">
+                {# Pending / Active Invitations Table #}
+                <h3>Outstanding Invitations</h3>
+                <p>Review the status of pending authorization tokens issued for your organization.</p>
+
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Email Address</th>
+                        <th>Expires At</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for invite in invitations %}
+                        <tr>
+                            <td>{{ invite.email }}</td>
+                            <td>
+                                {{ invite.expiresAt|date('Y-m-d H:i') }}
+                                <span>
+                                    ({{ invite.expiresAt|date('e') }})
+                                </span>
+                            </td>
+                            <td>
+                                {% if invite.used %}
+                                    <span>Accepted</span>
+                                {% elseif invite.expiresAt < date() %}
+                                    <span>Expired</span>
+                                {% else %}
+                                    <span>Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{{ path('admin_invitation_revoke', {'id': invite.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to revoke access parameters for this token?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('revoke_invitation_' ~ invite.id.toString()) }}">
+                                    <button type="submit" class="btn btn-danger">Revoke</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No invitation tokens currently registered for this tenant.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(event) {
+            const copyText = document.getElementById("shareable-link-input");
+            if (copyText) {
+                copyText.select();
+                copyText.setSelectionRange(0, 99999); // For mobile devices
+                document.execCommand("copy");
+
+                // Text feedback change
+                const btn = event.currentTarget;
+                const originalText = btn.textContent;
+                btn.textContent = "Copied!";
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }
+        }
+    </script>
+{% endblock %}
