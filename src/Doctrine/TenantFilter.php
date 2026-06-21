@@ -40,7 +40,8 @@ class TenantFilter extends SQLFilter
         }
 
         // Return the SQL string that will be appended in the WHERE clauses
-        return sprintf('%s.tenant_id = %s', $targetTableAlias, $tenantId);
+        // Since we are using MariaDB and the column is a UUID type, we cast the string parameter to UUID
+        return sprintf('%s.tenant_id = CAST(%s AS UUID)', $targetTableAlias, $tenantId);
     }
 }
 
