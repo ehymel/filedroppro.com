@@ -74,10 +74,18 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <form action="{{ path('admin_invitation_revoke', {'id': invite.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to revoke access parameters for this token?');">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('revoke_invitation_' ~ invite.id.toString()) }}">
-                                    <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
-                                </form>
+                                {# Let the admin renew/resend the link if it is pending or expired (i.e. not yet used) #}
+                                {% if not invite.used %}
+                                    <form action="{{ path('admin_invitation_revoke', {'id': invite.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to revoke access parameters for this token?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_invitation_' ~ invite.id.toString()) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
+                                    </form>
+
+                                    <form action="{{ path('admin_invitation_reinvite', {'id': invite.id.toString()}) }}" method="POST" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('reinvite_invitation_' ~ invite.id.toString()) }}">
+                                        <button type="submit" class="btn btn-sm btn-info">Resend / Renew</button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% else %}

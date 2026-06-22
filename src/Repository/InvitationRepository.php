@@ -40,9 +40,10 @@ class InvitationRepository extends ServiceEntityRepository
         }
     }
 
-    public function findAllSortedByExpiresAt(): QueryBuilder
+    public function findAllSortedByExpiresAt(): array
     {
-        return $this->createQueryBuilder('i')
-            ->orderBy('i.expiresAt', 'DESC');
+        return $this->createQueryBuilder('invitation')
+            ->addOrderBy('invitation.expiresAt', 'DESC')
+            ->getQuery()->getResult();
     }
 }

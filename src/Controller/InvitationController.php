@@ -7,10 +7,12 @@ use App\Entity\User;
 use App\Form\InvitationFormType;
 use App\Repository\InvitationRepository;
 use App\Repository\UserRepository;
+use Random\RandomException;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -26,6 +28,10 @@ class InvitationController extends AbstractController
 {
     public function __construct(private readonly InvitationRepository $invitationRepository, private readonly MailerInterface $mailer, private readonly UserRepository $userRepository) {}
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws RandomException
+     */
     #[Route('/', name: 'list', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
     {
@@ -72,24 +78,7 @@ class InvitationController extends AbstractController
             $invitation->used = false;
 
             $this->invitationRepository->save($invitation, true);
-
-            // Construct the absolute registration URL to send to the user
-            $registrationUrl = $this->generateUrl(
-                'register', ['token' => $token],
-                UrlGeneratorInterface::ABSOLUTE_URL
-            );
-
-            $templatedEmail = new TemplatedEmail()
-                ->to($email)
-                ->subject('FileDrop Pro Portal Invitation')
-                ->htmlTemplate('emails/user_invitation.html.twig')
-                ->context(['registrationUrl' => $registrationUrl]);
-            $this->mailer->send($templatedEmail);
-
-            $this->addFlash('success', sprintf('Invitation created successfully for %s!', $email));
-
-            // Store the link temporarily in the session flash so the admin can copy-paste it directly if needed for testing
-            $this->addFlash('invitation_link', $registrationUrl);
+            $this->sendInvitationEmail($invitation);
 
             return $this->redirectToRoute('admin_invitation_list');
         }
@@ -105,6 +94,36 @@ class InvitationController extends AbstractController
         ]);
     }
 
+    /**
+     * Renews an unused (pending or expired) invitation with a fresh 48-hour expiration.
+     */
+    #[Route('/reinvite/{id}', name: 'reinvite', methods: ['POST'])]
+    public function reinvite(Invitation $invitation, Request $request): Response
+    {
+        $tokenName = 'reinvite_invitation_' . $invitation->id->toString();
+        if (!$this->isCsrfTokenValid($tokenName, $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Invalid security token. Invitation renewal aborted.');
+            return $this->redirectToRoute('admin_invitation_list');
+        }
+
+        if ($invitation->used) {
+            $this->addFlash('danger', 'This invitation has already been accepted. You cannot renew or resend it.');
+            return $this->redirectToRoute('admin_invitation_list');
+        }
+
+        // Generate a new cryptographically secure token and bump expiration out another 48 hours
+        $token = 'inv_' . bin2hex(random_bytes(32));
+        $invitation->token = $token;
+        $invitation->expiresAt = new \DateTimeImmutable('+48 hours');
+
+        $this->invitationRepository->save($invitation, true);
+
+        $this->addFlash('success', sprintf('The invitation link for %s has been updated and extended.', $invitation->email));
+
+        $this->sendInvitationEmail($invitation);
+        return $this->redirectToRoute('admin_invitation_list');
+    }
+
     #[Route('/revoke/{id}', name: 'revoke', methods: ['POST'])]
     public function revoke(Invitation $invitation, Request $request): Response
     {
@@ -117,5 +136,29 @@ class InvitationController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_invitation_list');
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendInvitationEmail(Invitation $invitation): void
+    {
+        // Construct the absolute registration URL to send to the user
+        $registrationUrl = $this->generateUrl(
+            'register', ['token' => $invitation->token],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
+        $templatedEmail = new TemplatedEmail()
+            ->to($invitation->email)
+            ->subject('FileDrop Pro Portal Invitation')
+            ->htmlTemplate('emails/user_invitation.html.twig')
+            ->context(['registrationUrl' => $registrationUrl]);
+        $this->mailer->send($templatedEmail);
+
+        $this->addFlash('success', sprintf('Invitation successfully mailed to %s.', $invitation->email));
+
+        // Store the link temporarily in the session flash so the admin can copy-paste it directly if needed for testing
+        $this->addFlash('invitation_link', $registrationUrl);
     }
 }
