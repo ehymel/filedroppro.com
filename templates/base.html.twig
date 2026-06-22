@@ -22,8 +22,11 @@
 {% block header %}
 <header class="flexheader">
     <img class="logo-icon me-4" alt="FDP logo" src="{{ asset('images/FDP_logo_100.png') }}">
-    <h2 class="title">
-    </h2>
+    {% if is_granted('ROLE_USER') %}
+        <h2 class="title mt-4">
+            {{ app.user.tenant?.firmName }}
+        </h2>
+    {% endif %}
     <span class="nav">
         {% if is_granted('ROLE_USER') %}
             <nav class="navbar-expand navbar-light">
@@ -73,7 +76,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <ul class="navbar-nav me-auto d-flex">
-
+                    {% if is_granted('ROLE_ADMIN') %}
+                    <li class="nav-item{{ currentRoute matches '{^admin_(?![invitation])}' ? ' active bold'}}">
+                        <a class="nav-link" href="{{ path('admin_invitation_list') }}">Manage Invitations</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if is_granted('ROLE_SUPERUSER') %}

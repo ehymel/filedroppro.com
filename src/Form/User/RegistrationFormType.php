@@ -28,6 +28,17 @@ class RegistrationFormType extends AbstractType
             ->add('email', EmailType::class, [
                 'label' => 'Email Address',
                 'disabled' => $options['has_invitation'], // Lock email if registering via secure invite
+                'attr' => ['autocomplete' => 'off', 'readonly' => true, 'onfocus' => 'this.removeAttribute("readonly");'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
+            ])
+            ->add('firstName', TextType::class, [
+                'label' => 'First Name',
+                'attr' => ['autocomplete' => 'off'],
+                'row_attr' => ['class' => 'form-floating mb-2'],
+            ])
+            ->add('lastName', TextType::class, [
+                'label' => 'Last Name',
+                'attr' => ['autocomplete' => 'off'],
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('plainPassword', RepeatedType::class, [
@@ -44,6 +55,7 @@ class RegistrationFormType extends AbstractType
                     new NotBlank(message: 'Please enter a password'),
                     new Length(min: 12, max: 4096, minMessage: 'For security, your password must be at least {{ limit }} characters')
                 ],
+                'attr' => ['autocomplete' => 'off', 'readonly' => true, 'onfocus' => 'this.removeAttribute("readonly");'],
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('agreeTerms', CheckboxType::class, [

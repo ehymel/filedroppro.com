@@ -36,7 +36,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     public ?Uuid $id = null;
 
-
     #[ORM\Column]
     #[Assert\NotBlank, Assert\Email]
     public ?string $email = null;
@@ -56,10 +55,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     #[ORM\Column(type: Types::JSON)]
     public array $roles = [];
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column]
+    #[Assert\NotBlank]
     public ?string $firstName = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column]
+    #[Assert\NotBlank]
     public ?string $lastName = null;
 
     #[ORM\Column(nullable: true)]

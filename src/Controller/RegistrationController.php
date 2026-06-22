@@ -9,6 +9,7 @@ use App\Entity\Invitation;
 use App\Form\User\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -26,37 +27,57 @@ class RegistrationController extends AbstractController
         $hasInvitation = false;
         $tenantName = '';
         $invitation = null;
+        $user = new User();
 
+        // --- 1. Robust Invitation Token Verification ---
         if ($token) {
+            /** @var Invitation $invitation */
             $invitation = $entityManager->getRepository(Invitation::class)->findOneBy([
                 'token' => $token,
                 'used' => false
             ]);
 
-            if ($invitation && $invitation->getExpiresAt() > new \DateTimeImmutable()) {
+            if ($invitation) {
+                // Scenario A: Token already consumed
+                if ($invitation->used) {
+                    $this->addFlash('danger', 'This invitation link has already been used. If you have already created your account, please log in below.');
+                    return $this->redirectToRoute('security_login');
+                }
+
+                // Scenario B: Token expired
+                if ($invitation->expiresAt <= new \DateTimeImmutable()) {
+                    $this->addFlash('danger', 'This invitation link has expired (tokens are valid for 48 hours). Please ask your administrator to issue a new invitation.');
+                    return $this->redirectToRoute('security_login');
+                }
+
+                // Scenario C: Valid invitation token
                 $hasInvitation = true;
-                $tenantName = $invitation->getTenant()->getFirmName();
+                $tenantName = $invitation->tenant->firmName;
+                $user->email = $invitation->email;
+            } else {
+                // Scenario D: Malicious/Fake token
+                $this->addFlash('danger', 'The invitation token provided is invalid or has been revoked.');
+                return $this->redirectToRoute('register');
             }
         }
 
-        $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user, [
             'has_invitation' => $hasInvitation,
         ]);
 
         if ($hasInvitation && $invitation) {
-            $form->get('email')->setData($invitation->getEmail());
+            $form->get('email')->setData($invitation->email);
         }
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // 1. Process Tenant setup depending on the selected registration path
+            // --- 2. Process Tenant & Validation Paths ---
             if ($hasInvitation && $invitation) {
-                $tenant = $invitation->getTenant();
+                $tenant = $invitation->tenant;
                 $user->tenant = $tenant;
                 $user->status = 'active'; // Approved by invitation
-                $invitation->setUsed(true);
+                $invitation->used = true;
                 $user->roles = ['ROLE_USER'];
             } else {
                 $mode = $form->get('registrationMode')->getData();
@@ -80,11 +101,20 @@ class RegistrationController extends AbstractController
                         'joinCode' => $joinCode
                     ]);
 
-                    // Anti-Bruteforce timing decoy and blind response for missing join codes
+                    // --- 3. Balanced Security Join Code Validation ---
                     if (!$tenant) {
-                        usleep(random_int(500000, 1500000));
-                        $this->addFlash('success', 'If a matching company was found, your request has been dispatched to administrators.');
-                        return $this->redirectToRoute('security_login');
+                        // Apply a defensive timing penalty to mitigate brute-force scripting
+                        usleep(random_int(400000, 800000));
+
+                        $form->get('joinCode')->addError(
+                            new FormError('The security join code entered is invalid or does not match an active organization.')
+                        );
+
+                        return $this->render('user/register.html.twig', [
+                            'registrationForm' => $form->createView(),
+                            'hasInvitation' => $hasInvitation,
+                            'tenantName' => $tenantName,
+                        ]);
                     }
 
                     $user->tenant = $tenant;
@@ -93,7 +123,7 @@ class RegistrationController extends AbstractController
                 }
             }
 
-            // 2. Extract and bind the secure E2EE keys generated in-browser via Javascript
+            // --- 4. Validate and Bind E2EE Keys ---
             $publicKey = $form->get('publicKey')->getData();
             $encryptedPrivateKey = $form->get('encryptedPrivateKey')->getData();
 
@@ -110,7 +140,7 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('register', $token ? ['token' => $token] : []);
             }
 
-            // 3. Hash password and persist user
+            // --- 5. Hash Password & Persist Transaction ---
             $user->password = $userPasswordHasher->hashPassword($user, $form->get('plainPassword')->getData());
 
             $entityManager->persist($user);

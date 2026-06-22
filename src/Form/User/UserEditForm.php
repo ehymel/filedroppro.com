@@ -20,6 +20,9 @@ class UserEditForm extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('email', EmailType::class, [
+                'row_attr' => ['class' => 'form-floating mb-2'],
+            ])
             ->add('lastName', null, [
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])
@@ -27,9 +30,6 @@ class UserEditForm extends AbstractType
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('credentials', null, [
-                'row_attr' => ['class' => 'form-floating mb-2'],
-            ])
-            ->add('email', EmailType::class, [
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])
             ->add('plainPassword', RepeatedType::class, [
@@ -41,6 +41,8 @@ class UserEditForm extends AbstractType
             ->add('cellNumber', TelType::class, [
                 'label' => 'Cell #',
                 'row_attr' => ['class' => 'form-floating mb-2'],
+                'help' => 'Your cell number is used only for 2FA; your information will not be shared with anyone.',
+                'help_attr' => ['class' => 'ms-2'],
             ])
         ;
     }
