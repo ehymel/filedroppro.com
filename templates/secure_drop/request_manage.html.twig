@@ -3,20 +3,19 @@
 {% block title %}Manage Document Requests - Internal Portal{% endblock %}
 
 {% block body %}
-    <div>
-        <header>
-            <div>
-                <span>Internal Dashboard</span>
-                <h1>File Request Management</h1>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1>Internal Dashboard</h1>
                 <p>Generate secure drop links, track pending client uploads, and manage active requests.</p>
             </div>
-        </header>
+        </div>
 
         {% include 'flash_messages.html.twig' %}
 
-        <div>
-            <section>
-                <h2>Create New Request</h2>
+        <div class="row">
+            <div class="col-5 border-1">
+                <h3>Create New Request</h3>
                 <p>Email a client a targeted, tracking-enabled secure upload link.</p>
 
                 {{ form_start(form) }}
@@ -26,10 +25,13 @@
 
                     <button type="submit" class="btn btn-primary">Generate & Email Link</button>
                 {{ form_end(form) }}
-            </section>
+            </div>
+        </div>
 
-            <section>
-                <h2>Active & Historical Requests</h2>
+        <div class="row mt-5">
+            <div class="col-8">
+                {# Pending / Active Invitations Table #}
+                <h3>Active & Historical Requests</h3>
                 <p>Track the status of all secure document invitations sent from your firm.</p>
 
                 <table class="table table-striped">
@@ -79,8 +81,7 @@
                     {% endfor %}
                     </tbody>
                 </table>
-            </section>
-
+            </div>
         </div>
     </div>
 {% endblock %}

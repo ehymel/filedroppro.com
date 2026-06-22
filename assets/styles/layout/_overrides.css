@@ -65,7 +65,7 @@ textarea {
   field-sizing: content;
 }
 
-input, select, div.ts-wrapper {
+input, select, textarea, div.ts-wrapper {
     background-color: #e0e0f060!important;
 }
 

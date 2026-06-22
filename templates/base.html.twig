@@ -76,6 +76,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <ul class="navbar-nav me-auto d-flex">
+                    <li class="nav-item{{ currentRoute matches '{^insider}' ? ' active bold'}}">
+                        <a class="nav-link" href="{{ path('internal_requests_manage') }}">Manage Drop Requests</a>
+                    </li>
                     {% if is_granted('ROLE_ADMIN') %}
                     <li class="nav-item{{ currentRoute matches '{^admin_(?![invitation])}' ? ' active bold'}}">
                         <a class="nav-link" href="{{ path('admin_invitation_list') }}">Manage Invitations</a>

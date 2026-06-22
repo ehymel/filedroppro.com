@@ -18,7 +18,7 @@ class DropRequestFormType extends AbstractType
     {
         $builder
             ->add('clientName', TextType::class, [
-                'label' => 'Client / Patient Name',
+                'label' => 'Client Name',
                 'required' => true,
                 'attr' => ['placeholder' => 'Jane Doe'],
                 'constraints' => [

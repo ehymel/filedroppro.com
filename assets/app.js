@@ -3,7 +3,7 @@ import './stimulus_bootstrap.js';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
-// import './styles/app.css';
+import './styles/app.css';
 
 import './styles/layout/_body.css';
 import './styles/layout/_flexbox.css';
