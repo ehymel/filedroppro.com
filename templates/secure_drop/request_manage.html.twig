@@ -15,8 +15,8 @@
 
         <div class="row">
             <div class="col-5 border-1">
-                <h3>Create New Request</h3>
-                <p>Email a client a targeted, tracking-enabled secure upload link.</p>
+                <h3>Invite External Clients to Upload Files</h3>
+                <p>Send a targeted, tracking-enabled secure upload link to your client.</p>
 
                 {{ form_start(form) }}
                     {{ form_row(form.clientName) }}
@@ -48,11 +48,20 @@
                     {% for request in requests %}
                         <tr>
                             <td>
-                                <strong>{{ request.clientName }}</strong><br>
-                                <small>{{ request.clientEmail }}</small>
+                                {{ request.clientName }}
+                                <br />
+                                (<small>{{ request.clientEmail }}</small>)
                             </td>
-                            <td>{{ request.requestedBy.email }}</td>
-                            <td>{{ request.createdAt|date('Y-m-d H:i') }}</td>
+                            <td>
+                                {{ request.createdBy.name }}
+                                <br />
+                                (<small>{{ request.createdBy.email }}</small>)
+                            </td>
+                            <td>
+                                {{ request.createdAt|date('M d, Y') }}
+                                <br />
+                                {{ request.createdAt|date('h:i a') }}
+                            </td>
                             <td>
                                 <span>{{ request.status|capitalize }}</span>
                             </td>
@@ -60,12 +69,12 @@
                                 {% if request.status == 'pending' %}
                                     <form action="{{ path('internal_requests_resend', {'id': request.id.toString()}) }}" method="POST" style="display:inline;">
                                         <input type="hidden" name="_token" value="{{ csrf_token('resend_request_' ~ request.id.toString()) }}">
-                                        <button type="submit">Resend Email</button>
+                                        <button type="submit" class="btn btn-sm btn-info">Resend Email</button>
                                     </form>
 
                                     <form action="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}" method="POST" onsubmit="return confirm('Revoke this link? The client will no longer be able to use it.');" style="display:inline;">
                                         <input type="hidden" name="_token" value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
-                                        <button type="submit">Revoke Link</button>
+                                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
                                     </form>
                                 {% else %}
                                     <em>No actions available</em>

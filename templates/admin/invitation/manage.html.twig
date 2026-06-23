@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Manage Invitations{% endblock %}
+{% block title %}Manage Internal Staff{% endblock %}
 
 {% block body %}
     <div class="container">
         <div class="row">
             <div class="col">
-                <h1>Administrative Portal</h1>
-                <p>Generate and manage secure single-use entry tokens for your internal staff.</p>
+                <h1>Manage Internal Staff</h1>
+                <p>Generate and manage secure single-use entry tokens for your <strong>internal</strong> staff.</p>
             </div>
         </div>
 
@@ -30,8 +30,15 @@
 
         <div class="row">
             <div class="col-5 border-1">
-                <h3>Invite Staff Member</h3>
-                <p>Invitations grant bypass access to security-joining restrictions and lock new user configurations directly to your business profile.</p>
+                <h3>Invite Internal Staff Member</h3>
+                <p>Invitations grant bypass access to security-joining restrictions and
+                    lock new user configurations directly to your
+                    <span style="font-weight: bold; text-decoration: underline">{{ app.user.tenant.firmName }}</span>
+                    business profile.
+                </p>
+                <p style="font-weight: bold;">Invitations should be sent with care since all internal staff members can access all documents
+                    that have been uploaded to this site.
+                </p>
 
                 {{ form_start(invitationForm) }}
                     {{ form_row(invitationForm.email) }}
@@ -59,10 +66,10 @@
                         <tr>
                             <td>{{ invite.email }}</td>
                             <td>
-                                {{ invite.expiresAt|date('Y-m-d H:i') }}
-                                <span>
-                                    ({{ invite.expiresAt|date('e') }})
-                                </span>
+                                {{ invite.expiresAt|date('M d, Y') }} /
+                                {{ invite.expiresAt|date('h:i a') }}
+                                <br />
+                                ({{ invite.expiresAt|date('e') }})
                             </td>
                             <td>
                                 {% if invite.used %}

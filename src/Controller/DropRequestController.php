@@ -6,6 +6,7 @@ use App\Entity\DropRequest;
 use App\Entity\User;
 use App\Form\DropRequestFormType;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,7 +39,6 @@ class DropRequestController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $dropRequest->tenant = $tenant;
-            $dropRequest->requestedBy = $user;
             // Generate a secure random token for the custom drop link
             $dropRequest->token = 'req_' . bin2hex(random_bytes(24));
 
@@ -103,7 +103,7 @@ class DropRequestController extends AbstractController
     private function dispatchRequestEmail(DropRequest $dropRequest): bool
     {
         $tenant = $dropRequest->tenant;
-        $sender = $dropRequest->requestedBy;
+        $sender = $dropRequest->createdBy;
 
         $dropUrl = $this->generateUrl(
             'app_secure_drop_portal',
@@ -114,14 +114,14 @@ class DropRequestController extends AbstractController
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        $emailPayload = new Email()
-            ->from($sender->email)
+        $emailPayload = new TemplatedEmail()
+//            ->from($sender->email)
             ->to($dropRequest->clientEmail)
             ->subject(sprintf('Secure file request from %s', $tenant->firmName))
             ->html($this->renderView('emails/file_request.html.twig', [
                 'clientName' => $dropRequest->clientName,
                 'firmName' => $tenant->firmName,
-                'senderName' => $sender->email,
+                'senderName' => $sender->name.' ('.$sender->email.')',
                 'instructions' => $dropRequest->instructions,
                 'dropUrl' => $dropUrl
             ]));
@@ -130,6 +130,7 @@ class DropRequestController extends AbstractController
             $this->mailer->send($emailPayload);
             return true;
         } catch (\Exception $e) {
+//            $this->addFlash('danger', $e->getCode() . ': ' . $e->getMessage());
             return false;
         }
     }

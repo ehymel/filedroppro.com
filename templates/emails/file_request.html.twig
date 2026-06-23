@@ -9,9 +9,9 @@
 
 <p><strong>{{ senderName }}</strong> at <strong>{{ firmName }}</strong> has requested that you securely upload files to their document vault.</p>
 
-{% if customMessage is not empty %}
+{% if instructions is not empty %}
     <blockquote style="margin: 20px 0; padding-left: 15px; border-left: 3px solid #666; font-style: italic;">
-        "{{ customMessage }}"
+        "{{ instructions }}"
     </blockquote>
 {% endif %}
 

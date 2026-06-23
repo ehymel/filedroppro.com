@@ -96,6 +96,7 @@ class InvitationController extends AbstractController
 
     /**
      * Renews an unused (pending or expired) invitation with a fresh 48-hour expiration.
+     * @throws TransportExceptionInterface
      */
     #[Route('/reinvite/{id}', name: 'reinvite', methods: ['POST'])]
     public function reinvite(Invitation $invitation, Request $request): Response

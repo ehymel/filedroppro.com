@@ -23,10 +23,6 @@ class DropRequest extends MappedSuperclassBase
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     public ?Tenant $tenant = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    public ?User $requestedBy = null;
-
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     public ?string $clientName = null;
