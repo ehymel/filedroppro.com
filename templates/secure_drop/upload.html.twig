@@ -3,62 +3,65 @@
 {% block title %}Secure File Drop - {{ tenant.firmName }}{% endblock %}
 
 {% block body %}
-    <div id="drop-portal"
+    <div class="container"
+         id="drop-portal"
          data-controller="secure-drop"
          data-secure-drop-recipients-value="{{ recipientKeys|json_encode }}"
-         data-secure-drop-upload-url-value="{{ path('app_secure_drop_upload', {'joinCode': joinCode}) }}">
+         data-secure-drop-upload-url-value="{{ path('secure_drop_upload', {'joinCode': joinCode}) }}"
+    >
 
-        <header>
-            <div>
-                <span>End-to-End Encrypted Secure Drop</span>
+        <div class="row">
+            <div class="col">
                 <h1>Submit Secure Files to {{ tenant.firmName }}</h1>
+                <h3>End-to-End Encrypted Secure Drop</h3>
                 <p>Your files are encrypted locally in your browser before being transmitted. No one, including our hosting providers, can read your documents.</p>
             </div>
-        </header>
+        </div>
 
-        {# Interactive Client Portal Form #}
-        <main>
-            <div id="upload-status-alert" style="display:none;" role="alert"></div>
+        <div class="row">
+            <div class="col">
+                <div id="upload-status-alert" style="display:none;" role="alert"></div>
 
-            <form data-action="submit->secure-drop#processUpload" data-secure-drop-target="form">
+                {# Interactive Client Portal Form #}
+                <form data-action="submit->secure-drop#processUpload" data-secure-drop-target="form">
 
-                {# Sender Identification Fields #}
-                <fieldset>
-                    <legend>Your Identification</legend>
-                    <div>
-                        <label for="sender-name">Your Full Name</label>
-                        <input type="text" id="sender-name" required data-secure-drop-target="senderName" placeholder="Jane Doe">
+                    {# Sender Identification Fields #}
+                    <fieldset>
+                        <legend>Your Identification</legend>
+                        <div>
+                            <label for="sender-name">Your Full Name</label>
+                            <input type="text" id="sender-name" required data-secure-drop-target="senderName" placeholder="Jane Doe">
+                        </div>
+                        <div>
+                            <label for="sender-email">Your Email Address</label>
+                            <input type="email" id="sender-email" required data-secure-drop-target="senderEmail" placeholder="jane.doe@example.com">
+                        </div>
+                    </fieldset>
+
+                    {# Secure Document Selection Zone #}
+                    <fieldset>
+                        <legend>Select Files</legend>
+                        <div>
+                            <label for="file-input">Choose file to encrypt and send</label>
+                            <input type="file" id="file-input" required data-secure-drop-target="fileInput">
+                            <p>Supported formats: PDF, DOCX, ZIP, JPG, PNG (Max 50MB)</p>
+                        </div>
+                    </fieldset>
+
+                    {# Interactive Upload Progress Tracking #}
+                    <div id="progress-container" style="display:none;" data-secure-drop-target="progressContainer">
+                        <label id="progress-label">Status: Initializing Cryptographic Handshake...</label>
+                        <progress max="100" value="0" data-secure-drop-target="progressBar"></progress>
+                        <span id="progress-percentage" data-secure-drop-target="progressPercent">0%</span>
                     </div>
+
                     <div>
-                        <label for="sender-email">Your Email Address</label>
-                        <input type="email" id="sender-email" required data-secure-drop-target="senderEmail" placeholder="jane.doe@example.com">
+                        <button type="submit" class="btn btn-primary" data-secure-drop-target="submitBtn">
+                            Encrypt & Upload Securely
+                        </button>
                     </div>
-                </fieldset>
-
-                {# Secure Document Selection Zone #}
-                <fieldset>
-                    <legend>Select Files</legend>
-                    <div>
-                        <label for="file-input">Choose file to encrypt and send</label>
-                        <input type="file" id="file-input" required data-secure-drop-target="fileInput">
-                        <p>Supported formats: PDF, DOCX, ZIP, JPG, PNG (Max 50MB)</p>
-                    </div>
-                </fieldset>
-
-                {# Interactive Upload Progress Tracking #}
-                <div id="progress-container" style="display:none;" data-secure-drop-target="progressContainer">
-                    <label id="progress-label">Status: Initializing Cryptographic Handshake...</label>
-                    <progress max="100" value="0" data-secure-drop-target="progressBar"></progress>
-                    <span id="progress-percentage" data-secure-drop-target="progressPercent">0%</span>
-                </div>
-
-                <div>
-                    <button type="submit" data-secure-drop-target="submitBtn">
-                        Encrypt & Upload Securely
-                    </button>
-                </div>
-
-            </form>
-        </main>
+                </form>
+            </div>
+        </div>
     </div>
 {% endblock %}
