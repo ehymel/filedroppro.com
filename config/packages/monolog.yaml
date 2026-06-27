@@ -78,12 +78,12 @@ when@prod:
                 formatter: monolog.formatter.json
 
             # --- SMS Configuration ---
-
-            sms_deduplicated:
-                type: deduplication
-                handler: custom_sms_service
-                level: critical
-
-            custom_sms_service:
-                type: service
-                id: App\Service\SmsCriticalHandler
+#
+#            sms_deduplicated:
+#                type: deduplication
+#                handler: custom_sms_service
+#                level: critical
+#
+#            custom_sms_service:
+#                type: service
+#                id: App\Service\SmsCriticalHandler
