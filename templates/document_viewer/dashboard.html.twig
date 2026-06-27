@@ -10,7 +10,7 @@
         <div class="row">
             <div class="col">
                 <span>Internal Secure Vault</span>
-                <h1>Encrypted Document Management</h1>
+                <h1>Document Management</h1>
                 <p>Access and unseal end-to-end encrypted items submitted by external clients.</p>
             </div>
         </div>
@@ -18,35 +18,51 @@
         <div class="row mb-5">
             <div class="col">
                 {# Session Authentication Interceptor Modals #}
-                <dialog id="crypto-session-dialog" data-document-viewer-target="cryptoModal">
-                    <div>
-                        <h3>Unlock Security Workspace</h3>
-                        <p>Enter your Master Password to locally derive your private key and unlock files during this session.</p>
-                        <div>
-                            <label for="vault-session-password">Master Password</label>
-                            <input type="password" id="vault-session-password" data-document-viewer-target="masterPasswordInput" placeholder="••••••••">
+                <div class="modal fade" id="crypto-session-modal" tabindex="-1" aria-labelledby="cryptoModalLabel" aria-hidden="true" data-document-viewer-target="cryptoModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cryptoModalLabel">Unlock Security Workspace</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Your password is required to unlock files during this session.</p>
+                                <div class="form-floating mb-3">
+                                    <input type="password" id="vault-session-password" class="form-control"
+                                           placeholder="Password"
+                                           data-document-viewer-target="masterPasswordInput"
+                                    >
+                                    <label for="vault-session-password">Password</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        data-action="click->document-viewer#initializeCryptoSession"
+                                >
+                                    Unlock Workspace Memory
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" data-action="click->document-viewer#initializeCryptoSession">
-                            Unlock Workspace Memory
-                        </button>
                     </div>
-                </dialog>
+                </div>
             </div>
         </div>
 
         {% for client in clients %}
         <div class="row mb-5">
             <div class="col-9">
-                <h2>Client: {{ client.clientName }}</h2>
+                <h2>Documents uploaded from <span style="text-decoration: underline">{{ client.clientName }}</span></h2>
                 <p>Client records and encrypted transfers linked to this profile.</p>
 
-                <table class="table table-striped">
+                <table class="table table-striped sortable">
                     <thead>
                     <tr>
                         <th>File Reference Path</th>
-                        <th>Creation Details</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Uploaded date</th>
+                        <th class="no-sort">Status</th>
+                        <th class="no-sort">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -68,9 +84,9 @@
                                 </div>
                             </td>
                             <td>
-                                Uploaded: {{ doc.createdAt|date('Y-m-d H:i:s') }}
+                                {{ doc.createdAt|date('M d, Y') }}
                                 <br />
-                                By: {{ doc.client.clientName }}
+                                {{ doc.createdAt|date('g:i a') }}
                             </td>
                             <td>Encrypted</td>
                             <td>
@@ -93,10 +109,11 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="3">No documents uploaded for this client yet.</td>
+                            <td>No documents uploaded for this client yet.</td>
+                            <td colspan="2"></td>
                             <td>
-                                <a href="{{ path('internal_requests_manage') }}" class="btn btn-sm btn-primary">
-                                    Invite Client to Upload Documents
+                                <a href="{{ path('internal_requests_manage', { 'client_id': client.id }) }}" class="btn btn-sm btn-primary">
+                                    Invite this client to upload documents
                                 </a>
                             </td>
                         </tr>

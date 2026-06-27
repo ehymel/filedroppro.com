@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { Modal } from 'bootstrap';
 
 /**
  * Document Viewer Controller
@@ -14,6 +15,7 @@ export default class extends Controller {
     connect() {
         // Clear runtime transient variables from local memory
         this.unlockedPrivateKey = null;
+        this.modal = new Modal(this.cryptoModalTarget);
     }
 
     /**
@@ -25,8 +27,8 @@ export default class extends Controller {
             return;
         }
 
-        // Show the native HTML5 dialog modal to capture password context
-        this.cryptoModalTarget.showModal();
+        // Show the Bootstrap modal to capture password context
+        this.modal.show();
         this.cachedAction = pendingAction;
     }
 
@@ -84,7 +86,7 @@ export default class extends Controller {
 
             // Clean up UI state and execute the cached download action
             this.masterPasswordInputTarget.value = '';
-            this.cryptoModalTarget.close();
+            this.modal.hide();
 
             if (this.cachedAction) {
                 this.cachedAction();

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Client;
 use App\Entity\DropRequest;
 use App\Entity\User;
 use App\Form\DropRequestFormType;
@@ -11,7 +12,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -34,6 +34,10 @@ class DropRequestController extends AbstractController
 
         // 1. Handle New Request Form
         $dropRequest = new DropRequest();
+        if ($request->isMethod('GET') && $request->query->get('client_id')) {
+            $client = $this->em->getRepository(Client::class)->find($request->query->get('client_id'));
+            $dropRequest->clientName = $client->clientName;
+        }
         $form = $this->createForm(DropRequestFormType::class, $dropRequest);
         $form->handleRequest($request);
 

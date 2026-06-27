@@ -70,7 +70,7 @@
         {% set currentRoute = app.request.attributes.get('_route') %}
         <nav class="navbar navbar-expand-lg navbar-light">
             <button class="navbar-toggler" type="button"
-                    data-toggle="collapse" data-target="#navbarNavAltMarkup"
+                data-toggle="collapse" data-target="#navbarNavAltMarkup"
             >
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -79,12 +79,12 @@
                     <li class="nav-item{{ currentRoute matches '{^drop}' ? ' active bold'}}">
                         <a class="nav-link" href="{{ path('drop_documents_dashboard') }}">Document Viewer</a>
                     </li>
-                    <li class="nav-item{{ currentRoute matches '{^internal}' ? ' active bold'}}">
+                    <li class="nav-item{{ currentRoute matches '{^internal_requests}' ? ' active bold'}}">
                         <a class="nav-link" href="{{ path('internal_requests_manage') }}">Manage Client Drop Requests</a>
                     </li>
                     {% if is_granted('ROLE_ADMIN') %}
-                    <li class="nav-item{{ currentRoute matches '{^admin_(?![invitation])}' ? ' active bold'}}">
-                        <a class="nav-link" href="{{ path('admin_invitation_list') }}">Manage Internal Staff</a>
+                    <li class="nav-item{{ currentRoute matches '{^internal_invitations}' ? ' active bold'}}">
+                        <a class="nav-link" href="{{ path('internal_invitations_list') }}">Manage Internal Staff</a>
                     </li>
                     {% endif %}
                 </ul>

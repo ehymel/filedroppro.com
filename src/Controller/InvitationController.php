@@ -22,7 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * Handles the secure administrative invitation workflow.
  * Locked down strictly to Tenant Administrators.
  */
-#[Route('/admin/invitation', name: 'admin_invitation_')]
+#[Route('/internal/invitation', name: 'internal_invitations_')]
 #[IsGranted('ROLE_ADMIN')]
 class InvitationController extends AbstractController
 {
@@ -51,7 +51,7 @@ class InvitationController extends AbstractController
 
             if ($existingUser) {
                 $this->addFlash('danger', sprintf('A registered user with the email "%s" already exists on the platform.', $email));
-                return $this->redirectToRoute('admin_invitation_list');
+                return $this->redirectToRoute('internal_invitations_list');
             }
 
             // Guard 2: Check if there's already an active, unused invitation outstanding for this email
@@ -62,7 +62,7 @@ class InvitationController extends AbstractController
 
             if ($existingInvitation && $existingInvitation->expiresAt > new \DateTimeImmutable()) {
                 $this->addFlash('danger', sprintf('An active invitation is already outstanding for %s.', $email));
-                return $this->redirectToRoute('admin_invitation_list');
+                return $this->redirectToRoute('internal_invitations_list');
             }
 
             // Generate cryptographically secure invitation token
@@ -80,7 +80,7 @@ class InvitationController extends AbstractController
             $this->invitationRepository->save($invitation, true);
             $this->sendInvitationEmail($invitation);
 
-            return $this->redirectToRoute('admin_invitation_list');
+            return $this->redirectToRoute('internal_invitations_list');
         }
 
         // 2. Fetch outstanding invitations
@@ -104,12 +104,12 @@ class InvitationController extends AbstractController
         $tokenName = 'reinvite_invitation_' . $invitation->id->toString();
         if (!$this->isCsrfTokenValid($tokenName, $request->request->get('_token'))) {
             $this->addFlash('danger', 'Invalid security token. Invitation renewal aborted.');
-            return $this->redirectToRoute('admin_invitation_list');
+            return $this->redirectToRoute('internal_invitations_list');
         }
 
         if ($invitation->used) {
             $this->addFlash('danger', 'This invitation has already been accepted. You cannot renew or resend it.');
-            return $this->redirectToRoute('admin_invitation_list');
+            return $this->redirectToRoute('internal_invitations_list');
         }
 
         // Generate a new cryptographically secure token and bump expiration out another 48 hours
@@ -122,7 +122,7 @@ class InvitationController extends AbstractController
         $this->addFlash('success', sprintf('The invitation link for %s has been updated and extended.', $invitation->email));
 
         $this->sendInvitationEmail($invitation);
-        return $this->redirectToRoute('admin_invitation_list');
+        return $this->redirectToRoute('internal_invitations_list');
     }
 
     #[Route('/revoke/{id}', name: 'revoke', methods: ['POST'])]
@@ -136,7 +136,7 @@ class InvitationController extends AbstractController
             $this->addFlash('danger', 'Invalid security token. Revocation failed.');
         }
 
-        return $this->redirectToRoute('admin_invitation_list');
+        return $this->redirectToRoute('internal_invitations_list');
     }
 
     /**
