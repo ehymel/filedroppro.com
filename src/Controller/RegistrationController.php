@@ -65,10 +65,6 @@ class RegistrationController extends AbstractController
             'has_invitation' => $hasInvitation,
         ]);
 
-        if ($hasInvitation && $invitation) {
-            $form->get('email')->setData($invitation->email);
-        }
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

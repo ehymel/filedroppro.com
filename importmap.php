@@ -42,4 +42,5 @@ return [
     'dropzone' => ['version' => '6.0.0-beta.2'],
     'dropzone/dist/dropzone.css' => ['version' => '6.0.0-beta.2', 'type' => 'css'],
     'just-extend' => ['version' => '5.1.1'],
+    'sortablejs' => ['version' => '1.15.7'],
 ];

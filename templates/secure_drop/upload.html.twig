@@ -15,23 +15,43 @@
                 <h1>Securely Send Files to {{ tenant.firmName }}</h1>
                 <h3>End-to-End Encrypted Secure File Drop</h3>
                 <p>Your files are encrypted locally in your browser before being transmitted. No one, including our hosting providers, can read your documents.</p>
+
+                {# Personalized Instructions block for targeted file requests #}
+                {% if dropRequest is defined and dropRequest is not null %}
+                    <div data-secure-drop-target="instructionsContainer">
+                        <h3>Document Request for {{ dropRequest.clientName }}</h3>
+                        <p>Requested by: <strong>{{ dropRequest.createdBy.email }}</strong></p>
+                        {% if dropRequest.instructions %}
+                            <blockquote>
+                                <p>"{{ dropRequest.instructions }}"</p>
+                            </blockquote>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
 
         <div class="row">
-            <div class="col-7">
+            <div class="col-5">
                 {% include 'flash_messages.html.twig' %}
 
                 {# Interactive Client Portal Form #}
                 {{ form_start(form, { 'attr': { 'data-action': 'submit->secure-drop#processUpload', 'data-secure-drop-target': 'form' } }) }}
                     {# Sender Identification Fields #}
-                    {{ form_row(form.senderName, { 'attr': {'data-secure-drop-target': 'senderName' } }) }}
-                    {{ form_row(form.senderEmail, { 'attr': {'data-secure-drop-target': 'senderEmail' } }) }}
+                    {{ form_row(form.senderName, {
+                        'attr': {
+                            'data-secure-drop-target': 'senderName'
+                        } }
+                    ) }}
+                    {{ form_row(form.senderEmail, {
+                        'attr': {
+                            'data-secure-drop-target': 'senderEmail'
+                        } }
+                    ) }}
 
                     {# Secure Document Selection Zone #}
                     <fieldset>
                         <legend>Select Files</legend>
-
                         <div>
                             <label for="file-input">Choose file to encrypt and send</label>
                             <input type="file" id="file-input" required data-secure-drop-target="fileInput">
@@ -46,11 +66,13 @@
                         <span id="progress-percentage" data-secure-drop-target="progressPercent">0%</span>
                     </div>
 
-                    <div>
-                        <button type="submit" class="btn btn-primary" data-secure-drop-target="submitBtn">
-                            Encrypt & Upload Securely
-                        </button>
-                    </div>
+                    {% if dropRequest is defined and dropRequest is not null %}
+                        <input type="hidden" data-secure-drop-target="reqToken" value="{{ dropRequest.token }}">
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary" data-secure-drop-target="submitBtn">
+                        Encrypt & Upload Securely
+                    </button>
                 {{ form_end(form) }}
             </div>
         </div>

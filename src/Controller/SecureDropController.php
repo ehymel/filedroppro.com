@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Client;
 use App\Entity\Document;
 use App\Entity\DocumentKey;
+use App\Entity\DropRequest;
 use App\Entity\Tenant;
 use App\Entity\User;
 use App\Form\FileDropFormType;
@@ -29,8 +30,10 @@ class SecureDropController extends AbstractController
      * Renders the public file drop interface for a specific Tenant.
      */
     #[Route('/{joinCode}', name: 'portal', methods: ['GET'])]
-    public function dropPortal(string $joinCode): Response
+    public function dropPortal(string $joinCode, Request $request): Response
     {
+        $form = $this->createForm(FileDropFormType::class);
+
         // 1. Locate the target Tenant
         $tenant = $this->em->getRepository(Tenant::class)->findOneBy([
             'joinCode' => strtoupper(trim($joinCode))
@@ -65,18 +68,35 @@ class SecureDropController extends AbstractController
             ]);
         }
 
+        // 3. Handle Drop Request Tracking Token
+        $reqToken = $request->query->get('req');
+        $dropRequest = null;
+
+        if ($reqToken) {
+            // Only populate the form if the request is still pending
+            $dropRequest = $this->em->getRepository(DropRequest::class)->findOneBy([
+                'token' => $reqToken,
+                'tenant' => $tenant,
+//                'status' => 'pending'
+            ]);
+
+            $form->get('senderName')->setData($dropRequest->clientName);
+            $form->get('senderEmail')->setData($dropRequest->clientEmail);
+        }
+
         return $this->render('secure_drop/upload.html.twig', [
             'tenant' => $tenant,
-            'form' => $this->createForm(FileDropFormType::class),
+            'form' => $form,
             'recipientKeys' => $recipientKeys,
-            'joinCode' => $joinCode
+            'joinCode' => $joinCode,
+            'dropRequest' => $dropRequest
         ]);
     }
 
     /**
      * Accepts encrypted raw binary file chunks, maps envelope keys, and registers records.
      */
-    #[Route('/drop/{joinCode}/upload', name: 'upload', methods: ['POST'])]
+    #[Route('/upload/{joinCode}', name: 'upload', methods: ['POST'])]
     public function handleUpload(string $joinCode, Request $request): JsonResponse
     {
         $tenant = $this->em->getRepository(Tenant::class)->findOneBy([
@@ -92,6 +112,7 @@ class SecureDropController extends AbstractController
         $senderEmail = $request->request->get('senderEmail');
         $iv = $request->request->get('iv');
         $wrappedKeysJson = $request->request->get('wrappedKeys'); // Maps userId -> wrappedKeyHex
+        $reqToken = $request->request->get('reqToken');
 
         /** @var UploadedFile|null $file */
         $file = $request->files->get('encryptedFile');
@@ -138,8 +159,9 @@ class SecureDropController extends AbstractController
 
         // 5. Build individual DocumentKeys for each recipient
         foreach ($wrappedKeys as $userId => $wrappedKeyHex) {
+            /** @var User $user */
             $user = $this->em->getRepository(User::class)->find($userId);
-            if ($user && $user->getTenant() === $tenant) {
+            if ($user && $user->tenant === $tenant) {
                 $documentKey = new DocumentKey();
                 $documentKey->document = $document;
                 $documentKey->user = $user;
@@ -149,6 +171,18 @@ class SecureDropController extends AbstractController
 
                 // Automatically assign the user to have permanent access to this auto-created Client
                 $client->addUser($user);
+            }
+        }
+
+        // 6. Update Drop Request Status if linked
+        if ($reqToken) {
+            $dropRequest = $this->em->getRepository(DropRequest::class)->findOneBy([
+                'token' => $reqToken,
+                'tenant' => $tenant
+            ]);
+
+            if ($dropRequest && $dropRequest->status === 'pending') {
+                $dropRequest->status = 'fulfilled';
             }
         }
 

@@ -15,7 +15,8 @@ export default class extends Controller {
         'submitBtn',
         'progressContainer',
         'progressBar',
-        'progressPercent'
+        'progressPercent',
+        'reqToken'
     ];
 
     static values = {
@@ -32,6 +33,8 @@ export default class extends Controller {
         const file = this.fileInputTarget.files[0];
         const name = this.senderNameTarget.value;
         const email = this.senderEmailTarget.value;
+
+        console.log(this.uploadUrlValue, file, name, email);
 
         if (!file || !name || !email) {
             this.updateStatus('Please fill in all fields and select a file to transmit.', 'error');
@@ -102,6 +105,11 @@ export default class extends Controller {
             formData.append('senderEmail', email);
             formData.append('iv', this.arrayBufferToHex(iv));
             formData.append('wrappedKeys', JSON.stringify(wrappedKeys));
+
+            // Include the hidden request token so the server can fulfill the DropRequest entity
+            if (this.hasReqTokenTarget) {
+                formData.append('reqToken', this.reqTokenTarget.value);
+            }
 
             // Append raw binary encrypted blob
             const encryptedBlob = new Blob([encryptedFileBuffer], { type: 'application/octet-stream' });
