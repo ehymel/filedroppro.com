@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Security;
 
 use App\Repository\UserRepository;
 use App\Repository\WebauthnCredentialRepository;
