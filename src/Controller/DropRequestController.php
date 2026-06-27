@@ -60,7 +60,7 @@ class DropRequestController extends AbstractController
             ['createdAt' => 'DESC']
         );
 
-        return $this->render('secure_drop/request_manage.html.twig', [
+        return $this->render('drop/request_manage.html.twig', [
             'form' => $form->createView(),
             'requests' => $requests,
             'tenant' => $tenant,
@@ -106,7 +106,7 @@ class DropRequestController extends AbstractController
         $sender = $dropRequest->createdBy;
 
         $dropUrl = $this->generateUrl(
-            'app_secure_drop_portal',
+            'drop_portal',
             [
                 'joinCode' => $tenant->joinCode,
                 'req' => $dropRequest->token // Pass the tracker token in query string

@@ -21,7 +21,7 @@ use Symfony\Component\Uid\Uuid;
 /**
  * Manages public, zero-login secure document drops for external clients.
  */
-#[Route('/drop', name: 'secure_drop_')]
+#[Route('/drop', name: 'drop_')]
 class SecureDropController extends AbstractController
 {
     public function __construct(private readonly EntityManagerInterface $em) {}
@@ -63,7 +63,7 @@ class SecureDropController extends AbstractController
         }
 
         if (empty($recipientKeys)) {
-            return $this->render('secure_drop/error.html.twig', [
+            return $this->render('drop/error.html.twig', [
                 'error' => 'This secure drop zone is temporarily offline. No security credentials have been configured.'
             ]);
         }
@@ -84,7 +84,7 @@ class SecureDropController extends AbstractController
             $form->get('senderEmail')->setData($dropRequest->clientEmail);
         }
 
-        return $this->render('secure_drop/upload.html.twig', [
+        return $this->render('drop/upload.html.twig', [
             'tenant' => $tenant,
             'form' => $form,
             'recipientKeys' => $recipientKeys,
