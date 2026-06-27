@@ -7,6 +7,7 @@ use App\Entity\Document;
 use App\Entity\DocumentKey;
 use App\Entity\Tenant;
 use App\Entity\User;
+use App\Form\FileDropFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -66,6 +67,7 @@ class SecureDropController extends AbstractController
 
         return $this->render('secure_drop/upload.html.twig', [
             'tenant' => $tenant,
+            'form' => $this->createForm(FileDropFormType::class),
             'recipientKeys' => $recipientKeys,
             'joinCode' => $joinCode
         ]);
