@@ -14,4 +14,10 @@ class DefaultController extends AbstractController
     {
         return $this->render('main/homepage.html.twig');
     }
+
+    #[Route(path: '/unauthorized', name: 'unauthorized')]
+    public function unauthorized(): Response
+    {
+        return $this->render('security/unauthorized.html.twig');
+    }
 }

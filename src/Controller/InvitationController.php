@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Invitation;
-use App\Entity\User;
 use App\Form\InvitationFormType;
 use App\Repository\InvitationRepository;
 use App\Repository\UserRepository;
@@ -35,9 +34,11 @@ class InvitationController extends AbstractController
     #[Route('/', name: 'list', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
     {
-        /** @var User $admin */
-        $admin = $this->getUser();
-        $tenant = $admin->tenant;
+        $tenant = $this->getUser()->tenant;
+        if (!$tenant) {
+            $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
+            return $this->redirectToRoute('unauthorized');
+        }
 
         // 1. Configure the Invitation Form
         $form = $this->createForm(InvitationFormType::class);

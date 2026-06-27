@@ -25,6 +25,11 @@ class DocumentViewerController extends AbstractController
     #[Route('/', name: 'dashboard', methods: ['GET'])]
     public function dashboard(): Response
     {
+        if (!$this->getUser()->tenant) {
+            $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
+            return $this->redirectToRoute('unauthorized');
+        }
+
         // Fetch clients belonging to this tenant
         // Note: Our MultiTenant SQL Filter automatically enforces tenant boundaries here.
         return $this->render('document_viewer/dashboard.html.twig', [
@@ -39,6 +44,11 @@ class DocumentViewerController extends AbstractController
     #[Route('/download-payload/{id}', name: 'payload', methods: ['GET'])]
     public function downloadPayload(Document $document): Response
     {
+        if (!$this->getUser()->tenant) {
+            $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
+            return $this->redirectToRoute('unauthorized');
+        }
+
         // Security Check: Verify that this document belongs to the active user's tenant
         if ($document->client->tenant !== $this->getUser()->tenant) {
             throw $this->createAccessDeniedException('Unauthorized tenant metadata matching block.');

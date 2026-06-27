@@ -1,0 +1,14 @@
+{% extends 'bundles/TwigBundle/Exception/_error.html.twig' %}
+
+{% block body %}
+    <div class="container cols-8">
+        <h1>Access Denied</h1>
+
+        <p>
+            You don't have permission to access this page. If you think this is
+            an error, contact your administrator.
+        </p>
+
+        <a href="{{ path('homepage') }}">Return to homepage</a>
+    </div>
+{% endblock %}

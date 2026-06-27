@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Client;
 use App\Entity\DropRequest;
-use App\Entity\User;
 use App\Form\DropRequestFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -28,9 +27,12 @@ class DropRequestController extends AbstractController
     #[Route('/', name: 'manage', methods: ['GET', 'POST'])]
     public function manage(Request $request): Response
     {
-        /** @var User $user */
-        $user = $this->getUser();
-        $tenant = $user->tenant;
+        $tenant = $this->getUser()->tenant;
+
+        if (!$tenant) {
+            $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
+            return $this->redirectToRoute('unauthorized');
+        }
 
         // 1. Handle New Request Form
         $dropRequest = new DropRequest();

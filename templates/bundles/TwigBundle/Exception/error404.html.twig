@@ -1,0 +1,14 @@
+{% extends 'bundles/TwigBundle/Exception/_error.html.twig' %}
+
+{% block body %}
+    <div class="container cols-8">
+        <h1>Page not found</h1>
+
+        <p>
+            The requested page couldn't be located. Check for any URL
+            misspelling.
+        </p>
+
+        <a href="{{ path('homepage') }}">Return to homepage</a>
+    </div>
+{% endblock %}

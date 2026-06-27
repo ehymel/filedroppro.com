@@ -1,0 +1,19 @@
+{% extends 'bundles/TwigBundle/Exception/_error.html.twig' %}
+
+{% block body %}
+    <div class="container cols-8">
+        <h1 class="text-danger">There has been an error.</h1>
+
+        <p class="lead">
+            Please report the following to your administrator:
+            <br><br>
+            {{ status_code }}: {{ status_text }}
+            <br>
+            In {{ exception.file }}: Line {{ exception.line }}
+            <br>
+            {{ exception.message }}
+        </p>
+
+        <a href="{{ path('homepage') }}">Return to homepage</a>
+    </div>
+{% endblock %}
