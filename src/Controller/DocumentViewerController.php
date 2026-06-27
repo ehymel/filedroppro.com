@@ -78,4 +78,43 @@ class DocumentViewerController extends AbstractController
             'originalExtension' => pathinfo($document->originalFileName ?? $document->filePath, PATHINFO_EXTENSION),
         ]);
     }
+
+    #[Route('/delete/{id}', name: 'delete', methods: ['POST', 'DELETE'])]
+    public function delete(Document $document): Response
+    {
+        // Security Check: Verify that this document belongs to the active user's tenant
+        if ($document->client->tenant !== $this->getUser()->tenant) {
+            throw $this->createAccessDeniedException('Unauthorized tenant metadata matching block.');
+        }
+
+        $secureDirectory = $this->getParameter('kernel.project_dir') . '/var/secure_uploads';
+        $filePath = $secureDirectory . '/' . $document->filePath;
+
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $this->em->remove($document);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Document deleted successfully.');
+
+        return $this->redirectToRoute('drop_documents_dashboard');
+    }
+
+    #[Route('/update-note/{id}', name: 'update_note', methods: ['POST'])]
+    public function updateNote(Document $document, \Symfony\Component\HttpFoundation\Request $request): JsonResponse
+    {
+        if ($document->client->tenant !== $this->getUser()->tenant) {
+            return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $document->note = $data['note'] ?? '';
+
+        $this->em->persist($document);
+        $this->em->flush();
+
+        return new JsonResponse(['success' => true, 'note' => $document->note]);
+    }
 }

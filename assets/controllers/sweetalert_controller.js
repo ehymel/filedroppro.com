@@ -15,7 +15,7 @@ export default class extends Controller {
         const ct = event.currentTarget;
 
         Swal.fire({
-            title: this.titleValue || null,
+            title: this.titleValue || 'Are you sure?',
             text: 'This action is not reversible.',
             icon: 'warning',
             showCancelButton: true,
@@ -24,33 +24,58 @@ export default class extends Controller {
             confirmButtonText: 'Yes, delete it!',
             showLoaderOnConfirm: true,
             preConfirm: () => {
-                this.delete(ct);
-            }
+                return this.delete(ct);
+            },
+            allowOutsideClick: () => !Swal.isLoading()
         });
     }
 
     async delete(ct) {
         // if clicked element provides a different delete URL, use it
+        let url = this.deleteUrlValue;
         if (ct && ct.dataset.url) {
-            this.deleteUrlValue = ct.dataset.url;
+            url = ct.dataset.url;
+        }
+
+        if (!url) {
+            console.error('No delete URL provided');
+            return;
         }
 
         if (!this.submitAsyncValue) {
-            window.location.replace(this.deleteUrlValue);
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            document.body.appendChild(form);
+            form.submit();
             return;
         }
 
         // otherwise, submit async
-        const response = await fetch(this.deleteUrlValue, {
-            method: 'DELETE',
-        });
+        try {
+            const response = await fetch(url, {
+                method: 'DELETE',
+            });
 
-        this.dispatch('async:deleted', {
-            detail: { response },   // this option not needed here, but could be useful to have in different scenario
-        });
+            this.dispatch('async:deleted', {
+                detail: { response },
+            });
 
-        if (response.status === 200 || response.status === 204) {
-            window.location.replace(this.listUrlValue)
+            if (response.ok) {
+                if (this.listUrlValue) {
+                    window.location.replace(this.listUrlValue);
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                Swal.showValidationMessage(
+                    `Request failed: ${response.statusText}`
+                );
+            }
+        } catch (error) {
+            Swal.showValidationMessage(
+                `Request failed: ${error}`
+            );
         }
     }
 

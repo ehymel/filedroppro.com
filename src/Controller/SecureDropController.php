@@ -133,13 +133,13 @@ class SecureDropController extends AbstractController
         // Ensures standard SaaS organizational structure remains completely clean
         $client = $this->em->getRepository(Client::class)->findOneBy([
             'tenant' => $tenant,
-            'clientName' => sprintf('Drop Box: %s', $senderName)
+            'clientName' => $senderName
         ]);
 
         if (!$client) {
             $client = new Client();
             $client->tenant = $tenant;
-            $client->clientName = sprintf('Drop Box: %s', $senderName);
+            $client->clientName = $senderName;
             $this->em->persist($client);
         }
 

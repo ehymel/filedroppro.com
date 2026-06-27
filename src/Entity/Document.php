@@ -36,14 +36,14 @@ class Document extends MappedSuperclassBase
     #[Assert\NotBlank]
     public ?string $filePath = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(nullable: true)]
     public ?string $originalFileName = null;
 
     /**
      * The initialization vector (IV) used in AES-GCM encryption.
      * This is a non-secret required to kick off the client-side decryption ceremony.
      */
-    #[ORM\Column(length: 255)]
+    #[ORM\Column]
     #[Assert\NotBlank]
     public ?string $iv = null;
 
@@ -52,4 +52,7 @@ class Document extends MappedSuperclassBase
      */
     #[ORM\OneToMany(targetEntity: DocumentKey::class, mappedBy: 'document', cascade: ['persist', 'remove'])]
     public Collection $documentKeys;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    public ?string $note = null;
 }

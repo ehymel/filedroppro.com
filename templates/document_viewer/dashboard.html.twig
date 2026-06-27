@@ -36,36 +36,69 @@
 
         {% for client in clients %}
         <div class="row mb-5">
-            <div class="col-8">
-                <h2>{{ client.clientName }}</h2>
+            <div class="col-9">
+                <h2>Client: {{ client.clientName }}</h2>
                 <p>Client records and encrypted transfers linked to this profile.</p>
 
                 <table class="table table-striped">
                     <thead>
                     <tr>
                         <th>File Reference Path</th>
-                        <th>Status Matrix</th>
+                        <th>Creation Details</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for doc in client.documents %}
                         <tr>
-                            <th>{{ doc.filePath }}</th>
-                            <td>Encrypted At Rest</td>
+                            <td>
+                                <span class="bold">{{ doc.filePath }}</span>
+                                <div data-controller="document-note"
+                                     data-document-note-url-value="{{ path('drop_documents_update_note', {'id': doc.id.toString()}) }}">
+                                    <div data-document-note-target="display" class="mb-1">
+                                        <span style="text-decoration: underline">Note:</span> {{ doc.note|default('No note added.') }}
+                                        <a href="#" data-action="click->document-note#toggle"><span class="fa fa-edit"></span></a>
+                                    </div>
+                                    <div data-document-note-target="form" class="d-none mt-2">
+                                        <textarea class="form-control mb-2" data-document-note-target="input">{{ doc.note }}</textarea>
+                                        <button class="btn btn-sm btn-success" data-action="click->document-note#save">Save</button>
+                                        <button class="btn btn-sm btn-link" data-action="click->document-note#toggle">Cancel</button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                Uploaded: {{ doc.createdAt|date('Y-m-d H:i:s') }}
+                                <br />
+                                By: {{ doc.client.clientName }}
+                            </td>
+                            <td>Encrypted</td>
                             <td>
                                 <button class="btn btn-sm btn-primary" type="button"
                                         data-action="click->document-viewer#decryptAndDownload"
                                         data-document-id="{{ doc.id.toString() }}"
                                         data-download-url="{{ path('drop_documents_payload', {'id': doc.id.toString()}) }}"
                                         data-metadata-url="{{ path('drop_documents_metadata', {'id': doc.id.toString()}) }}">
-                                    Decrypt & Open
+                                    Decrypt & Download
+                                </button>
+
+                                <button class="btn btn-sm btn-danger" type="button"
+                                        data-controller="sweetalert"
+                                        data-action="click->sweetalert#remove"
+                                        data-sweetalert-title-value="Permanently delete document?"
+                                        data-sweetalert-delete-url-value="{{ path('drop_documents_delete', {'id': doc.id.toString()}) }}">
+                                    Permanently Delete
                                 </button>
                             </td>
                         </tr>
                     {% else %}
                         <tr>
                             <td colspan="3">No documents uploaded for this client yet.</td>
+                            <td>
+                                <a href="{{ path('internal_requests_manage') }}" class="btn btn-sm btn-primary">
+                                    Invite Client to Upload Documents
+                                </a>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
