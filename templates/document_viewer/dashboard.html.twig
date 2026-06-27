@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Document Vault - Internal Dashboard{% endblock %}
+
+{% block body %}
+    <div class="container" id="vault-dashboard"
+         data-controller="document-viewer"
+         data-document-viewer-encrypted-private-key-value="{{ encryptedPrivateKey }}"
+    >
+        <div class="row">
+            <div class="col">
+                <span>Internal Secure Vault</span>
+                <h1>Encrypted Document Management</h1>
+                <p>Access and unseal end-to-end encrypted items submitted by external clients.</p>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col">
+                {# Session Authentication Interceptor Modals #}
+                <dialog id="crypto-session-dialog" data-document-viewer-target="cryptoModal">
+                    <div>
+                        <h3>Unlock Security Workspace</h3>
+                        <p>Enter your Master Password to locally derive your private key and unlock files during this session.</p>
+                        <div>
+                            <label for="vault-session-password">Master Password</label>
+                            <input type="password" id="vault-session-password" data-document-viewer-target="masterPasswordInput" placeholder="••••••••">
+                        </div>
+                        <button type="button" data-action="click->document-viewer#initializeCryptoSession">
+                            Unlock Workspace Memory
+                        </button>
+                    </div>
+                </dialog>
+            </div>
+        </div>
+
+        {% for client in clients %}
+        <div class="row mb-5">
+            <div class="col-8">
+                <h2>{{ client.clientName }}</h2>
+                <p>Client records and encrypted transfers linked to this profile.</p>
+
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>File Reference Path</th>
+                        <th>Status Matrix</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for doc in client.documents %}
+                        <tr>
+                            <th>{{ doc.filePath }}</th>
+                            <td>Encrypted At Rest</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" type="button"
+                                        data-action="click->document-viewer#decryptAndDownload"
+                                        data-document-id="{{ doc.id.toString() }}"
+                                        data-download-url="{{ path('drop_documents_payload', {'id': doc.id.toString()}) }}"
+                                        data-metadata-url="{{ path('drop_documents_metadata', {'id': doc.id.toString()}) }}">
+                                    Decrypt & Open
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3">No documents uploaded for this client yet.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+            <p>No client drop-boxes registered inside this tenant structure yet.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

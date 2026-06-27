@@ -36,6 +36,9 @@ class Document extends MappedSuperclassBase
     #[Assert\NotBlank]
     public ?string $filePath = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    public ?string $originalFileName = null;
+
     /**
      * The initialization vector (IV) used in AES-GCM encryption.
      * This is a non-secret required to kick off the client-side decryption ceremony.

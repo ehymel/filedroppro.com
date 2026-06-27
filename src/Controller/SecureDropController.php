@@ -116,6 +116,9 @@ class SecureDropController extends AbstractController
 
         /** @var UploadedFile|null $file */
         $file = $request->files->get('encryptedFile');
+        $originalNameWithEnc = $file->getClientOriginalName();
+        // Strip the ".enc" suffix we appended client-side
+        $originalFileName = preg_replace('/\.enc$/i', '', $originalNameWithEnc);
 
         if (!$senderName || !$senderEmail || !$iv || !$wrappedKeysJson || !$file) {
             return new JsonResponse(['error' => 'Missing required security parameters.'], Response::HTTP_BAD_REQUEST);
@@ -155,6 +158,7 @@ class SecureDropController extends AbstractController
         $document->client = $client;
         $document->filePath = $safeFilename;
         $document->iv = $iv;
+        $document->originalFileName = $originalFileName;
         $this->em->persist($document);
 
         // 5. Build individual DocumentKeys for each recipient
