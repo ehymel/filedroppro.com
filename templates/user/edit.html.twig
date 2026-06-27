@@ -3,11 +3,12 @@
 {% block body %}
     <div class="container">
         <div class="row">
-            <div class="col-6" {{ stimulus_controller('sweetalert', {
-                submitAsync: true,
-                listUrl: app.request.headers.get('referer'),
-                deleteUrl: ''
-            }) }}
+            <div class="col-lg-6 col-sm-8 col-12"
+                {{ stimulus_controller('sweetalert', {
+                    submitAsync: true,
+                    listUrl: app.request.headers.get('referer'),
+                    deleteUrl: ''
+                }) }}
             >
                 <h1>Edit Account Information</h1>
 
