@@ -20,7 +20,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route(path: '/admin/user', name: 'admin_user_')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_SUPERUSER')]
 class UserAdminController extends AbstractController
 {
     public function __construct(private readonly UserRepository $userRepository)
