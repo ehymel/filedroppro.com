@@ -48,14 +48,9 @@
                 {{ form_row(registrationForm.firstName) }}
                 {{ form_row(registrationForm.lastName) }}
                 {{ form_row(registrationForm.plainPassword.first, {
-                    'label': 'Password',
-                    'row_attr': {'class': 'form-floating mb-2'},
                     'attr': {'data-registration-target': 'passwordInput'}
                 }) }}
-                {{ form_row(registrationForm.plainPassword.second, {
-                    'label': 'Repeat password',
-                    'row_attr': {'class': 'form-floating mb-2'},
-                }) }}
+                {{ form_row(registrationForm.plainPassword.second) }}
 
                 {# Mode selection: Only visible if not registering via invite #}
                 {% if not hasInvitation %}

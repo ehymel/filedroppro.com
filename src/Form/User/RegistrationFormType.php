@@ -49,8 +49,14 @@ class RegistrationFormType extends AbstractType
                 'invalid_message' => 'The password fields must match.',
                 'options' => ['attr' => ['class' => 'password-field']],
                 'required' => true,
-                'first_options'  => ['label' => 'Password'],
-                'second_options' => ['label' => 'Repeat Password'],
+                'first_options'  => [
+                    'label' => 'Password',
+                    'row_attr' => ['class' => 'form-floating mb-2']
+                ],
+                'second_options' => [
+                    'label' => 'Repeat Password',
+                    'row_attr' => ['class' => 'form-floating mb-2'],
+                    ],
                 'constraints' => [
                     new NotBlank(message: 'Please enter a password'),
                     new Length(min: 12, max: 4096, minMessage: 'For security, your password must be at least {{ limit }} characters')
