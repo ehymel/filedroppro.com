@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <div {{ stimulus_controller('modal-form') }}>
+        <div {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
             <button class="btn btn-primary btn-sm"
                     data-action="modal-form#open"
                     data-form-url="{{ path('internal_staff_invite') }}"
@@ -32,7 +32,7 @@
         </div>
 
         <div class="row mt-5">
-            <div class="col-md-8 col-12" data-reload-content-target="content">
+            <div class="col-md-8 col-12">
                 {# Visual Key Recovery/Copy Assist if just generated #}
                 {% if app.flashes('invitation_link') is not empty %}
                     {% for link in app.flashes('invitation_link') %}
@@ -47,9 +47,11 @@
                         </div>
                     {% endfor %}
                 {% endif %}
-
-                {{ include('flash_messages.html.twig') }}
-
+            </div>
+        </div>
+        {{ include('flash_messages.html.twig') }}
+        <div class="row">
+            <div class="col-md-8 col-12" data-reload-content-target="content">
                 {{ include('internal/_invitation_list.html.twig') }}
             </div>
         </div>

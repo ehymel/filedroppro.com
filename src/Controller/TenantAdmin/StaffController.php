@@ -9,6 +9,7 @@ use App\Repository\UserRepository;
 use Random\RandomException;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -74,13 +75,10 @@ class StaffController extends AbstractController
             $existingUser = $this->userRepository->findOneByEmail($email);
 
             if ($existingUser) {
-                $this->addFlash('danger', sprintf('A registered user with the email "%s" already exists on the platform.', $email));
-                if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
-                    return $this->render('internal/_invitation_form.html.twig', [
-                        'form' => $form,
-                    ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
-                }
-                return $this->redirectToRoute('internal_staff_list');
+                $form->get('email')->addError(
+                    new FormError('A registered user with the email "%s" already exists on the platform.', $email)
+                );
+                return new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
             // Guard 2: Check if there's already an active, unused invitation outstanding for this email
@@ -106,9 +104,11 @@ class StaffController extends AbstractController
             $this->invitationRepository->save($invitation, true);
             $this->sendInvitationEmail($invitation);
 
-            if ($form->isSubmitted()) {
+            if ($request->request->get('ajax')) {
                 return new Response(null, Response::HTTP_NO_CONTENT);
             }
+
+            return $this->redirectToRoute('internal_staff_list');
         }
 
         return $this->render('internal/_invitation_form.html.twig', [
