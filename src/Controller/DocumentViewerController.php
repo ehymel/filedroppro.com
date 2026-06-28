@@ -13,15 +13,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/drop/documents', name: 'drop_documents_')]
+#[Route('/internal/documents', name: 'internal_documents_')]
 #[IsGranted('ROLE_USER')]
 class DocumentViewerController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}
 
-    /**
-     * Renders the master dashboard listing clients and their encrypted documents.
-     */
     #[Route('/', name: 'dashboard', methods: ['GET'])]
     public function dashboard(): Response
     {
@@ -109,7 +106,7 @@ class DocumentViewerController extends AbstractController
 
         $this->addFlash('success', 'Document deleted successfully.');
 
-        return $this->redirectToRoute('drop_documents_dashboard');
+        return $this->redirectToRoute('internal_documents_dashboard');
     }
 
     #[Route('/update-note/{id}', name: 'update_note', methods: ['POST'])]

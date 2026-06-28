@@ -78,14 +78,14 @@
                 {% if app.user.tenant %}
                     <ul class="navbar-nav me-auto d-flex">
                         <li class="nav-item{{ currentRoute matches '{^drop}' ? ' active bold'}}">
-                            <a class="nav-link" href="{{ path('drop_documents_dashboard') }}">Document Viewer</a>
+                            <a class="nav-link" href="{{ path('internal_documents_dashboard') }}">Document Viewer</a>
                         </li>
                         <li class="nav-item{{ currentRoute matches '{^internal_requests}' ? ' active bold'}}">
                             <a class="nav-link" href="{{ path('internal_requests_manage') }}">Manage Client Drop Requests</a>
                         </li>
                         {% if is_granted('ROLE_ADMIN') %}
                         <li class="nav-item{{ currentRoute matches '{^internal_invitations}' ? ' active bold'}}">
-                            <a class="nav-link" href="{{ path('internal_invitations_list') }}">Manage Internal Staff</a>
+                            <a class="nav-link" href="{{ path('internal_staff_list') }}">Manage Internal Staff</a>
                         </li>
                         {% endif %}
                     </ul>

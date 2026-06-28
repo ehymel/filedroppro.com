@@ -71,7 +71,7 @@
                             <td>
                                 <span class="bold">{{ doc.filePath }}</span>
                                 <div data-controller="document-note"
-                                     data-document-note-url-value="{{ path('drop_documents_update_note', {'id': doc.id.toString()}) }}">
+                                     data-document-note-url-value="{{ path('internal_documents_update_note', {'id': doc.id.toString()}) }}">
                                     <div data-document-note-target="display" class="mb-1">
                                         <span style="text-decoration: underline">Note:</span> {{ doc.note|default('No note added.') }}
                                         <a href="#" data-action="click->document-note#toggle"><span class="fa fa-edit"></span></a>
@@ -93,8 +93,8 @@
                                 <button class="btn btn-sm btn-primary" type="button"
                                         data-action="click->document-viewer#decryptAndDownload"
                                         data-document-id="{{ doc.id.toString() }}"
-                                        data-download-url="{{ path('drop_documents_payload', {'id': doc.id.toString()}) }}"
-                                        data-metadata-url="{{ path('drop_documents_metadata', {'id': doc.id.toString()}) }}">
+                                        data-download-url="{{ path('internal_documents_payload', {'id': doc.id.toString()}) }}"
+                                        data-metadata-url="{{ path('internal_documents_metadata', {'id': doc.id.toString()}) }}">
                                     Decrypt & Download
                                 </button>
 
@@ -102,7 +102,7 @@
                                         data-controller="sweetalert"
                                         data-action="click->sweetalert#remove"
                                         data-sweetalert-title-value="Permanently delete document?"
-                                        data-sweetalert-delete-url-value="{{ path('drop_documents_delete', {'id': doc.id.toString()}) }}">
+                                        data-sweetalert-delete-url-value="{{ path('internal_documents_delete', {'id': doc.id.toString()}) }}">
                                     Permanently Delete
                                 </button>
                             </td>
