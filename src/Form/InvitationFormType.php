@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\Invitation;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -34,8 +35,7 @@ class InvitationFormType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            // Unmapped form so we can manually handle generation logic in the controller
-            'csrf_token_id' => 'invitation_form',
+            'data_class' => Invitation::class,
         ]);
     }
 }

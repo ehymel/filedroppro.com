@@ -19,12 +19,13 @@
             </div>
         </div>
 
-        <div {{ stimulus_controller('modal-form', {
-            formUrl: path('internal_staff_list', { form: 1 }),
-            hideFullPageOpenButton: true
-        }) }}>
-            <button class="btn btn-primary" data-action="modal-form#open">
-                Invite Internal Staff Member
+        <div {{ stimulus_controller('modal-form') }}>
+            <button class="btn btn-primary btn-sm"
+                    data-action="modal-form#open"
+                    data-form-url="{{ path('internal_staff_invite') }}"
+                    data-modal-title="Invite Internal Staff Member"
+            >
+                Invite Internal Staff Member <span class="fa fa-plus-circle"></span>
             </button>
 
             {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
@@ -32,7 +33,6 @@
 
         <div class="row mt-5">
             <div class="col-md-8 col-12" data-reload-content-target="content">
-                {{ include('flash_messages.html.twig') }}
                 {# Visual Key Recovery/Copy Assist if just generated #}
                 {% if app.flashes('invitation_link') is not empty %}
                     {% for link in app.flashes('invitation_link') %}
@@ -42,33 +42,16 @@
                             <div>
                                 <label for="shareable-link-input"></label>
                                 <input type="text" readonly value="{{ link }}" id="shareable-link-input">
-                                <button class="btn btn-sm btn-info ms-3" onclick="copyToClipboard(event)">Copy Link</button>
+                                <button class="btn btn-sm btn-info ms-3" onclick="navigator.clipboard.writeText({{ link }}); return false;">Copy Link</button>
                             </div>
                         </div>
                     {% endfor %}
                 {% endif %}
 
+                {{ include('flash_messages.html.twig') }}
+
                 {{ include('internal/_invitation_list.html.twig') }}
             </div>
         </div>
     </div>
-
-    <script>
-        function copyToClipboard(event) {
-            const btn = event.currentTarget;
-            const copyText = btn.previousElementSibling;
-            if (copyText && copyText.id === "shareable-link-input") {
-                copyText.select();
-                copyText.setSelectionRange(0, 99999); // For mobile devices
-                document.execCommand("copy");
-
-                // Text feedback change
-                const originalText = btn.textContent;
-                btn.textContent = "Copied!";
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                }, 2000);
-            }
-        }
-    </script>
 {% endblock %}

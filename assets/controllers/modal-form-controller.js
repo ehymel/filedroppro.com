@@ -12,43 +12,48 @@ export default class extends Controller {
 
     async open(event) {
         event.preventDefault();
+        const button = event.currentTarget;
+        const formUrl = button.dataset.formUrl || this.formUrlValue;
+        const modalTitle = button.dataset.modalTitle || 'Form';
+        const hideFullPage = button.dataset.hideFullPage || this.hideFullPageOpenButtonValue;
+
         this.modalBodyTarget.innerHTML = 'Loading...';
+        this.modalTarget.querySelector('.modal-title').innerText = modalTitle;
         this.modal = new Modal(this.modalTarget);
+        const params = new URLSearchParams({ ajax: 1});
         this.modal.show();
 
-        const url = new URL(this.formUrlValue, window.location.origin);
-        url.searchParams.set('ajax', '1');
+        this.currentFormUrl = formUrl;
 
-        let response = await fetch(url.toString());
+        let response = await fetch(`${formUrl}?${params.toString()}`);
         this.modalBodyTarget.innerHTML = await response.text();
-        if (this.hideFullPageOpenButtonValue) {
-            let fullPageBtn = document.querySelector('button#js-modal-fullpage-btn');
+
+        let fullPageBtn = this.modalTarget.querySelector('button#js-modal-fullpage-btn');
+        if (hideFullPage) {
             fullPageBtn.classList.add('d-none');
+        } else {
+            fullPageBtn.classList.remove('d-none');
         }
     }
 
     async submitForm(event) {
         event.preventDefault();
-        const form = event.target.closest('form') || this.modalBodyTarget.getElementsByTagName('form')[0];
-        let formData = new FormData(form);
-        formData.append('ajax', 1);
+        const form = this.modalBodyTarget.getElementsByTagName('form')[0];
+        let params = new FormData(form);
+        params.append('ajax', 1);
 
-        const url = new URL(this.formUrlValue, window.location.origin);
-        // url.searchParams.set('ajax', '1');
+        // for (let param in params.values()) {
+        //     console.log(param);
+        // }
 
-        let response = await fetch(url.toString(), {
+        let response = await fetch(this.currentFormUrl, {
             method: 'POST',
-            body: formData,
+            body: params,
         });
 
         if (response.status !== 422) {
-            const body = await response.text();
-            if (body.length > 0) {
-                this.dispatch('success', { detail: { content: body } });
-            } else {
-                this.dispatch('success');
-            }
             this.modal.hide();
+            this.dispatch('success');
         } else {
             this.modalBodyTarget.innerHTML = await response.text();
         }
@@ -57,6 +62,6 @@ export default class extends Controller {
     fullPage(event) {
         event.preventDefault();
         this.modal.hide();
-        document.location.href = this.formUrlValue;
+        document.location.href = this.currentFormUrl;
     }
 }

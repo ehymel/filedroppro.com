@@ -1,4 +1,5 @@
-<h3>Invite Internal Staff Member</h3>
+{{ include('flash_messages.html.twig') }}
+
 <p>Invitations grant bypass access to security-joining restrictions and
     lock new user configurations directly to your
     <span style="font-weight: bold; text-decoration: underline">{{ app.user.tenant.firmName }}</span>
@@ -8,9 +9,9 @@
     that have been uploaded to this site.
 </p>
 
-{{ form_start(invitationForm, { attr: { 'data-action': 'submit->modal-form#submitForm' } }) }}
-    {{ form_row(invitationForm.email) }}
+{{ form_start(form, { attr: { 'data-action': 'submit->modal-form#submitForm' } }) }}
+    {{ form_row(form.email) }}
     <button type="submit" class="btn btn-primary ms-4">
         Generate Secure Token and Send Email Invitation
     </button>
-{{ form_end(invitationForm) }}
+{{ form_end(form) }}
