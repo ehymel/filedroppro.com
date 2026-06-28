@@ -31,11 +31,6 @@
                         'data-action': 'submit->registration#handleSubmit'
                     }
                 }) }}
-                {# dummy fields to avoid email and password autofill by browser #}
-                <div style="position: absolute; left: -9999px; top: -9999px;" aria-hidden="true">
-                    <input type="text" name="temp_email_autofill" tabindex="-1" autocomplete="off">
-                    <input type="password" name="temp_password_autofill" tabindex="-1" autocomplete="off">
-                </div>
 
                 {# Scenario: User registering with a secure, locked invitation #}
                 {% if hasInvitation %}
