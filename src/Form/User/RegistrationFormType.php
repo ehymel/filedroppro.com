@@ -3,6 +3,7 @@
 namespace App\Form\User;
 
 use App\Entity\User;
+use App\Repository\TenantRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -22,6 +23,10 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 
 class RegistrationFormType extends AbstractType
 {
+    public function __construct(private readonly TenantRepository $tenantRepository)
+    {
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -124,6 +129,11 @@ class RegistrationFormType extends AbstractType
                     $firmName = trim((string) $form->get('firmName')->getData());
                     if (empty($firmName)) {
                         $form->get('firmName')->addError(new FormError('Please enter your Firm or Practice name.'));
+                    } else {
+                        $existingTenant = $this->tenantRepository->findOneBy(['firmName' => $firmName]);
+                        if ($existingTenant) {
+                            $form->get('firmName')->addError(new FormError('An organization with this name is already registered on our platform.'));
+                        }
                     }
                 }
 

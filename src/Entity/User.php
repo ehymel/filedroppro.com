@@ -93,6 +93,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
 
     #[ORM\ManyToOne(targetEntity: Tenant::class, inversedBy: 'users')]
     #[ORM\JoinColumn(nullable: true)]
+    #[Assert\Valid]
     public ?Tenant $tenant = null;
 
     /**
