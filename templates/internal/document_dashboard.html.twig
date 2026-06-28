@@ -15,36 +15,32 @@
             </div>
         </div>
 
-        <div class="row mb-5">
-            <div class="col">
-                {# Session Authentication Interceptor Modals #}
-                <div class="modal fade" id="crypto-session-modal" tabindex="-1" aria-labelledby="cryptoModalLabel" aria-hidden="true" data-document-viewer-target="cryptoModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="cryptoModalLabel">Unlock Security Workspace</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Your password is required to unlock files during this session.</p>
-                                <div class="form-floating mb-3">
-                                    <input type="password" id="vault-session-password" class="form-control"
-                                           placeholder="Password"
-                                           data-document-viewer-target="masterPasswordInput"
-                                    >
-                                    <label for="vault-session-password">Password</label>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button"
-                                        class="btn btn-primary"
-                                        data-action="click->document-viewer#initializeCryptoSession"
-                                >
-                                    Unlock Workspace Memory
-                                </button>
-                            </div>
+        {# Session Authentication Interceptor Modals #}
+        <div class="modal fade" id="crypto-session-modal" tabindex="-1" aria-labelledby="cryptoModalLabel" aria-hidden="true" data-document-viewer-target="cryptoModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cryptoModalLabel">Unlock Security Workspace</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Your password is required to unlock files during this session.</p>
+                        <div class="form-floating mb-3">
+                            <input type="password" id="vault-session-password" class="form-control"
+                                   placeholder="Password"
+                                   data-document-viewer-target="masterPasswordInput"
+                            >
+                            <label for="vault-session-password">Password</label>
                         </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button"
+                                class="btn btn-primary"
+                                data-action="click->document-viewer#initializeCryptoSession"
+                        >
+                            Unlock Workspace Memory
+                        </button>
                     </div>
                 </div>
             </div>

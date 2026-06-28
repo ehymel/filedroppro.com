@@ -3,7 +3,7 @@
 {% block title %}Manage Document Requests - Internal Portal{% endblock %}
 
 {% block body %}
-    <div class="container">
+    <div class="container" {{ stimulus_controller('invite-form') }}>
         <div class="row">
             <div class="col">
                 <h1>Drop Request Management</h1>
@@ -13,24 +13,25 @@
 
         {% include 'flash_messages.html.twig' %}
 
-        <div class="row">
-            <div class="col-lg-5 col-sm-8 col-12 border-1">
-                <h3>Invite External Clients to Upload Files</h3>
-                <p>Send a targeted, tracking-enabled secure upload link to your client.</p>
-
-                {{ form_start(form) }}
-                    {{ form_row(form.clientName) }}
-                    {{ form_row(form.clientEmail) }}
-                    {{ form_row(form.instructions) }}
-
-                    <button type="submit" class="btn btn-primary">Generate & Email Link</button>
-                {{ form_end(form) }}
+        <div id="invite-form-container" style="display: none;" data-invite-form-target="formContainer">
+            {{ form_start(form, {'attr': {'id': 'invite-client-form'}}) }}
+            {{ form_row(form.clientName) }}
+            {{ form_row(form.clientEmail) }}
+            {{ form_row(form.instructions) }}
+            <div class="mt-3 text-end">
+                <button type="button" class="btn btn-secondary" data-action="click->invite-form#close">Cancel</button>
+                <button type="submit" class="btn btn-primary">Generate & Email Link</button>
             </div>
+            {{ form_end(form) }}
         </div>
 
         <div class="row mt-5">
             <div class="col-md-8 col-12">
-                {# Pending / Active Invitations Table #}
+                <button id="invite-client-btn" class="btn btn-sm btn-primary mb-3"
+                        data-action="click->invite-form#open">
+                    Invite External Clients to Upload Files
+                </button>
+
                 <h3>Active & Historical Requests</h3>
                 <p>Track the status of all secure document invitations sent from your firm.</p>
 
