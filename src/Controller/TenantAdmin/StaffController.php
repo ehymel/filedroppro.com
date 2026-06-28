@@ -37,11 +37,66 @@ class StaffController extends AbstractController
             return $this->redirectToRoute('unauthorized');
         }
 
-        $invitations = $this->invitationRepository->findAllSortedByExpiresAt();
+        // 1. Configure the Invitation Form
+        $invitation = new Invitation();
+        $invitation->tenant = $tenant;
+
+        $form = $this->createForm(InvitationFormType::class, $invitation);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $invitation = $form->getData();
+            $email = $invitation->email;
+
+            $this->addFlash('info', 'Invitation sent successfully.');
+
+            // Guard 1: Check if a registered user with this email already exists in the database
+            $existingUser = $this->userRepository->findOneByEmail($email);
+
+            if ($existingUser) {
+                $this->addFlash('danger', sprintf('A registered user with the email "%s" already exists on the platform.', $email));
+                if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
+                    return $this->render('internal/_invitation_form.html.twig', [
+                        'form' => $form,
+                    ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
+                }
+                return $this->redirectToRoute('internal_staff_list');
+            }
+
+            // Guard 2: Check if there's already an active, unused invitation outstanding for this email
+            $existingInvitation = $this->invitationRepository->findOneBy([
+                'email' => $email,
+                'used' => false,
+            ]);
+
+            if ($existingInvitation && $existingInvitation->expiresAt > new \DateTimeImmutable()) {
+                $this->addFlash('danger', sprintf('An active invitation is already outstanding for %s.', $email));
+                if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
+                    return $this->render('internal/_invitation_form.html.twig', [
+                        'form' => $form,
+                    ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
+                }
+                return $this->redirectToRoute('internal_staff_list');
+            }
+
+            $invitation->token = 'inv_' . bin2hex(random_bytes(32));
+            $invitation->expiresAt = new \DateTimeImmutable('+48 hours');
+            $invitation->used = false;
+
+            $this->invitationRepository->save($invitation, true);
+            $this->sendInvitationEmail($invitation);
+
+//            if ($request->request->get('ajax')) {
+//                return new Response(null, Response::HTTP_NO_CONTENT);
+//            }
+
+            return $this->redirectToRoute('internal_staff_list');
+        }
 
         return $this->render('internal/invitation_manage.html.twig', [
-            'invitations' => $invitations,
+            'invitations' => $this->invitationRepository->findAllSortedByExpiresAt(),
             'tenant' => $tenant,
+            'form' => $form,
         ]);
     }
 
