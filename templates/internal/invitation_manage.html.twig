@@ -1,14 +1,17 @@
+{% set currentUrl = path(app.request.attributes.get('_route'),
+    app.request.attributes.get('_route_params')|merge(app.request.query.all)) %}
+
 {% extends 'base.html.twig' %}
 
 {% block title %}Manage Internal Staff{% endblock %}
 
 {% block body %}
-    {% set currentUrl = path(app.request.attributes.get('_route'),
-        app.request.attributes.get('_route_params')|merge(app.request.query.all)) %}
     <div class="container"
             {{ stimulus_controller('reload-content', { url: currentUrl }) }}
             data-action="modal-form:success->reload-content#refreshContent"
     >
+        {{ include('flash_messages.html.twig') }}
+
         <div class="row">
             <div class="col">
                 <h1>Manage Internal Staff</h1>
@@ -16,9 +19,10 @@
             </div>
         </div>
 
-        {% include 'flash_messages.html.twig' %}
-
-        <div {{ stimulus_controller('modal-form', { formUrl: path('internal_staff_list', { form: 1 }) }) }}>
+        <div {{ stimulus_controller('modal-form', {
+            formUrl: path('internal_staff_list', { form: 1 }),
+            hideFullPageOpenButton: true
+        }) }}>
             <button class="btn btn-primary" data-action="modal-form#open">
                 Invite Internal Staff Member
             </button>
@@ -26,23 +30,24 @@
             {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
         </div>
 
-        {# Visual Key Recovery/Copy Assist if just generated #}
-        {% if app.flashes('invitation_link') is not empty %}
-            {% for link in app.flashes('invitation_link') %}
-                <div class="mt-3">
-                    <h3>Share Secure Invitation Link</h3>
-                    <p>Copy and share this pre-approved link with your new staff member. This link will expire in 48 hours.</p>
-                    <div>
-                        <label for="shareable-link-input"></label>
-                        <input type="text" readonly value="{{ link }}" id="shareable-link-input">
-                        <button onclick="copyToClipboard(event)">Copy Link</button>
-                    </div>
-                </div>
-            {% endfor %}
-        {% endif %}
-
         <div class="row mt-5">
             <div class="col-md-8 col-12" data-reload-content-target="content">
+                {{ include('flash_messages.html.twig') }}
+                {# Visual Key Recovery/Copy Assist if just generated #}
+                {% if app.flashes('invitation_link') is not empty %}
+                    {% for link in app.flashes('invitation_link') %}
+                        <div class="mt-3">
+                            <h3>Share Secure Invitation Link</h3>
+                            <p>Copy and share this pre-approved link with your new staff member. This link will expire in 48 hours.</p>
+                            <div>
+                                <label for="shareable-link-input"></label>
+                                <input type="text" readonly value="{{ link }}" id="shareable-link-input">
+                                <button class="btn btn-sm btn-info ms-3" onclick="copyToClipboard(event)">Copy Link</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
                 {{ include('internal/_invitation_list.html.twig') }}
             </div>
         </div>
@@ -50,14 +55,14 @@
 
     <script>
         function copyToClipboard(event) {
-            const copyText = document.getElementById("shareable-link-input");
-            if (copyText) {
+            const btn = event.currentTarget;
+            const copyText = btn.previousElementSibling;
+            if (copyText && copyText.id === "shareable-link-input") {
                 copyText.select();
                 copyText.setSelectionRange(0, 99999); // For mobile devices
                 document.execCommand("copy");
 
                 // Text feedback change
-                const btn = event.currentTarget;
                 const originalText = btn.textContent;
                 btn.textContent = "Copied!";
                 setTimeout(() => {

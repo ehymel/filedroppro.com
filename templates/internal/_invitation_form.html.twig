@@ -8,7 +8,9 @@
     that have been uploaded to this site.
 </p>
 
-{{ form_start(invitationForm) }}
+{{ form_start(invitationForm, { attr: { 'data-action': 'submit->modal-form#submitForm' } }) }}
     {{ form_row(invitationForm.email) }}
-    <button type="submit" class="btn btn-primary ms-4">Generate Secure Token and Send Email Invitation</button>
+    <button type="submit" class="btn btn-primary ms-4">
+        Generate Secure Token and Send Email Invitation
+    </button>
 {{ form_end(invitationForm) }}

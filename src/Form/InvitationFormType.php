@@ -35,6 +35,7 @@ class InvitationFormType extends AbstractType
     {
         $resolver->setDefaults([
             // Unmapped form so we can manually handle generation logic in the controller
+            'csrf_token_id' => 'invitation_form',
         ]);
     }
 }

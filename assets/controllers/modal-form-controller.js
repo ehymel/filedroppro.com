@@ -10,7 +10,8 @@ export default class extends Controller {
     }
     modal = null;
 
-    async open() {
+    async open(event) {
+        event.preventDefault();
         this.modalBodyTarget.innerHTML = 'Loading...';
         this.modal = new Modal(this.modalTarget);
         this.modal.show();
@@ -28,11 +29,12 @@ export default class extends Controller {
 
     async submitForm(event) {
         event.preventDefault();
-        const form = this.modalBodyTarget.getElementsByTagName('form')[0];
+        const form = event.target.closest('form') || this.modalBodyTarget.getElementsByTagName('form')[0];
         let formData = new FormData(form);
+        formData.append('ajax', 1);
 
         const url = new URL(this.formUrlValue, window.location.origin);
-        url.searchParams.set('ajax', '1');
+        // url.searchParams.set('ajax', '1');
 
         let response = await fetch(url.toString(), {
             method: 'POST',
@@ -40,8 +42,13 @@ export default class extends Controller {
         });
 
         if (response.status !== 422) {
+            const body = await response.text();
+            if (body.length > 0) {
+                this.dispatch('success', { detail: { content: body } });
+            } else {
+                this.dispatch('success');
+            }
             this.modal.hide();
-            this.dispatch('success');
         } else {
             this.modalBodyTarget.innerHTML = await response.text();
         }

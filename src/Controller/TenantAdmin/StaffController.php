@@ -88,7 +88,10 @@ class StaffController extends AbstractController
             $this->sendInvitationEmail($invitation);
 
             if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
-                return new Response(null, Response::HTTP_NO_CONTENT);
+                $invitations = $this->invitationRepository->findAllSortedByExpiresAt();
+                return $this->render('internal/_invitation_list.html.twig', [
+                    'invitations' => $invitations,
+                ]);
             }
 
             return $this->redirectToRoute('internal_staff_list');

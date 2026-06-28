@@ -10,3 +10,4 @@ framework:
             - authenticate
             - logout
             - registration_form
+            - invitation_form

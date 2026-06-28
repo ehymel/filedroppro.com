@@ -14,7 +14,6 @@
             </div>
             <div class="modal-body"
                  data-modal-form-target="modalBody"
-                 data-action="submit->modal-form#submitForm"
             >
                 {{ modalContent|default('Loading...') }}
             </div>
@@ -30,7 +29,7 @@
                 >
                     Cancel
                 </button>
-                <button type="button" class="btn btn-primary"
+                <button type="submit" class="btn btn-primary"
                         data-action="modal-form#submitForm"
                 >
                     Save

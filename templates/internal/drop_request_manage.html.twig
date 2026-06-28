@@ -1,22 +1,23 @@
+{% set currentUrl = path(app.request.attributes.get('_route'),
+    app.request.attributes.get('_route_params')|merge(app.request.query.all)) %}
+
 {% extends 'base.html.twig' %}
 
 {% block title %}Manage Document Requests - Internal Portal{% endblock %}
 
 {% block body %}
-    {% set currentUrl = path(app.request.attributes.get('_route'),
-        app.request.attributes.get('_route_params')|merge(app.request.query.all)) %}
     <div class="container"
             {{ stimulus_controller('reload-content', { url: currentUrl }) }}
             data-action="modal-form:success->reload-content#refreshContent"
     >
+        {% include 'flash_messages.html.twig' %}
+
         <div class="row">
             <div class="col">
                 <h1>Drop Request Management</h1>
                 <p>Generate secure drop links, track pending client uploads, and manage active requests.</p>
             </div>
         </div>
-
-        {% include 'flash_messages.html.twig' %}
 
         <div {{ stimulus_controller('modal-form', { formUrl: path('internal_requests_manage', { form: 1 }) }) }}>
             <button class="btn btn-primary" data-action="modal-form#open">
