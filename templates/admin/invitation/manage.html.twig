@@ -52,13 +52,13 @@
                 <h3>Outstanding Invitations</h3>
                 <p>Review the status of pending authorization tokens issued for your organization.</p>
 
-                <table class="table table-striped">
+                <table class="table table-striped sortable">
                     <thead>
                     <tr>
                         <th>Email Address</th>
                         <th>Expires At</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th class="no-sort">Action</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -66,10 +66,12 @@
                         <tr>
                             <td>{{ invite.email }}</td>
                             <td>
-                                {{ invite.expiresAt|date('M d, Y') }} /
-                                {{ invite.expiresAt|date('h:i a') }}
-                                <br />
-                                ({{ invite.expiresAt|date('e') }})
+                                {% if not invite.used %}
+                                    {{ invite.expiresAt|date('M d, Y') }} /
+                                    {{ invite.expiresAt|date('h:i a') }}
+                                    <br />
+                                    ({{ invite.expiresAt|date('e') }})
+                                {% endif %}
                             </td>
                             <td>
                                 {% if invite.used %}
