@@ -6,6 +6,7 @@ use App\Repository\TenantRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -14,6 +15,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * All queries in the SaaS database should be filtered by Tenant to ensure strict multi-tenant isolation.
  */
 #[ORM\Entity(repositoryClass: TenantRepository::class)]
+#[UniqueEntity(fields: ['firmName'], message: 'An organization with this name is already registered on our platform.')]
 class Tenant extends MappedSuperclassBase
 {
     public function __construct()
@@ -28,7 +30,7 @@ class Tenant extends MappedSuperclassBase
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private(set) ?Uuid $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(unique: true)]
     #[Assert\NotBlank]
     public ?string $firmName = null;
 
