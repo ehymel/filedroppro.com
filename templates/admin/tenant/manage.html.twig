@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Manage Tenants{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1>Manage Tenants</h1>
+            </div>
+        </div>
+
+        {% include 'flash_messages.html.twig' %}
+
+        <div class="row mt-5">
+            <div class="col-md-8 col-12">
+                <h3>Tenants</h3>
+
+                <table class="table table-striped sortable">
+                    <thead>
+                    <tr>
+                        <th>Tenant</th>
+                        <th>Manager</th>
+                        <th>Status</th>
+                        <th>Users</th>
+                        <th>Documents</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tenant in tenants %}
+                        <tr>
+                            <td>{{ tenant.firmName }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5">No tenants are yet registered.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

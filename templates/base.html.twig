@@ -92,8 +92,8 @@
                 {% endif %}
                 {% if is_granted('ROLE_SUPERUSER') %}
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item{{ currentRoute matches '{^admin_(?![user|import])}' ? ' active bold'}}">
-                            <a class="nav-link" href="{{ path('admin_home') }}">Site Admin</a>
+                        <li class="nav-item{{ currentRoute matches '{^admin_(?![tenant])}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('admin_tenant_list') }}">Tenant Admin</a>
                         </li>
                         <li class="nav-item{{ currentRoute matches '{^admin_user.*}' ? ' active bold'}}">
                             <a class="nav-link" href="{{ path('admin_user_list') }}">User Admin</a>
