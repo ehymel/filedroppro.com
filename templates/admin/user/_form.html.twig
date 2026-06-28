@@ -1,4 +1,4 @@
-<div {{ stimulus_controller('admin--user') }}>
+<div>
     {{ form_start(form) }}
     {{ form_row(form.firstName) }}
     {{ form_row(form.lastName) }}
@@ -8,6 +8,7 @@
     {{ form_row(form.isVisible) }}
     {{ form_row(form.isActivated) }}
     {{ form_row(form.roles) }}
+    {{ form_row(form.status) }}
     <hr>
 
     <button type="submit" class="btn btn-primary" formnovalidate>Update</button>
