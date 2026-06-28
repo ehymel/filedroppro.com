@@ -66,7 +66,7 @@ class DropRequestController extends AbstractController
             ['createdAt' => 'DESC']
         );
 
-        return $this->render('drop/request_manage.html.twig', [
+        return $this->render('internal/drop_request_manage.html.twig', [
             'form' => $form->createView(),
             'requests' => $requests,
             'tenant' => $tenant,

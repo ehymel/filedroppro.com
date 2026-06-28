@@ -84,7 +84,7 @@ class StaffController extends AbstractController
         // Thanks to our custom TenantFilter, this list automatically isolates to invitations matching $tenant!
         $invitations = $this->invitationRepository->findAllSortedByExpiresAt();
 
-        return $this->render('tenant_admin/invitation/manage.html.twig', [
+        return $this->render('tenant_admin/invitation_manage.html.twig', [
             'invitationForm' => $form,
             'invitations' => $invitations,
             'tenant' => $tenant,

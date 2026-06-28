@@ -2,6 +2,8 @@
 {% set currentUrl = path(app.request.attributes.get('_route'),
     app.request.attributes.get('_route_params')|merge(app.request.query.all|merge({'ajax': true }))) %}
 
+{% block title %}User Admin{% endblock %}
+
 {% block body %}
     <div class="container mt-4"
         {{ stimulus_controller('reload-content', {
