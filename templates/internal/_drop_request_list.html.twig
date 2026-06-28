@@ -1,0 +1,56 @@
+<table class="table table-striped sortable">
+    <thead>
+    <tr>
+        <th>Client</th>
+        <th>Requested By</th>
+        <th>Date Sent</th>
+        <th>Status</th>
+        <th class="no-sort">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for request in requests %}
+        <tr>
+            <td>
+                {{ request.clientName }}
+                <br />
+                (<small>{{ request.clientEmail }}</small>)
+            </td>
+            <td>
+                {{ request.createdBy.name }}
+                <br />
+                (<small>{{ request.createdBy.email }}</small>)
+            </td>
+            <td>
+                {{ request.createdAt|date('M d, Y') }}
+                <br />
+                {{ request.createdAt|date('g:i a') }}
+            </td>
+            <td>
+                <span>{{ request.status|capitalize }}</span>
+            </td>
+            <td>
+                {% if request.status == 'pending' %}
+                    <form action="{{ path('internal_requests_resend', {'id': request.id.toString()}) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('resend_request_' ~ request.id.toString()) }}">
+                        <button type="submit" class="btn btn-sm btn-info">Resend Email</button>
+                    </form>
+
+                    <form action="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}" method="POST" onsubmit="return confirm('Revoke this link? The client will no longer be able to use it.');" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
+                    </form>
+                {% else %}
+                    <em>No actions available</em>
+                {% endif %}
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="5">
+                No secure file requests have been generated yet.
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

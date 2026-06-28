@@ -1,0 +1,8 @@
+{{ form_start(form, {'attr': {'id': 'invite-client-form'}}) }}
+{{ form_row(form.clientName) }}
+{{ form_row(form.clientEmail) }}
+{{ form_row(form.instructions) }}
+<div class="mt-3 text-end">
+    <button type="submit" class="btn btn-primary">Generate & Email Link</button>
+</div>
+{{ form_end(form) }}

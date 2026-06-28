@@ -1,0 +1,58 @@
+{{ include('flash_messages.html.twig') }}
+
+{# Pending / Active Invitations Table #}
+<h3>Outstanding Invitations</h3>
+<p>Review the status of pending authorization tokens issued for your organization.</p>
+
+<table class="table table-striped sortable">
+    <thead>
+    <tr>
+        <th>Email Address</th>
+        <th>Expires At</th>
+        <th>Status</th>
+        <th class="no-sort">Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for invite in invitations %}
+        <tr>
+            <td>{{ invite.email }}</td>
+            <td>
+                {% if not invite.used %}
+                    {{ invite.expiresAt|date('M d, Y') }} /
+                    {{ invite.expiresAt|date('h:i a') }}
+                    <br />
+                    ({{ invite.expiresAt|date('e') }})
+                {% endif %}
+            </td>
+            <td>
+                {% if invite.used %}
+                    <span>Accepted</span>
+                {% elseif invite.expiresAt < date() %}
+                    <span>Expired</span>
+                {% else %}
+                    <span>Pending</span>
+                {% endif %}
+            </td>
+            <td>
+                {# Let the admin renew/resend the link if it is pending or expired (i.e. not yet used) #}
+                {% if not invite.used %}
+                    <form action="{{ path('internal_staff_revoke', {'id': invite.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to revoke access parameters for this token?');" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_invitation_' ~ invite.id.toString()) }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
+                    </form>
+
+                    <form action="{{ path('internal_staff_reinvite', {'id': invite.id.toString()}) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('reinvite_invitation_' ~ invite.id.toString()) }}">
+                        <button type="submit" class="btn btn-sm btn-info">Resend / Renew</button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="4">No invitation tokens currently registered for this tenant.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

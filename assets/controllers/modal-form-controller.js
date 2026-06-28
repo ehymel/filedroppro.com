@@ -13,10 +13,12 @@ export default class extends Controller {
     async open() {
         this.modalBodyTarget.innerHTML = 'Loading...';
         this.modal = new Modal(this.modalTarget);
-        const params = new URLSearchParams({ ajax: 1});
         this.modal.show();
 
-        let response = await fetch(`${this.formUrlValue}?${params.toString()}`);
+        const url = new URL(this.formUrlValue, window.location.origin);
+        url.searchParams.set('ajax', '1');
+
+        let response = await fetch(url.toString());
         this.modalBodyTarget.innerHTML = await response.text();
         if (this.hideFullPageOpenButtonValue) {
             let fullPageBtn = document.querySelector('button#js-modal-fullpage-btn');
@@ -27,16 +29,14 @@ export default class extends Controller {
     async submitForm(event) {
         event.preventDefault();
         const form = this.modalBodyTarget.getElementsByTagName('form')[0];
-        let params = new FormData(form);
-        params.append('ajax', 1);
+        let formData = new FormData(form);
 
-        // for (let param in params.values()) {
-        //     console.log(param);
-        // }
+        const url = new URL(this.formUrlValue, window.location.origin);
+        url.searchParams.set('ajax', '1');
 
-        let response = await fetch(this.formUrlValue, {
+        let response = await fetch(url.toString(), {
             method: 'POST',
-            body: params,
+            body: formData,
         });
 
         if (response.status !== 422) {

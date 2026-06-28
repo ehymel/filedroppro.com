@@ -3,7 +3,12 @@
 {% block title %}Manage Document Requests - Internal Portal{% endblock %}
 
 {% block body %}
-    <div class="container" {{ stimulus_controller('invite-form') }}>
+    {% set currentUrl = path(app.request.attributes.get('_route'),
+        app.request.attributes.get('_route_params')|merge(app.request.query.all)) %}
+    <div class="container"
+            {{ stimulus_controller('reload-content', { url: currentUrl }) }}
+            data-action="modal-form:success->reload-content#refreshContent"
+    >
         <div class="row">
             <div class="col">
                 <h1>Drop Request Management</h1>
@@ -13,84 +18,20 @@
 
         {% include 'flash_messages.html.twig' %}
 
-        <div id="invite-form-container" style="display: none;" data-invite-form-target="formContainer">
-            {{ form_start(form, {'attr': {'id': 'invite-client-form'}}) }}
-            {{ form_row(form.clientName) }}
-            {{ form_row(form.clientEmail) }}
-            {{ form_row(form.instructions) }}
-            <div class="mt-3 text-end">
-                <button type="button" class="btn btn-secondary" data-action="click->invite-form#close">Cancel</button>
-                <button type="submit" class="btn btn-primary">Generate & Email Link</button>
-            </div>
-            {{ form_end(form) }}
+        <div {{ stimulus_controller('modal-form', { formUrl: path('internal_requests_manage', { form: 1 }) }) }}>
+            <button class="btn btn-primary" data-action="modal-form#open">
+                Invite External Clients to Upload Files
+            </button>
+
+            {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
         </div>
 
         <div class="row mt-5">
-            <div class="col-md-8 col-12">
-                <button id="invite-client-btn" class="btn btn-sm btn-primary mb-3"
-                        data-action="click->invite-form#open">
-                    Invite External Clients to Upload Files
-                </button>
-
+            <div class="col-md-8 col-12" data-reload-content-target="content">
                 <h3>Active & Historical Requests</h3>
                 <p>Track the status of all secure document invitations sent from your firm.</p>
 
-                <table class="table table-striped sortable">
-                    <thead>
-                    <tr>
-                        <th>Client</th>
-                        <th>Requested By</th>
-                        <th>Date Sent</th>
-                        <th>Status</th>
-                        <th class="no-sort">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for request in requests %}
-                        <tr>
-                            <td>
-                                {{ request.clientName }}
-                                <br />
-                                (<small>{{ request.clientEmail }}</small>)
-                            </td>
-                            <td>
-                                {{ request.createdBy.name }}
-                                <br />
-                                (<small>{{ request.createdBy.email }}</small>)
-                            </td>
-                            <td>
-                                {{ request.createdAt|date('M d, Y') }}
-                                <br />
-                                {{ request.createdAt|date('g:i a') }}
-                            </td>
-                            <td>
-                                <span>{{ request.status|capitalize }}</span>
-                            </td>
-                            <td>
-                                {% if request.status == 'pending' %}
-                                    <form action="{{ path('internal_requests_resend', {'id': request.id.toString()}) }}" method="POST" style="display:inline;">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('resend_request_' ~ request.id.toString()) }}">
-                                        <button type="submit" class="btn btn-sm btn-info">Resend Email</button>
-                                    </form>
-
-                                    <form action="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}" method="POST" onsubmit="return confirm('Revoke this link? The client will no longer be able to use it.');" style="display:inline;">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
-                                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
-                                    </form>
-                                {% else %}
-                                    <em>No actions available</em>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="5">
-                                No secure file requests have been generated yet.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                {{ include('internal/_drop_request_list.html.twig') }}
             </div>
         </div>
     </div>

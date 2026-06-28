@@ -57,7 +57,17 @@ class DropRequestController extends AbstractController
                 $this->addFlash('danger', 'The request was saved, but the email failed to send. You can try resending it below.');
             }
 
+            if ($request->isXmlHttpRequest() || $request->query->get('form')) {
+                return new Response(null, 204);
+            }
+
             return $this->redirectToRoute('internal_requests_manage');
+        }
+
+        if ($request->query->get('form')) {
+            return $this->render('internal/_drop_request_form.html.twig', [
+                'form' => $form->createView(),
+            ]);
         }
 
         // 2. Fetch all outstanding requests for this Tenant
@@ -115,7 +125,7 @@ class DropRequestController extends AbstractController
             'drop_portal',
             [
                 'joinCode' => $tenant->joinCode,
-                'req' => $dropRequest->token // Pass the tracker token in query string
+                'req' => $dropRequest->token
             ],
             UrlGeneratorInterface::ABSOLUTE_URL
         );

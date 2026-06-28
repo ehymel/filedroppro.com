@@ -3,7 +3,12 @@
 {% block title %}Manage Internal Staff{% endblock %}
 
 {% block body %}
-    <div class="container">
+    {% set currentUrl = path(app.request.attributes.get('_route'),
+        app.request.attributes.get('_route_params')|merge(app.request.query.all)) %}
+    <div class="container"
+            {{ stimulus_controller('reload-content', { url: currentUrl }) }}
+            data-action="modal-form:success->reload-content#refreshContent"
+    >
         <div class="row">
             <div class="col">
                 <h1>Manage Internal Staff</h1>
@@ -13,97 +18,32 @@
 
         {% include 'flash_messages.html.twig' %}
 
+        <div {{ stimulus_controller('modal-form', { formUrl: path('internal_staff_list', { form: 1 }) }) }}>
+            <button class="btn btn-primary" data-action="modal-form#open">
+                Invite Internal Staff Member
+            </button>
+
+            {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
+        </div>
+
         {# Visual Key Recovery/Copy Assist if just generated #}
         {% if app.flashes('invitation_link') is not empty %}
             {% for link in app.flashes('invitation_link') %}
-                <div>
+                <div class="mt-3">
                     <h3>Share Secure Invitation Link</h3>
                     <p>Copy and share this pre-approved link with your new staff member. This link will expire in 48 hours.</p>
                     <div>
                         <label for="shareable-link-input"></label>
                         <input type="text" readonly value="{{ link }}" id="shareable-link-input">
-                        <button onclick="copyToClipboard()">Copy Link</button>
+                        <button onclick="copyToClipboard(event)">Copy Link</button>
                     </div>
                 </div>
             {% endfor %}
         {% endif %}
 
-        <div class="row">
-            <div class="col-lg-5 col-sm-8 col-12 border-1">
-                <h3>Invite Internal Staff Member</h3>
-                <p>Invitations grant bypass access to security-joining restrictions and
-                    lock new user configurations directly to your
-                    <span style="font-weight: bold; text-decoration: underline">{{ app.user.tenant.firmName }}</span>
-                    business profile.
-                </p>
-                <p style="font-weight: bold;">Invitations should be sent with care since all internal staff members can access all documents
-                    that have been uploaded to this site.
-                </p>
-
-                {{ form_start(invitationForm) }}
-                    {{ form_row(invitationForm.email) }}
-                    <button type="submit" class="btn btn-primary ms-4">Generate Secure Token and Send Email Invitation</button>
-                {{ form_end(invitationForm) }}
-            </div>
-        </div>
         <div class="row mt-5">
-            <div class="col-md-8 col-12">
-                {# Pending / Active Invitations Table #}
-                <h3>Outstanding Invitations</h3>
-                <p>Review the status of pending authorization tokens issued for your organization.</p>
-
-                <table class="table table-striped sortable">
-                    <thead>
-                    <tr>
-                        <th>Email Address</th>
-                        <th>Expires At</th>
-                        <th>Status</th>
-                        <th class="no-sort">Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for invite in invitations %}
-                        <tr>
-                            <td>{{ invite.email }}</td>
-                            <td>
-                                {% if not invite.used %}
-                                    {{ invite.expiresAt|date('M d, Y') }} /
-                                    {{ invite.expiresAt|date('h:i a') }}
-                                    <br />
-                                    ({{ invite.expiresAt|date('e') }})
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if invite.used %}
-                                    <span>Accepted</span>
-                                {% elseif invite.expiresAt < date() %}
-                                    <span>Expired</span>
-                                {% else %}
-                                    <span>Pending</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {# Let the admin renew/resend the link if it is pending or expired (i.e. not yet used) #}
-                                {% if not invite.used %}
-                                    <form action="{{ path('internal_staff_revoke', {'id': invite.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to revoke access parameters for this token?');" style="display:inline;">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_invitation_' ~ invite.id.toString()) }}">
-                                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
-                                    </form>
-
-                                    <form action="{{ path('internal_staff_reinvite', {'id': invite.id.toString()}) }}" method="POST" style="display:inline;">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('reinvite_invitation_' ~ invite.id.toString()) }}">
-                                        <button type="submit" class="btn btn-sm btn-info">Resend / Renew</button>
-                                    </form>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="4">No invitation tokens currently registered for this tenant.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <div class="col-md-8 col-12" data-reload-content-target="content">
+                {{ include('internal/_invitation_list.html.twig') }}
             </div>
         </div>
     </div>

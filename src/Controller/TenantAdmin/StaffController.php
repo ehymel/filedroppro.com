@@ -48,7 +48,12 @@ class StaffController extends AbstractController
 
             if ($existingUser) {
                 $this->addFlash('danger', sprintf('A registered user with the email "%s" already exists on the platform.', $email));
-                return $this->redirectToRoute('admin_invitation_list');
+                if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
+                    return $this->render('internal/_invitation_form.html.twig', [
+                        'invitationForm' => $form,
+                    ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
+                }
+                return $this->redirectToRoute('internal_staff_list');
             }
 
             // Guard 2: Check if there's already an active, unused invitation outstanding for this email
@@ -59,6 +64,11 @@ class StaffController extends AbstractController
 
             if ($existingInvitation && $existingInvitation->expiresAt > new \DateTimeImmutable()) {
                 $this->addFlash('danger', sprintf('An active invitation is already outstanding for %s.', $email));
+                if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
+                    return $this->render('internal/_invitation_form.html.twig', [
+                        'invitationForm' => $form,
+                    ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
+                }
                 return $this->redirectToRoute('internal_staff_list');
             }
 
@@ -77,7 +87,24 @@ class StaffController extends AbstractController
             $this->invitationRepository->save($invitation, true);
             $this->sendInvitationEmail($invitation);
 
+            if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
+                return new Response(null, Response::HTTP_NO_CONTENT);
+            }
+
             return $this->redirectToRoute('internal_staff_list');
+        }
+
+        if ($request->query->get('ajax') || $request->isXmlHttpRequest()) {
+            if ($form->isSubmitted() || $request->query->get('form')) {
+                return $this->render('internal/_invitation_form.html.twig', [
+                    'invitationForm' => $form,
+                ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+            }
+
+            $invitations = $this->invitationRepository->findAllSortedByExpiresAt();
+            return $this->render('internal/_invitation_list.html.twig', [
+                'invitations' => $invitations,
+            ]);
         }
 
         // 2. Fetch outstanding invitations
