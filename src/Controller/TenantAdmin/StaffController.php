@@ -37,7 +37,9 @@ class StaffController extends AbstractController
             return $this->redirectToRoute('unauthorized');
         }
 
-        return $this->render('internal/invitation_manage.html.twig', [
+        $template = $request->query->get('ajax') ? 'invitation_list.html.twig' : 'invitation_manage.html.twig';
+
+        return $this->render('internal/'.$template, [
             'invitations' => $this->invitationRepository->findAllSortedByExpiresAt(),
             'tenant' => $tenant,
         ]);

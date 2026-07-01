@@ -31,8 +31,6 @@
 
         <div class="row mt-5" data-reload-content-target="content">
             <div class="col-md-8 col-12">
-                {{ include('flash_messages.html.twig') }}
-
                 {# Visual Key Recovery/Copy Assist if just generated #}
                 {% if app.flashes('invitation_link') is not empty %}
                     {% for link in app.flashes('invitation_link') %}
@@ -46,6 +44,8 @@
                         </div>
                     {% endfor %}
                 {% endif %}
+
+                {{ include('flash_messages.html.twig') }}
 
                 {{ include('internal/_invitation_list.html.twig') }}
             </div>
