@@ -2,15 +2,13 @@
 
 namespace App\Entity;
 
+use App\Repository\DropRequestRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * Tracks secure file drop requests sent to external clients.
- */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: DropRequestRepository::class)]
 class DropRequest extends MappedSuperclassBase
 {
     #[ORM\Id]

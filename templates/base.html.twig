@@ -81,7 +81,7 @@
                             <a class="nav-link" href="{{ path('internal_documents_dashboard') }}">Document Viewer</a>
                         </li>
                         <li class="nav-item{{ currentRoute matches '{^internal_requests}' ? ' active bold'}}">
-                            <a class="nav-link" href="{{ path('internal_requests_manage') }}">Manage Client Drop Requests</a>
+                            <a class="nav-link" href="{{ path('internal_requests_list') }}">Manage Client Drop Requests</a>
                         </li>
                         {% if is_granted('ROLE_ADMIN') %}
                         <li class="nav-item{{ currentRoute matches '{^internal_invitations}' ? ' active bold'}}">

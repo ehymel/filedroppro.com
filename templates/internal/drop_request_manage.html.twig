@@ -10,8 +10,6 @@
             {{ stimulus_controller('reload-content', { url: currentUrl }) }}
             data-action="modal-form:success->reload-content#refreshContent"
     >
-        {% include 'flash_messages.html.twig' %}
-
         <div class="row">
             <div class="col">
                 <h1>Drop Request Management</h1>
@@ -19,18 +17,24 @@
             </div>
         </div>
 
-        <div {{ stimulus_controller('modal-form', { formUrl: path('internal_requests_manage', { form: 1 }) }) }}>
-            <button class="btn btn-primary" data-action="modal-form#open">
+        <div {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
+            <button class="btn btn-primary btn-sm"
+                    data-action="modal-form#open"
+                    data-form-url="{{ path('internal_requests_new') }}"
+                    data-modal-title="Invite External Client"
+            >
                 Invite External Clients to Upload Files
             </button>
 
             {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
         </div>
 
-        <div class="row mt-5">
-            <div class="col-md-8 col-12" data-reload-content-target="content">
+        <div class="row mt-5" data-reload-content-target="content">
+            <div class="col-md-8 col-12">
                 <h3>Active & Historical Requests</h3>
                 <p>Track the status of all secure document invitations sent from your firm.</p>
+
+                {% include 'flash_messages.html.twig' %}
 
                 {{ include('internal/_drop_request_list.html.twig') }}
             </div>

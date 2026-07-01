@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/internal/staff', name: 'internal_staff_')]
+#[Route(path: '/internal/staff', name: 'internal_staff_')]
 #[IsGranted('ROLE_ADMIN')]
 class StaffController extends AbstractController
 {
@@ -28,8 +28,8 @@ class StaffController extends AbstractController
      * @throws TransportExceptionInterface
      * @throws RandomException
      */
-    #[Route('/', name: 'list')]
-    public function index(Request $request): Response
+    #[Route(path: '/', name: 'list')]
+    public function list(Request $request): Response
     {
         $tenant = $this->getUser()->tenant;
         if (!$tenant) {
@@ -49,7 +49,7 @@ class StaffController extends AbstractController
      * @throws TransportExceptionInterface
      * @throws RandomException
      */
-    #[Route('/invite', name: 'invite', methods: ['GET', 'POST'])]
+    #[Route(path: '/invite', name: 'invite', methods: ['GET', 'POST'])]
     public function invite(Request $request): Response
     {
         $tenant = $this->getUser()->tenant;
@@ -108,7 +108,9 @@ class StaffController extends AbstractController
             $this->invitationRepository->save($invitation, true);
             $this->sendInvitationEmail($invitation);
 
-            return new Response(null, Response::HTTP_NO_CONTENT);
+            if ($request->request->get('ajax')) {
+                return new Response(null, Response::HTTP_NO_CONTENT);
+            }
         }
 
         return $this->render('internal/_invitation_form.html.twig', [
@@ -120,7 +122,7 @@ class StaffController extends AbstractController
      * Renews an unused (pending or expired) invitation with a fresh 48-hour expiration.
      * @throws TransportExceptionInterface|RandomException
      */
-    #[Route('/reinvite/{id}', name: 'reinvite', methods: ['POST'])]
+    #[Route(path: '/reinvite/{id}', name: 'reinvite', methods: ['POST'])]
     public function reinvite(Invitation $invitation, Request $request): Response
     {
         $tokenName = 'reinvite_invitation_' . $invitation->id->toString();
@@ -147,7 +149,7 @@ class StaffController extends AbstractController
         return $this->redirectToRoute('internal_staff_list');
     }
 
-    #[Route('/revoke/{id}', name: 'revoke', methods: ['POST'])]
+    #[Route(path: '/revoke/{id}', name: 'revoke', methods: ['POST'])]
     public function revoke(Invitation $invitation, Request $request): Response
     {
         if ($this->isCsrfTokenValid('revoke_invitation_' . $invitation->id->toString(), $request->request->get('_token'))) {
