@@ -31,13 +31,15 @@
         {% if is_granted('ROLE_USER') %}
             <nav class="navbar-expand navbar-light">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown">
+                    <li class="nav-item dropdown mt-3">
                         <a class="nav-link dropdown-toggle" href="#"
                            id="userDropdown" aria-haspopup="true" aria-expanded="false"
                            data-bs-toggle="dropdown" role="button"
                         >
                             <span class="fa fa-user"></span>
                             {{ app.user ? app.user.name|default }}
+                            <br />
+                            {{ app.user ? app.user.email|default }}
                             <span class="caret"></span>
                         </a>
                         <div class="dropdown-menu" aria-labelledby="userDropdown">
