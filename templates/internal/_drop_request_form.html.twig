@@ -1,8 +1,16 @@
-{{ form_start(form, {'attr': {'id': 'invite-client-form'}}) }}
-{{ form_row(form.clientName) }}
-{{ form_row(form.clientEmail) }}
-{{ form_row(form.instructions) }}
-<div class="mt-3 text-end">
-    <button type="submit" class="btn btn-primary">Generate & Email Link</button>
-</div>
+{{ include('flash_messages.html.twig') }}
+
+<h4>Generate Link and <br />Send Email Invitation</h4>
+
+<p class="mt-3">Email a request for documents to an external client.</p>
+
+<p>Your client will receive a secure link to upload documents that will be encrypted and stored securely.</p>
+
+{{ form_start(form, {
+    action: path('internal_requests_new'),
+    attr: {'data-action': 'submit->modal-form#submitForm'}
+}) }}
+    {{ form_row(form.clientName) }}
+    {{ form_row(form.clientEmail) }}
+    {{ form_row(form.instructions) }}
 {{ form_end(form) }}

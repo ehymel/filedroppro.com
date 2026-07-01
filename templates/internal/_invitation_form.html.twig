@@ -1,6 +1,8 @@
 {{ include('flash_messages.html.twig') }}
 
-<p>Invitations grant bypass access to security-joining restrictions and
+<h4>Generate Secure Token and <br />Send Email Invitation</h4>
+
+<p class="mt-3">Invitations grant bypass access to security-joining restrictions and
     lock new user configurations directly to your
     <span style="font-weight: bold; text-decoration: underline">{{ app.user.tenant.firmName }}</span>
     business profile.
@@ -11,13 +13,7 @@
 
 {{ form_start(form, {
     action: path('internal_staff_invite'),
-    attr: {
-        'data-action': 'submit->modal-form#submitForm',
-        'id': 'invitation-form'
-    }
+    attr: {'data-action': 'submit->modal-form#submitForm'}
 }) }}
     {{ form_row(form.email) }}
-    <button type="submit" class="btn btn-primary ms-3">
-        Generate Secure Token and Send Email Invitation
-    </button>
 {{ form_end(form) }}
