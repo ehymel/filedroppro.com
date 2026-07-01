@@ -21,9 +21,6 @@ class InvitationFormType extends AbstractType
             ->add('email', EmailType::class, [
                 'label' => 'Recipient Email Address',
                 'required' => true,
-                'attr' => [
-                    'placeholder' => 'colleague@firm.com',
-                ],
                 'constraints' => [
                     new NotBlank(message:  'Please provide an email address for the invitee.'),
                     new Email(message:  'Please enter a valid business email address.'),

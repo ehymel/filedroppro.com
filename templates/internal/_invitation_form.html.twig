@@ -9,7 +9,13 @@
     that have been uploaded to this site.
 </p>
 
-{{ form_start(form) }}
+{{ form_start(form, {
+    action: path('internal_staff_invite'),
+    attr: {
+        'data-action': 'submit->modal-form#submitForm',
+        'id': 'invitation-form'
+    }
+}) }}
     {{ form_row(form.email) }}
     <button type="submit" class="btn btn-primary ms-3">
         Generate Secure Token and Send Email Invitation

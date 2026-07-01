@@ -37,17 +37,19 @@ export default class extends Controller {
     }
 
     async submitForm(event) {
+        event.preventDefault();
+
         const form = this.modalBodyTarget.getElementsByTagName('form')[0];
         if (!form) {
             return;
         }
 
-        event.preventDefault();
-
         let params = new FormData(form);
         params.append('ajax', 1);
 
-        let response = await fetch(this.currentFormUrl, {
+        const url = form.getAttribute('action') || this.currentFormUrl;
+
+        let response = await fetch(url, {
             method: 'POST',
             body: params,
         });
