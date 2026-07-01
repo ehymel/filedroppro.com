@@ -20,12 +20,14 @@ export default class extends Controller {
         this.modalBodyTarget.innerHTML = 'Loading...';
         this.modalTarget.querySelector('.modal-title').innerText = modalTitle;
         this.modal = new Modal(this.modalTarget);
-        const params = new URLSearchParams({ ajax: 1});
         this.modal.show();
 
         this.currentFormUrl = formUrl;
 
-        let response = await fetch(`${formUrl}?${params.toString()}`);
+        const url = new URL(formUrl, window.location.origin);
+        url.searchParams.set('ajax', 1);
+
+        let response = await fetch(url.toString());
         this.modalBodyTarget.innerHTML = await response.text();
 
         let fullPageBtn = this.modalTarget.querySelector('button#js-modal-fullpage-btn');
@@ -57,9 +59,10 @@ export default class extends Controller {
         let params = new FormData(form);
         params.append('ajax', 1);
 
-        const url = form.getAttribute('action') || this.currentFormUrl;
+        const url = new URL(form.getAttribute('action') || this.currentFormUrl, window.location.origin);
+        url.searchParams.set('ajax', 1);
 
-        let response = await fetch(url, {
+        let response = await fetch(url.toString(), {
             method: 'POST',
             body: params,
         });

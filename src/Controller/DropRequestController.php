@@ -58,8 +58,8 @@ class DropRequestController extends AbstractController
 
         // convenience to pre-fill client name
         if ($request->isMethod('GET') && $request->query->get('client_id')) {
-            $client = $clientRepository->find($request->query->get('client_id'));
-            $dropRequest->clientName = $client->clientName;
+            $client = $clientRepository->findOneBy(['id' => $request->query->get('client_id')]);
+            $dropRequest->clientName = $client?->clientName;
         }
 
         $form = $this->createForm(DropRequestFormType::class, $dropRequest);
