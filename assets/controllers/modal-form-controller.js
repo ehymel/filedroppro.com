@@ -44,6 +44,16 @@ export default class extends Controller {
             return;
         }
 
+        // Only dispatch the submit event if this was NOT triggered by the form's own submit event
+        // to avoid infinite recursion.
+        if (event.type !== 'submit') {
+            const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+            form.dispatchEvent(submitEvent);
+            if (submitEvent.defaultPrevented) {
+                return;
+            }
+        }
+
         let params = new FormData(form);
         params.append('ajax', 1);
 
