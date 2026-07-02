@@ -9,7 +9,6 @@
          data-secure-drop-recipients-value="{{ recipientKeys|json_encode }}"
          data-secure-drop-upload-url-value="{{ path('drop_upload', {'joinCode': joinCode}) }}"
     >
-
         <div class="row">
             <div class="col">
                 <h1>Securely Send Files to {{ tenant.firmName }}</h1>
@@ -35,31 +34,19 @@
             <div class="col-5">
                 {% include 'flash_messages.html.twig' %}
 
-                {# Interactive Client Portal Form #}
                 {{ form_start(form, { 'attr': { 'data-action': 'submit->secure-drop#processUpload', 'data-secure-drop-target': 'form' } }) }}
-                    {# Sender Identification Fields #}
-                    {{ form_row(form.senderName, {
-                        'attr': {
-                            'data-secure-drop-target': 'senderName'
-                        } }
-                    ) }}
-                    {{ form_row(form.senderEmail, {
-                        'attr': {
-                            'data-secure-drop-target': 'senderEmail'
-                        } }
-                    ) }}
+                    {{ form_row(form.senderName, { 'attr': { 'data-secure-drop-target': 'senderName' } }) }}
+                    {{ form_row(form.senderEmail, { 'attr': { 'data-secure-drop-target': 'senderEmail' } }) }}
 
-                    {# Secure Document Selection Zone #}
                     <fieldset>
                         <legend>Select Files</legend>
                         <div>
                             <label for="file-input">Choose file to encrypt and send</label>
                             <input type="file" id="file-input" required data-secure-drop-target="fileInput">
-                            <p>Supported formats: PDF, DOCX, ZIP, JPG, PNG (Max 50MB)</p>
+                            <p>Supported formats: PDF, DOCX, XLSX, ZIP, JPG, PNG (Max 50MB)</p>
                         </div>
                     </fieldset>
 
-                    {# Interactive Upload Progress Tracking #}
                     <div id="progress-container" style="display:none;" data-secure-drop-target="progressContainer">
                         <label id="progress-label">Status: Initializing Cryptographic Handshake...</label>
                         <progress max="100" value="0" data-secure-drop-target="progressBar"></progress>
