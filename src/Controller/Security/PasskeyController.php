@@ -11,11 +11,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/passkey/', name: 'passkey_')]
+#[Route(path: '/passkey/', name: 'passkey_')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class PasskeyController extends AbstractController
 {
-    #[Route('manage', name: 'manage')]
+    #[Route(path: 'manage', name: 'manage')]
     public function manage(WebauthnCredentialRepository $credentialRepository): Response
     {
         /** @var User $currentUser */
@@ -30,8 +30,8 @@ class PasskeyController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    public function deletePasskey(string $id, Request $request, WebauthnCredentialRepository $credentialRepository): Response {
+    #[Route(path: '/{id}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(string $id, Request $request, WebauthnCredentialRepository $credentialRepository): Response {
         $passkey = $credentialRepository->find($id);
         $wantsJson = $request->getPreferredFormat() === 'json';
 

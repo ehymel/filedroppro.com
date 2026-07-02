@@ -22,11 +22,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('user', name: 'user_')]
 class UserController extends AbstractController
 {
-    public function __construct(private readonly string $kernelSecret)
-    {
-    }
+    public function __construct(private readonly string $kernelSecret) {}
 
-    #[Route('/edit', name: 'edit')]
+    #[Route(path: '/edit', name: 'edit')]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function edit(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $em): Response
     {
@@ -55,7 +53,7 @@ class UserController extends AbstractController
         ]);
     }
 
-    #[Route('activate/{id}/{hash}', name: 'activate')]
+    #[Route(path: 'activate/{id}/{hash}', name: 'activate')]
     public function activate(User $user, Request $request, EntityManagerInterface $em): Response
     {
         $submittedHash = $request->attributes->get('hash');
@@ -84,7 +82,7 @@ class UserController extends AbstractController
         return $this->render('user/activation_failed.html.twig');
     }
 
-    #[Route('/password_set/{id}/{hash}', name: 'set_password')]
+    #[Route(path: '/password_set/{id}/{hash}', name: 'set_password')]
     public function setPassword(User $user, Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $em): ?Response
     {
         $submittedHash = $request->attributes->get('hash');
@@ -118,7 +116,7 @@ class UserController extends AbstractController
         ]);
     }
 
-    #[Route('password_reset/{id}/{hash}', name: 'reset_password')]
+    #[Route(path: 'password_reset/{id}/{hash}', name: 'reset_password')]
     public function resetPassword(User $user, Request $request, UserPasswordHasherInterface $passwordHasher,
                                   TokenStorageInterface $tokenStorage, EntityManagerInterface $em): Response
     {
@@ -159,7 +157,7 @@ class UserController extends AbstractController
         ]);
     }
 
-    #[Route('/password_reset_request', name: 'request_reset_pw')]
+    #[Route(path: '/password_reset_request', name: 'request_reset_pw')]
     public function requestResetPwLink(Request $request, MailerInterface $mailer, UserRepository $userRepository, EntityManagerInterface $em): Response
     {
         $form = $this->createForm(UserPasswordResetRequestForm::class);

@@ -13,13 +13,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/internal/documents', name: 'internal_documents_')]
+#[Route(path: '/internal/documents', name: 'internal_documents_')]
 #[IsGranted('ROLE_USER')]
 class DocumentViewerController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}
 
-    #[Route('/', name: 'dashboard', methods: ['GET'])]
+    #[Route(path: '/', name: 'dashboard', methods: ['GET'])]
     public function dashboard(): Response
     {
         if (!$this->getUser()->tenant) {
@@ -38,7 +38,7 @@ class DocumentViewerController extends AbstractController
     /**
      * Securely streams the raw, encrypted .enc binary block to the browser.
      */
-    #[Route('/download-payload/{id}', name: 'payload', methods: ['GET'])]
+    #[Route(path: '/download-payload/{id}', name: 'payload', methods: ['GET'])]
     public function downloadPayload(Document $document): Response
     {
         if (!$this->getUser()->tenant) {
@@ -65,10 +65,9 @@ class DocumentViewerController extends AbstractController
     /**
      * API Endpoint yielding the specific initialization vector and wrapped key block for a user.
      */
-    #[Route('/crypto-metadata/{id}', name: 'metadata', methods: ['GET'])]
+    #[Route(path: '/crypto-metadata/{id}', name: 'metadata', methods: ['GET'])]
     public function getCryptoMetadata(Document $document): JsonResponse
     {
-        // Locate the singular wrapped envelope key matching both this document and this user
         $documentKey = $this->em->getRepository(DocumentKey::class)->findOneBy([
             'document' => $document,
             'user' => $this->getUser()
@@ -86,7 +85,7 @@ class DocumentViewerController extends AbstractController
         ]);
     }
 
-    #[Route('/delete/{id}', name: 'delete', methods: ['POST', 'DELETE'])]
+    #[Route(path: '/delete/{id}', name: 'delete', methods: ['POST', 'DELETE'])]
     public function delete(Document $document): Response
     {
         // Security Check: Verify that this document belongs to the active user's tenant
@@ -109,7 +108,7 @@ class DocumentViewerController extends AbstractController
         return $this->redirectToRoute('internal_documents_dashboard');
     }
 
-    #[Route('/update-note/{id}', name: 'update_note', methods: ['POST'])]
+    #[Route(path: '/update-note/{id}', name: 'update_note', methods: ['POST'])]
     public function updateNote(Document $document, \Symfony\Component\HttpFoundation\Request $request): JsonResponse
     {
         if ($document->client->tenant !== $this->getUser()->tenant) {

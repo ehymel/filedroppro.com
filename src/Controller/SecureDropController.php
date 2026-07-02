@@ -21,7 +21,7 @@ use Symfony\Component\Uid\Uuid;
 /**
  * Manages public, zero-login secure document drops for external clients.
  */
-#[Route('/drop', name: 'drop_')]
+#[Route(path: '/drop', name: 'drop_')]
 class SecureDropController extends AbstractController
 {
     public function __construct(private readonly EntityManagerInterface $em) {}
@@ -29,7 +29,7 @@ class SecureDropController extends AbstractController
     /**
      * Renders the public file drop interface for a specific Tenant.
      */
-    #[Route('/{joinCode}', name: 'portal', methods: ['GET'])]
+    #[Route(path: '/{joinCode}', name: 'portal', methods: ['GET'])]
     public function dropPortal(string $joinCode, Request $request): Response
     {
         $form = $this->createForm(FileDropFormType::class);
@@ -96,7 +96,7 @@ class SecureDropController extends AbstractController
     /**
      * Accepts encrypted raw binary file chunks, maps envelope keys, and registers records.
      */
-    #[Route('/upload/{joinCode}', name: 'upload', methods: ['POST'])]
+    #[Route(path: '/upload/{joinCode}', name: 'upload', methods: ['POST'])]
     public function handleUpload(string $joinCode, Request $request): JsonResponse
     {
         $tenant = $this->em->getRepository(Tenant::class)->findOneBy([

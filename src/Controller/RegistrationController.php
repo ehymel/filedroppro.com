@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class RegistrationController extends AbstractController
 {
-    #[Route('/register', name: 'register')]
+    #[Route(path: '/register', name: 'register')]
     public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
