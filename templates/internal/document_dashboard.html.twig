@@ -65,7 +65,8 @@
                     {% for doc in client.documents %}
                         <tr>
                             <td>
-                                <span class="bold">{{ doc.filePath }}</span>
+                                <span class="bold" title="{{ doc.filePath }}">{{ doc.originalFileName|default(doc.filePath) }}</span>
+
                                 <div data-controller="document-note"
                                      data-document-note-url-value="{{ path('internal_documents_update_note', {'id': doc.id.toString()}) }}">
                                     <div data-document-note-target="display" class="mb-1">
@@ -84,7 +85,7 @@
                                 <br />
                                 {{ doc.createdAt|date('g:i a') }}
                             </td>
-                            <td>Encrypted</td>
+                            <td>Encrypted <span class="fa fa-lock"></span></td>
                             <td>
                                 <button class="btn btn-sm btn-primary" type="button"
                                         data-action="click->document-viewer#decryptAndDownload"
@@ -107,10 +108,16 @@
                         <tr>
                             <td>No documents uploaded for this client yet.</td>
                             <td colspan="2"></td>
-                            <td>
-                                <a href="{{ path('internal_requests_manage', { 'client_id': client.id }) }}" class="btn btn-sm btn-primary">
+                            <td {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
+                                <button class="btn btn-primary btn-sm"
+                                            data-action="modal-form#open"
+                                            data-form-url="{{ path('internal_requests_new', { 'client_id': client.id.toString() }) }}"
+                                            data-modal-title="Invite External Client"
+                                    >
                                     Invite this client to upload documents
-                                </a>
+                                    </button>
+
+                                    {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
                             </td>
                         </tr>
                     {% endfor %}
