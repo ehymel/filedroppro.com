@@ -29,24 +29,8 @@
             {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
         </div>
 
-        <div class="row mt-5" data-reload-content-target="content">
-            <div class="col-md-8 col-12">
-                {# Visual Key Recovery/Copy Assist if just generated #}
-                {% if app.flashes('invitation_link') is not empty %}
-                    {% for link in app.flashes('invitation_link') %}
-                        <div class="alert alert-info mt-3">
-                            <h3>Share Secure Invitation Link</h3>
-                            <p>Copy and share this pre-approved link with your new staff member. This link will expire in 48 hours.</p>
-                            <div class="input-group">
-                                <input type="text" readonly value="{{ link }}" class="form-control" id="shareable-link-input-{{ loop.index }}">
-                                <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ link }}'); this.innerText='Copied!'; setTimeout(() => this.innerText='Copy Link', 2000); return false;">Copy Link</button>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
-                {{ include('flash_messages.html.twig') }}
-
+        <div class="row mt-5">
+            <div class="col-md-8 col-12" data-reload-content-target="content">
                 {{ include('internal/_invitation_list.html.twig') }}
             </div>
         </div>
