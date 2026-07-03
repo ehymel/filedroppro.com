@@ -9,8 +9,10 @@ use App\Entity\DropRequest;
 use App\Entity\Tenant;
 use App\Entity\User;
 use App\Form\FileDropFormType;
+use Aws\S3\S3Client;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,12 +26,14 @@ use Symfony\Component\Uid\Uuid;
 #[Route(path: '/drop', name: 'drop_')]
 class SecureDropController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $em) {}
+    public function __construct(private readonly EntityManagerInterface $em,
+                                private readonly S3Client $s3Client,
+                                #[Autowire(param: 'env(AWS_S3_BUCKET)')] private readonly string $s3BucketName) {}
 
     /**
      * Renders the public file drop interface for a specific Tenant.
      */
-    #[Route(path: '/{joinCode}', name: 'portal', methods: ['GET'])]
+    #[Route(path: '/{joinCode}', name: 'portal')]
     public function dropPortal(string $joinCode, Request $request): Response
     {
         $form = $this->createForm(FileDropFormType::class);
@@ -90,6 +94,129 @@ class SecureDropController extends AbstractController
             'recipientKeys' => $recipientKeys,
             'joinCode' => $joinCode,
             'dropRequest' => $dropRequest
+        ]);
+    }
+
+    /**
+     * Generates a secure AWS S3 Pre-signed URL for direct browser uploads.
+     */
+    #[Route('/drop/{joinCode}/presign', name: 'presign', methods: ['POST'])]
+    public function generatePresignedUrl(string $joinCode, Request $request): JsonResponse
+    {
+        $tenant = $this->em->getRepository(Tenant::class)->findOneBy([
+            'joinCode' => strtoupper(trim($joinCode))
+        ]);
+
+        if (!$tenant) {
+            return new JsonResponse(['error' => 'Invalid drop destination.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        $filename = $payload['filename'] ?? null;
+
+        if (!$filename) {
+            return new JsonResponse(['error' => 'Missing filename parameter.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Generate a random UUID-based file path to prevent naming collisions and metadata leakage on S3
+        $s3Key = Uuid::v4()->toString() . '.enc';
+
+        // Prepare the AWS pre-signed PUT command
+        $cmd = $this->s3Client->getCommand('PutObject', [
+            'Bucket' => $this->s3BucketName,
+            'Key' => $s3Key,
+            'ContentType' => 'application/octet-stream',
+        ]);
+
+        // Url expires in 15 minutes
+        $presignedRequest = $this->s3Client->createPresignedRequest($cmd, '+15 minutes');
+        $presignedUrl = (string) $presignedRequest->getUri();
+
+        return new JsonResponse([
+            'uploadUrl' => $presignedUrl,
+            's3Key' => $s3Key
+        ]);
+    }
+
+    /**
+     * Finalizes metadata in database after Uppy confirms a successful direct S3 upload.
+     */
+    #[Route('/drop/{joinCode}/finalize', name: 'finalize', methods: ['POST'])]
+    public function finalizeUpload(string $joinCode, Request $request): JsonResponse
+    {
+        $tenant = $this->em->getRepository(Tenant::class)->findOneBy([
+            'joinCode' => strtoupper(trim($joinCode))
+        ]);
+
+        if (!$tenant) {
+            return new JsonResponse(['error' => 'Invalid drop destination.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        $senderName = $payload['senderName'] ?? null;
+        $senderEmail = $payload['senderEmail'] ?? null;
+        $iv = $payload['iv'] ?? null;
+        $wrappedKeys = $payload['wrappedKeys'] ?? null;
+        $s3Key = $payload['s3Key'] ?? null;
+        $originalFileName = $payload['originalFileName'] ?? null;
+        $reqToken = $payload['reqToken'] ?? null;
+
+        if (!$senderName || !$senderEmail || !$iv || !$wrappedKeys || !$s3Key || !$originalFileName) {
+            return new JsonResponse(['error' => 'Missing required metadata parameters.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Map or generate Client profile
+        $client = $this->em->getRepository(Client::class)->findOneBy([
+            'tenant' => $tenant,
+            'clientName' => sprintf('Drop Box: %s', $senderName)
+        ]);
+
+        if (!$client) {
+            $client = new Client();
+            $client->tenant = $tenant;
+            $client->clientName = sprintf('Drop Box: %s', $senderName);
+            $this->em->persist($client);
+        }
+
+        // Construct Document record pointing directly to S3
+        $document = new Document();
+        $document->client = $client;
+        $document->filePath = $s3Key; // The key on S3 acts as our path
+        $document->iv = $iv;
+        $document->originalFileName = $originalFileName;
+        $this->em->persist($document);
+
+        // Build individual wrapped key envelopes
+        foreach ($wrappedKeys as $userId => $wrappedKeyHex) {
+            $user = $this->em->getRepository(User::class)->find($userId);
+            if ($user && $user->getTenant() === $tenant) {
+                $documentKey = new DocumentKey();
+                $documentKey->document = $document;
+                $documentKey->user = $user;
+                $documentKey->wrappedKeyHex = $wrappedKeyHex;
+                $this->em->persist($documentKey);
+
+                $client->addUser($user);
+            }
+        }
+
+        // Fulfill invitation if verified
+        if ($reqToken) {
+            $dropRequest = $this->em->getRepository(DropRequest::class)->findOneBy([
+                'token' => $reqToken,
+                'tenant' => $tenant
+            ]);
+
+            if ($dropRequest && $dropRequest->getStatus() === 'pending') {
+                $dropRequest->setStatus('fulfilled');
+            }
+        }
+
+        $this->em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Files securely encrypted and successfully uploaded directly to S3!'
         ]);
     }
 

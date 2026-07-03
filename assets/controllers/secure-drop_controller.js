@@ -1,10 +1,12 @@
 import { Controller } from '@hotwired/stimulus';
+import Uppy from '@uppy/core';
+import AwsS3 from '@uppy/aws-s3';
 
 /**
- * Secure Drop Controller
- * * Executes local client-side cryptographic encryption using the Web Crypto API,
- * maps encrypted keys into an envelope payload for multiple recipients,
- * and streams secure binaries directly to Symfony.
+ * Secure Drop Controller with Uppy Direct S3 Integration
+ * * Leverages Uppy core to manage direct-to-S3 uploading,
+ * * Intercepts file addition with an async pre-processor to perform E2EE locally,
+ * * Dispatches metadata to Symfony to complete record insertion on success.
  */
 export default class extends Controller {
     static targets = [
@@ -20,118 +22,174 @@ export default class extends Controller {
     ];
 
     static values = {
-        recipients: Array, // Holds an array of objects: { userId, publicKey }
-        uploadUrl: String
+        recipients: Array,
+        presignUrl: String,   // Route to generate pre-signed AWS URL
+        finalizeUrl: String   // Route to finalize metadata
     };
 
-    /**
-     * Intercepts the public submission workflow to perform client-side encryption.
-     */
-    async processUpload(event) {
-        event.preventDefault();
-
-        const file = this.fileInputTarget.files[0];
-        const name = this.senderNameTarget.value;
-        const email = this.senderEmailTarget.value;
-
-        console.log(this.uploadUrlValue, file, name, email);
-
-        if (!file || !name || !email) {
-            this.updateStatus('Please fill in all fields and select a file to transmit.', 'error');
-            return;
-        }
-
-        this.lockUI();
-
-        try {
-            // --- Step 1: Generate Symmetric Key (K_sym) ---
-            this.updateProgress('Generating local symmetric key...', 10);
-            const aesKey = await window.crypto.subtle.generateKey(
-                { name: 'AES-GCM', length: 256 },
-                true,
-                ['encrypt', 'decrypt']
-            );
-
-            // Export symmetric key to raw bytes so we can encrypt/wrap it for recipients
-            const rawAesKey = await window.crypto.subtle.exportKey('raw', aesKey);
-
-            // --- Step 2: Encrypt File Binary Locally ---
-            this.updateProgress('Encrypting file contents in-memory...', 30);
-            const fileArrayBuffer = await file.arrayBuffer();
-            const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 12-byte initialization vector
-
-            const encryptedFileBuffer = await window.crypto.subtle.encrypt(
-                { name: 'AES-GCM', iv: iv },
-                aesKey,
-                fileArrayBuffer
-            );
-
-            // --- Step 3: Wrap Symmetric Key for each staff recipient ---
-            this.updateProgress('Wrapping secure credentials for staff keys...', 60);
-            const wrappedKeys = {};
-
-            for (const recipient of this.recipientsValue) {
-                try {
-                    // Import standard PEM RSA-OAEP public key
-                    const rsaPublicKey = await window.crypto.subtle.importKey(
-                        'spki',
-                        this.convertPemToBinary(recipient.publicKey),
-                        { name: 'RSA-OAEP', hash: 'SHA-256' },
-                        false,
-                        ['encrypt', 'wrapKey']
-                    );
-
-                    // Encrypt K_sym using recipient's Public Key
-                    const wrappedKeyBuffer = await window.crypto.subtle.encrypt(
-                        { name: 'RSA-OAEP' },
-                        rsaPublicKey,
-                        rawAesKey
-                    );
-
-                    wrappedKeys[recipient.userId] = this.arrayBufferToHex(wrappedKeyBuffer);
-                } catch (err) {
-                    console.warn(`Could not wrap session keys for user: ${recipient.userId}`, err);
-                }
-            }
-
-            if (Object.keys(wrappedKeys).length === 0) {
-                throw new Error('Key wrapping failed. No valid recipient paths could be configured.');
-            }
-
-            // --- Step 4: Construct Secure Multipart Payload and Stream ---
-            this.updateProgress('Uploading encrypted payloads...', 80);
-            const formData = new FormData();
-            formData.append('senderName', name);
-            formData.append('senderEmail', email);
-            formData.append('iv', this.arrayBufferToHex(iv));
-            formData.append('wrappedKeys', JSON.stringify(wrappedKeys));
-
-            // Include the hidden request token so the server can fulfill the DropRequest entity
-            if (this.hasReqTokenTarget) {
-                formData.append('reqToken', this.reqTokenTarget.value);
-            }
-
-            // Append raw binary encrypted blob
-            const encryptedBlob = new Blob([encryptedFileBuffer], { type: 'application/octet-stream' });
-            formData.append('encryptedFile', encryptedBlob, file.name + '.enc');
-
-            await this.uploadPayload(formData);
-
-        } catch (error) {
-            console.error('Secure local encryption failed:', error);
-            this.updateStatus(`Security handshake failed: ${error.message}`, 'error');
-            this.unlockUI();
-        }
+    connect() {
+        this.initializeUppy();
+        this.cryptoMetadata = {}; // Temporary lookup for encrypt configurations
     }
 
     /**
-     * Executes the asynchronous transport streaming the FormData payload.
+     * Configures Uppy with custom cryptographic pre-processing.
      */
-    async uploadPayload(formData) {
+    initializeUppy() {
+        this.uppy = new Uppy({
+            autoProceed: false,
+            restrictions: {
+                maxNumberOfFiles: 1,
+                maxFileSize: 52428800 // 50MB
+            }
+        });
+
+        // Use Uppy's pre-processor step to intercept and locally encrypt file buffers
+        this.uppy.addPreProcessor(async (fileIDs) => {
+            for (const id of fileIDs) {
+                const file = this.uppy.getFile(id);
+                this.updateProgress('Encrypting file locally in-browser...', 30);
+
+                const encryptedData = await this.encryptFileLocally(file.data, file.name);
+
+                // Save crypto artifacts mapped specifically to this Uppy file id
+                this.cryptoMetadata[id] = {
+                    iv: encryptedData.iv,
+                    wrappedKeys: encryptedData.wrappedKeys,
+                    originalFileName: file.name
+                };
+
+                // Replace the raw file with the encrypted blob payload
+                this.uppy.setFileState(id, {
+                    data: encryptedData.blob,
+                    size: encryptedData.blob.size
+                });
+            }
+        });
+
+        // Use standard Uppy S3 direct uploading
+        this.uppy.use(AwsS3, {
+            getUploadParameters: async (file) => {
+                // Request a dynamic AWS pre-signed PUT URL from Symfony
+                const response = await fetch(this.presignUrlValue, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: file.name })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Could not fetch pre-signed S3 parameters.');
+                }
+
+                const data = await response.json();
+
+                // Stash the S3 key on the file object metadata so we can access it on success
+                this.uppy.setFileMeta(file.id, { s3Key: data.s3Key });
+
+                return {
+                    method: 'PUT',
+                    url: data.uploadUrl,
+                    headers: { 'Content-Type': 'application/octet-stream' }
+                };
+            }
+        });
+
+        // Wire Uppy's progress state into our UI tracker
+        this.uppy.on('upload-progress', (file, progress) => {
+            const percentage = Math.round((progress.bytesUploaded / progress.bytesTotal) * 100);
+            this.updateProgress('Streaming encrypted binary to cloud...', percentage);
+        });
+
+        // Handle successful direct S3 transfer
+        this.uppy.on('upload-success', async (file, response) => {
+            this.updateProgress('Synchronizing security envelopes...', 90);
+            const crypto = this.cryptoMetadata[file.id];
+
+            const payload = {
+                senderName: this.senderNameTarget.value,
+                senderEmail: this.senderEmailTarget.value,
+                iv: crypto.iv,
+                wrappedKeys: crypto.wrappedKeys,
+                s3Key: file.meta.s3Key,
+                originalFileName: crypto.originalFileName,
+                reqToken: this.hasReqTokenTarget ? this.reqTokenTarget.value : null
+            };
+
+            await this.finalizeS3Document(payload);
+        });
+
+        this.uppy.on('error', (error) => {
+            console.error('Uppy Direct upload collapsed:', error);
+            this.updateStatus(`Security transmission failed: ${error.message}`, 'error');
+            this.unlockUI();
+        });
+    }
+
+    /**
+     * Executes the browser Web Crypto encryption task.
+     */
+    async encryptFileLocally(fileBlob, fileName) {
+        const fileArrayBuffer = await fileBlob.arrayBuffer();
+
+        // 1. Generate local symmetric session key (K_sym)
+        const aesKey = await window.crypto.subtle.generateKey(
+            { name: 'AES-GCM', length: 256 },
+            true,
+            ['encrypt', 'decrypt']
+        );
+
+        const rawAesKey = await window.crypto.subtle.exportKey('raw', aesKey);
+
+        // 2. Encrypt the file buffer
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedFileBuffer = await window.crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv: iv },
+            aesKey,
+            fileArrayBuffer
+        );
+
+        // 3. Wrap K_sym for each firm recipient
+        const wrappedKeys = {};
+        for (const recipient of this.recipientsValue) {
+            try {
+                const rsaPublicKey = await window.crypto.subtle.importKey(
+                    'spki',
+                    this.convertPemToBinary(recipient.publicKey),
+                    { name: 'RSA-OAEP', hash: 'SHA-256' },
+                    false,
+                    ['encrypt', 'wrapKey']
+                );
+
+                const wrappedKeyBuffer = await window.crypto.subtle.encrypt(
+                    { name: 'RSA-OAEP' },
+                    rsaPublicKey,
+                    rawAesKey
+                );
+
+                wrappedKeys[recipient.userId] = this.arrayBufferToHex(wrappedKeyBuffer);
+            } catch (err) {
+                console.warn(`Keywrap failed for staff user: ${recipient.userId}`, err);
+            }
+        }
+
+        const encryptedBlob = new Blob([encryptedFileBuffer], { type: 'application/octet-stream' });
+
+        return {
+            blob: encryptedBlob,
+            iv: this.arrayBufferToHex(iv),
+            wrappedKeys: wrappedKeys
+        };
+    }
+
+    /**
+     * Relays cryptographic parameters and S3 paths to Symfony to write the database mappings.
+     */
+    async finalizeS3Document(payload) {
         try {
-            const response = await fetch(this.uploadUrlValue, {
+            const response = await fetch(this.finalizeUrlValue, {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
             const result = await response.json();
@@ -140,8 +198,9 @@ export default class extends Controller {
                 this.updateProgress('Upload complete!', 100);
                 this.updateStatus(result.message, 'success');
                 this.formTarget.reset();
+                this.uppy.clear();
             } else {
-                throw new Error(result.error || 'Unknown transport error occurred.');
+                throw new Error(result.error || 'Metadata alignment failed.');
             }
         } catch (err) {
             this.updateStatus(`Delivery failed: ${err.message}`, 'error');
@@ -150,11 +209,33 @@ export default class extends Controller {
         }
     }
 
+    /**
+     * Triggers the direct S3 upload process on submit.
+     */
+    processUpload(event) {
+        event.preventDefault();
+
+        const file = this.fileInputTarget.files[0];
+        if (!file) {
+            this.updateStatus('Please select a document to upload.', 'error');
+            return;
+        }
+
+        this.lockUI();
+
+        // Feed file directly to Uppy
+        this.uppy.addFile({
+            name: file.name,
+            type: file.type,
+            data: file
+        });
+
+        // Fire the upload sequence
+        this.uppy.upload();
+    }
+
     // --- Cryptographic Helper Methods ---
 
-    /**
-     * Extracts raw binary from an asymmetric PEM public key string block.
-     */
     convertPemToBinary(pem) {
         const lines = pem.split('\n');
         let base64 = '';
@@ -173,16 +254,13 @@ export default class extends Controller {
         return bytes.buffer;
     }
 
-    /**
-     * Translates a binary ArrayBuffer block into a clean hex string.
-     */
     arrayBufferToHex(buffer) {
         return Array.from(new Uint8Array(buffer))
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
     }
 
-    // --- UI State Management Methods ---
+    // --- UI Helpers ---
 
     lockUI() {
         this.submitBtnTarget.disabled = true;
