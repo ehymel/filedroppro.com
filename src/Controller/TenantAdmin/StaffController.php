@@ -72,8 +72,6 @@ class StaffController extends AbstractController
             $invitation = $form->getData();
             $email = $invitation->email;
 
-            $this->addFlash('info', 'Invitation sent successfully.');
-
             // Guard 1: Check if a registered user with this email already exists in the database
             $existingUser = $this->userRepository->findOneByEmail($email);
 
