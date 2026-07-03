@@ -167,13 +167,13 @@ class SecureDropController extends AbstractController
         // Map or generate Client profile
         $client = $this->em->getRepository(Client::class)->findOneBy([
             'tenant' => $tenant,
-            'clientName' => sprintf('Drop Box: %s', $senderName)
+            'clientName' => $senderName,
         ]);
 
         if (!$client) {
             $client = new Client();
             $client->tenant = $tenant;
-            $client->clientName = sprintf('Drop Box: %s', $senderName);
+            $client->clientName = trim($senderName);
             $this->em->persist($client);
         }
 

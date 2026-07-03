@@ -11,7 +11,7 @@ use Symfony\Component\Uid\Uuid;
  * The private key is encrypted client-side using a key derived from the user's password (K_master).
  */
 #[ORM\Entity]
-class UserKey
+class UserKey extends MappedSuperclassBase
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]

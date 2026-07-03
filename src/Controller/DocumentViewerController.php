@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\Entity\Client;
 use App\Entity\Document;
 use App\Entity\DocumentKey;
+use App\Repository\ClientRepository;
+use App\Repository\DocumentKeyRepository;
+use App\Repository\DocumentRepository;
 use Aws\S3\S3Client;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,12 +24,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class DocumentViewerController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $em,
+    public function __construct(private readonly DocumentRepository $documentRepository,
                                 private readonly S3Client $s3Client,
                                 #[Autowire(param: 'env(AWS_S3_BUCKET)')] private readonly string $s3BucketName) {}
 
     #[Route(path: '/', name: 'dashboard', methods: ['GET'])]
-    public function dashboard(): Response
+    public function dashboard(ClientRepository $clientRepository): Response
     {
         if (!$this->getUser()->tenant) {
             $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
@@ -36,7 +39,7 @@ class DocumentViewerController extends AbstractController
         // Fetch clients belonging to this tenant
         // Note: Our MultiTenant SQL Filter automatically enforces tenant boundaries here.
         return $this->render('internal/document_dashboard.html.twig', [
-            'clients' => $this->em->getRepository(Client::class)->findBy([], ['clientName' => 'ASC']),
+            'clients' => $clientRepository->findBy([], ['clientName' => 'ASC']),
             'encryptedPrivateKey' => $this->getUser()->userKey?->encryptedPrivateKey
         ]);
     }
@@ -83,9 +86,9 @@ class DocumentViewerController extends AbstractController
      * API Endpoint yielding the specific initialization vector and wrapped key block for a user.
      */
     #[Route(path: '/crypto-metadata/{id}', name: 'metadata', methods: ['GET'])]
-    public function getCryptoMetadata(Document $document): JsonResponse
+    public function getCryptoMetadata(Document $document, DocumentKeyRepository $documentKeyRepository): JsonResponse
     {
-        $documentKey = $this->em->getRepository(DocumentKey::class)->findOneBy([
+        $documentKey = $documentKeyRepository->findOneBy([
             'document' => $document,
             'user' => $this->getUser()
         ]);
@@ -110,15 +113,18 @@ class DocumentViewerController extends AbstractController
             throw $this->createAccessDeniedException('Unauthorized tenant metadata matching block.');
         }
 
-        $secureDirectory = $this->getParameter('kernel.project_dir') . '/var/secure_uploads';
-        $filePath = $secureDirectory . '/' . $document->filePath;
-
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        // Remove the encrypted object from AWS S3 before deleting the metadata record
+        try {
+            $this->s3Client->deleteObject([
+                'Bucket' => $this->s3BucketName,
+                'Key' => $document->filePath,
+            ]);
+        } catch (\Exception $e) {
+            $this->addFlash('danger', 'The document could not be removed from secure S3 storage. Please try again.');
+            return $this->redirectToRoute('internal_documents_dashboard');
         }
 
-        $this->em->remove($document);
-        $this->em->flush();
+        $this->documentRepository->remove($document, true);
 
         $this->addFlash('success', 'Document deleted successfully.');
 
@@ -135,8 +141,7 @@ class DocumentViewerController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $document->note = $data['note'] ?? '';
 
-        $this->em->persist($document);
-        $this->em->flush();
+        $this->documentRepository->save($document, true);
 
         return new JsonResponse(['success' => true, 'note' => $document->note]);
     }

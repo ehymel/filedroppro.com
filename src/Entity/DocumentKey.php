@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Repository\DocumentKeyRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -11,10 +12,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  * The Key-Wrapping junction entity.
  * Storing a unique wrapped symmetric key (K_sym encrypted with User's K_pub) for each authorized user.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: DocumentKeyRepository::class)]
 #[ORM\Table(name: 'document_keys')]
 #[ORM\UniqueConstraint(name: 'uniq_doc_user', columns: ['document_id', 'user_id'])]
-class DocumentKey
+class DocumentKey extends MappedSuperclassBase
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
