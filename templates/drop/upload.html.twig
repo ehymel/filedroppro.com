@@ -22,9 +22,8 @@
                         <h3>Document Request for {{ dropRequest.clientName }}</h3>
                         <p>Requested by: <strong>{{ dropRequest.createdBy.email }}</strong></p>
                         {% if dropRequest.instructions %}
-                            <blockquote>
-                                <p>"{{ dropRequest.instructions }}"</p>
-                            </blockquote>
+                            <strong>Instructions:</strong>
+                            <p>"{{ dropRequest.instructions }}"</p>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -39,7 +38,7 @@
                     {{ form_row(form.senderName, { 'attr': { 'data-secure-drop-target': 'senderName' } }) }}
                     {{ form_row(form.senderEmail, { 'attr': { 'data-secure-drop-target': 'senderEmail' } }) }}
 
-                    <div id="upload-status-alert" style="display:none;" role="alert"></div>
+                    <div id="upload-status-alert" class="d-none alert alert-danger" data-secure-drop-target="uploadStatusAlert" role="alert"></div>
                     <fieldset>
                         <legend>Select Files</legend>
 
@@ -54,7 +53,7 @@
                         </div>
                     </fieldset>
 
-                    <div id="progress-container" style="display:none;" data-secure-drop-target="progressContainer">
+                    <div id="progress-container" class="d-none alert alert-info" data-secure-drop-target="progressContainer">
                         <label id="progress-label">Status: Initializing Cryptographic Handshake...</label>
                         <progress max="100" value="0" data-secure-drop-target="progressBar"></progress>
                         <span id="progress-percentage" data-secure-drop-target="progressPercent">0%</span>

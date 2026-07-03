@@ -22,7 +22,8 @@ export default class extends Controller {
         'progressContainer',
         'progressBar',
         'progressPercent',
-        'reqToken'
+        'reqToken',
+        'uploadStatusAlert'
     ];
 
     static values = {
@@ -130,8 +131,6 @@ export default class extends Controller {
                 reqToken: this.hasReqTokenTarget ? this.reqTokenTarget.value : null
             };
 
-            console.log(payload);
-
             await this.finalizeS3Document(payload);
         });
 
@@ -220,7 +219,6 @@ export default class extends Controller {
                 throw new Error(result.error || 'Metadata alignment failed.');
             }
         } catch (err) {
-            console.error(err);
             this.updateStatus(`Delivery failed: ${err.message}`, 'error');
         } finally {
             this.unlockUI();
@@ -300,9 +298,11 @@ export default class extends Controller {
     }
 
     updateStatus(message, type) {
-        const alertBox = this.element.querySelector('#upload-status-alert');
+        const alertBox = this.uploadStatusAlertTarget;
         if (alertBox) {
-            alertBox.style.display = 'block';
+            this.showElement(alertBox);
+            alertBox.classList.remove('alert-danger');
+            alertBox.classList.add(`alert-info`);
             alertBox.setAttribute('data-type', type);
             alertBox.textContent = message;
         }
@@ -310,7 +310,7 @@ export default class extends Controller {
 
     showElement(element) {
         if (element) {
-            element.style.display = 'block';
+            element.classList.remove('d-none');
         }
     }
 }

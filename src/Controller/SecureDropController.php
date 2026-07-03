@@ -217,7 +217,7 @@ class SecureDropController extends AbstractController
 
         return new JsonResponse([
             'success' => true,
-            'message' => 'Files securely encrypted and successfully uploaded directly to S3!'
+            'message' => 'Files securely encrypted and successfully uploaded'
         ]);
     }
 }
