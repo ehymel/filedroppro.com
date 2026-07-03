@@ -7,7 +7,7 @@
         "php": ">=8.5",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "aws/aws-sdk-php": ">=3.387.1",
+        "aws/aws-sdk-php": ">=3.387.2",
         "babdev/pagerfanta-bundle": "^4.6",
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",

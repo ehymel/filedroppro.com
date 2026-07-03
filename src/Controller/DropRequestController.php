@@ -92,7 +92,7 @@ class DropRequestController extends AbstractController
     {
         if (!$this->isCsrfTokenValid('resend_request_' . $dropRequest->id->toString(), $request->request->get('_token'))) {
             $this->addFlash('danger', 'Invalid security token.');
-            return $this->redirectToRoute('internal_requests_manage');
+            return $this->redirectToRoute('internal_requests_list');
         }
 
         if ($this->dispatchRequestEmail($dropRequest)) {
@@ -101,7 +101,7 @@ class DropRequestController extends AbstractController
             $this->addFlash('danger', 'Failed to resend the email notification.');
         }
 
-        return $this->redirectToRoute('internal_requests_manage');
+        return $this->redirectToRoute('internal_requests_list');
     }
 
     #[Route('/revoke/{id}', name: 'revoke', methods: ['POST'])]
@@ -109,7 +109,7 @@ class DropRequestController extends AbstractController
     {
         if (!$this->isCsrfTokenValid('revoke_request_' . $dropRequest->id->toString(), $request->request->get('_token'))) {
             $this->addFlash('danger', 'Invalid security token.');
-            return $this->redirectToRoute('internal_requests_manage');
+            return $this->redirectToRoute('internal_requests_list');
         }
 
         $dropRequest->status = 'revoked';

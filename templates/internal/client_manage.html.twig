@@ -1,5 +1,5 @@
 {% set currentUrl = path(app.request.attributes.get('_route'),
-    app.request.attributes.get('_route_params')|merge(app.request.query.all)) %}
+    app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({'ajax': 1})) %}
 
 {% extends 'base.html.twig' %}
 
