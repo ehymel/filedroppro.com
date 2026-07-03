@@ -36,10 +36,16 @@
                         <button type="submit" class="btn btn-sm btn-info">Resend Email</button>
                     </form>
 
-                    <form action="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}" method="POST" onsubmit="return confirm('Revoke this link? The client will no longer be able to use it.');" style="display:inline;">
-                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
-                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            data-controller="sweetalert"
+                            data-action="click->sweetalert#remove"
+                            data-sweetalert-title-value="Revoke this link?"
+                            data-sweetalert-text-value="The client will no longer be able to use it."
+                            data-sweetalert-confirm-button-text-value="Yes, revoke it!"
+                            data-sweetalert-delete-url-value="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}"
+                            data-sweetalert-csrf-token-value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
+                        Revoke
+                    </button>
                 {% else %}
                     <em>No actions available</em>
                 {% endif %}

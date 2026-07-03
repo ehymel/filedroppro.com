@@ -38,10 +38,16 @@
             <td>{{ client.documents|length }}</td>
             <td>
                 {% if client.documents|length === 0 %}
-                    <form action="{{ path('internal_client_delete', {'id': client.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this client?');" style="display:inline;">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete_client' ~ client.id.toString()) }}">
-                        <button type="submit" class="btn btn-sm btn-danger">Permanently delete client</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            data-controller="sweetalert"
+                            data-action="click->sweetalert#remove"
+                            data-sweetalert-title-value="Permanently delete client?"
+                            data-sweetalert-text-value="Are you sure you want to delete this client?"
+                            data-sweetalert-confirm-button-text-value="Yes, delete it!"
+                            data-sweetalert-delete-url-value="{{ path('internal_client_delete', {'id': client.id.toString()}) }}"
+                            data-sweetalert-csrf-token-value="{{ csrf_token('delete_client' ~ client.id.toString()) }}">
+                        Permanently delete client
+                    </button>
                 {% endif %}
             </td>
         </tr>

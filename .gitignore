@@ -1,4 +1,5 @@
 /.idea
+/.junie
 
 ###> symfony/framework-bundle ###
 /.env.local

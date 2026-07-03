@@ -35,10 +35,16 @@
             <td>
                 {# Let the admin renew/resend the link if it is pending or expired (i.e. not yet used) #}
                 {% if not invite.used %}
-                    <form action="{{ path('internal_staff_revoke', {'id': invite.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to revoke access parameters for this token?');" style="display:inline;">
-                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_invitation_' ~ invite.id.toString()) }}">
-                        <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            data-controller="sweetalert"
+                            data-action="click->sweetalert#remove"
+                            data-sweetalert-title-value="Revoke invitation?"
+                            data-sweetalert-text-value="Are you sure you want to revoke access parameters for this token?"
+                            data-sweetalert-confirm-button-text-value="Yes, revoke it!"
+                            data-sweetalert-delete-url-value="{{ path('internal_staff_revoke', {'id': invite.id.toString()}) }}"
+                            data-sweetalert-csrf-token-value="{{ csrf_token('revoke_invitation_' ~ invite.id.toString()) }}">
+                        Revoke
+                    </button>
 
                     <form action="{{ path('internal_staff_reinvite', {'id': invite.id.toString()}) }}" method="POST" style="display:inline;">
                         <input type="hidden" name="_token" value="{{ csrf_token('reinvite_invitation_' ~ invite.id.toString()) }}">
