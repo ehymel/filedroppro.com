@@ -7,7 +7,6 @@
          id="drop-portal"
          data-controller="secure-drop"
          data-secure-drop-recipients-value="{{ recipientKeys|json_encode }}"
-         data-secure-drop-upload-url-value="{{ path('drop_upload', {'joinCode': joinCode}) }}"
          data-secure-drop-presign-url-value="{{ path('drop_presign', {'joinCode': joinCode}) }}"
          data-secure-drop-finalize-url-value="{{ path('drop_finalize', {'joinCode': joinCode}) }}"
     >
@@ -40,12 +39,18 @@
                     {{ form_row(form.senderName, { 'attr': { 'data-secure-drop-target': 'senderName' } }) }}
                     {{ form_row(form.senderEmail, { 'attr': { 'data-secure-drop-target': 'senderEmail' } }) }}
 
+                    <div id="upload-status-alert" style="display:none;" role="alert"></div>
                     <fieldset>
                         <legend>Select Files</legend>
-                        <div>
+
+                        {# Uppy Dashboard Mounting Container #}
+                        <div id="uppy-dashboard-container" data-secure-drop-target="uppyContainer"></div>
+
+                        {# Fallback native file input for legacy environments #}
+                        <div id="legacy-file-fallback" style="display: none;">
                             <label for="file-input">Choose file to encrypt and send</label>
-                            <input type="file" id="file-input" required data-secure-drop-target="fileInput">
-                            <p>Supported formats: PDF, DOCX, XLSX, ZIP, JPG, PNG (Max 50MB)</p>
+                            <input type="file" id="file-input" data-secure-drop-target="fileInput">
+                            <p>Supported formats: PDF, DOCX, ZIP, JPG, PNG (Max 50MB)</p>
                         </div>
                     </fieldset>
 

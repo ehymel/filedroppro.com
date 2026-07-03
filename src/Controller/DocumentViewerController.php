@@ -5,11 +5,15 @@ namespace App\Controller;
 use App\Entity\Client;
 use App\Entity\Document;
 use App\Entity\DocumentKey;
+use Aws\S3\S3Client;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -17,7 +21,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class DocumentViewerController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(private EntityManagerInterface $em,
+                                private readonly S3Client $s3Client,
+                                #[Autowire(param: 'env(AWS_S3_BUCKET)')] private readonly string $s3BucketName) {}
 
     #[Route(path: '/', name: 'dashboard', methods: ['GET'])]
     public function dashboard(): Response
@@ -36,30 +42,41 @@ class DocumentViewerController extends AbstractController
     }
 
     /**
-     * Securely streams the raw, encrypted .enc binary block to the browser.
+     * Securely streams the raw, encrypted .enc binary block from AWS S3 directly to the browser.
      */
     #[Route(path: '/download-payload/{id}', name: 'payload', methods: ['GET'])]
     public function downloadPayload(Document $document): Response
     {
-        if (!$this->getUser()->tenant) {
-            $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
-            return $this->redirectToRoute('unauthorized');
-        }
-
         // Security Check: Verify that this document belongs to the active user's tenant
         if ($document->client->tenant !== $this->getUser()->tenant) {
             throw $this->createAccessDeniedException('Unauthorized tenant metadata matching block.');
         }
 
-        $secureDirectory = $this->getParameter('kernel.project_dir') . '/var/secure_uploads';
-        $filePath = $secureDirectory . '/' . $document->filePath;
+        try {
+            // Retrieve the encrypted object data stream directly from AWS S3
+            $result = $this->s3Client->getObject([
+                'Bucket' => $this->s3BucketName,
+                'Key' => $document->filePath,
+            ]);
 
-        if (!file_exists($filePath)) {
-            throw $this->createNotFoundException('The requested encrypted file payload could not be located on disk.');
+            // Stream the S3 resource directly back to Symfony's output buffer
+            $response = new StreamedResponse(function () use ($result) {
+                $stream = $result['Body'];
+                while (!$stream->eof()) {
+                    echo $stream->read(8192); // Stream in memory-safe 8KB chunks
+                    flush();
+                }
+            });
+
+            // Set appropriate headers to stream as binary file attachment
+            $response->headers->set('Content-Type', 'application/octet-stream');
+            $response->headers->set('Content-Disposition', sprintf('attachment; filename="%s"', $document->filePath));
+
+            return $response;
+
+        } catch (\Exception $e) {
+            throw $this->createNotFoundException('The requested encrypted file payload could not be retrieved from secure S3 storage.');
         }
-
-        // Return the raw encrypted file payload directly as a binary response stream
-        return new BinaryFileResponse($filePath);
     }
 
     /**
@@ -109,7 +126,7 @@ class DocumentViewerController extends AbstractController
     }
 
     #[Route(path: '/update-note/{id}', name: 'update_note', methods: ['POST'])]
-    public function updateNote(Document $document, \Symfony\Component\HttpFoundation\Request $request): JsonResponse
+    public function updateNote(Document $document, Request $request): JsonResponse
     {
         if ($document->client->tenant !== $this->getUser()->tenant) {
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_FORBIDDEN);

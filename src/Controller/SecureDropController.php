@@ -13,7 +13,6 @@ use Aws\S3\S3Client;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -100,7 +99,7 @@ class SecureDropController extends AbstractController
     /**
      * Generates a secure AWS S3 Pre-signed URL for direct browser uploads.
      */
-    #[Route('/drop/{joinCode}/presign', name: 'presign', methods: ['POST'])]
+    #[Route('/presign/{joinCode}', name: 'presign', methods: ['POST'])]
     public function generatePresignedUrl(string $joinCode, Request $request): JsonResponse
     {
         $tenant = $this->em->getRepository(Tenant::class)->findOneBy([
@@ -141,7 +140,7 @@ class SecureDropController extends AbstractController
     /**
      * Finalizes metadata in database after Uppy confirms a successful direct S3 upload.
      */
-    #[Route('/drop/{joinCode}/finalize', name: 'finalize', methods: ['POST'])]
+    #[Route('/finalize/{joinCode}', name: 'finalize', methods: ['POST'])]
     public function finalizeUpload(string $joinCode, Request $request): JsonResponse
     {
         $tenant = $this->em->getRepository(Tenant::class)->findOneBy([
@@ -217,111 +216,6 @@ class SecureDropController extends AbstractController
         return new JsonResponse([
             'success' => true,
             'message' => 'Files securely encrypted and successfully uploaded directly to S3!'
-        ]);
-    }
-
-    /**
-     * Accepts encrypted raw binary file chunks, maps envelope keys, and registers records.
-     */
-    #[Route(path: '/upload/{joinCode}', name: 'upload', methods: ['POST'])]
-    public function handleUpload(string $joinCode, Request $request): JsonResponse
-    {
-        $tenant = $this->em->getRepository(Tenant::class)->findOneBy([
-            'joinCode' => strtoupper(trim($joinCode))
-        ]);
-
-        if (!$tenant) {
-            return new JsonResponse(['error' => 'Invalid drop destination.'], Response::HTTP_NOT_FOUND);
-        }
-
-        // 1. Extract post parameters
-        $senderName = $request->request->get('senderName');
-        $senderEmail = $request->request->get('senderEmail');
-        $iv = $request->request->get('iv');
-        $wrappedKeysJson = $request->request->get('wrappedKeys'); // Maps userId -> wrappedKeyHex
-        $reqToken = $request->request->get('reqToken');
-
-        /** @var UploadedFile|null $file */
-        $file = $request->files->get('encryptedFile');
-        $originalNameWithEnc = $file->getClientOriginalName();
-        // Strip the ".enc" suffix we appended client-side
-        $originalFileName = preg_replace('/\.enc$/i', '', $originalNameWithEnc);
-
-        if (!$senderName || !$senderEmail || !$iv || !$wrappedKeysJson || !$file) {
-            return new JsonResponse(['error' => 'Missing required security parameters.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $wrappedKeys = json_decode($wrappedKeysJson, true);
-        if (!is_array($wrappedKeys)) {
-            return new JsonResponse(['error' => 'Invalid cryptographic mapping.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        // 2. Automatically associate or create a Client entity for this sender
-        // Ensures standard SaaS organizational structure remains completely clean
-        $client = $this->em->getRepository(Client::class)->findOneBy([
-            'tenant' => $tenant,
-            'clientName' => $senderName
-        ]);
-
-        if (!$client) {
-            $client = new Client();
-            $client->tenant = $tenant;
-            $client->clientName = $senderName;
-            $this->em->persist($client);
-        }
-
-        // 3. Persist the encrypted binary to our secure storage volume
-        $secureDirectory = $this->getParameter('kernel.project_dir') . '/var/secure_uploads';
-        $safeFilename = Uuid::v4()->toString() . '.enc';
-
-        try {
-            $file->move($secureDirectory, $safeFilename);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Failed to write encrypted payload to disk.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        // 4. Create the Document meta-record
-        $document = new Document();
-        $document->client = $client;
-        $document->filePath = $safeFilename;
-        $document->iv = $iv;
-        $document->originalFileName = $originalFileName;
-        $this->em->persist($document);
-
-        // 5. Build individual DocumentKeys for each recipient
-        foreach ($wrappedKeys as $userId => $wrappedKeyHex) {
-            /** @var User $user */
-            $user = $this->em->getRepository(User::class)->find($userId);
-            if ($user && $user->tenant === $tenant) {
-                $documentKey = new DocumentKey();
-                $documentKey->document = $document;
-                $documentKey->user = $user;
-                $documentKey->wrappedKeyHex = $wrappedKeyHex;
-
-                $this->em->persist($documentKey);
-
-                // Automatically assign the user to have permanent access to this auto-created Client
-                $client->addUser($user);
-            }
-        }
-
-        // 6. Update Drop Request Status if linked
-        if ($reqToken) {
-            $dropRequest = $this->em->getRepository(DropRequest::class)->findOneBy([
-                'token' => $reqToken,
-                'tenant' => $tenant
-            ]);
-
-            if ($dropRequest && $dropRequest->status === 'pending') {
-                $dropRequest->status = 'fulfilled';
-            }
-        }
-
-        $this->em->flush();
-
-        return new JsonResponse([
-            'success' => true,
-            'message' => 'Files securely encrypted and successfully delivered to your providers!'
         ]);
     }
 }

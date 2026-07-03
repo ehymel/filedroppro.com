@@ -1,6 +1,9 @@
 import { Controller } from '@hotwired/stimulus';
 import Uppy from '@uppy/core';
+import Dashboard from '@uppy/dashboard';
 import AwsS3 from '@uppy/aws-s3';
+import '@uppy/core/dist/style.min.css';
+import '@uppy/dashboard/dist/style.min.css';
 
 /**
  * Secure Drop Controller with Uppy Direct S3 Integration
@@ -13,6 +16,7 @@ export default class extends Controller {
         'form',
         'senderName',
         'senderEmail',
+        'uppyContainer',
         'fileInput',
         'submitBtn',
         'progressContainer',
@@ -42,6 +46,17 @@ export default class extends Controller {
                 maxNumberOfFiles: 1,
                 maxFileSize: 52428800 // 50MB
             }
+        });
+
+        // Mount the Visual Dashboard UI
+        this.uppy.use(Dashboard, {
+            target: this.uppyContainerTarget,
+            inline: true,
+            height: 350,
+            showProgressDetails: true,
+            hideUploadButton: true, // We want the main HTML form button to trigger the upload
+            // theme: 'dark', // Matches your slate-900 background beautifully
+            proudlyDisplayPoweredByUppy: true
         });
 
         // Use Uppy's pre-processor step to intercept and locally encrypt file buffers
@@ -114,6 +129,8 @@ export default class extends Controller {
                 originalFileName: crypto.originalFileName,
                 reqToken: this.hasReqTokenTarget ? this.reqTokenTarget.value : null
             };
+
+            console.log(payload);
 
             await this.finalizeS3Document(payload);
         });
@@ -203,6 +220,7 @@ export default class extends Controller {
                 throw new Error(result.error || 'Metadata alignment failed.');
             }
         } catch (err) {
+            console.error(err);
             this.updateStatus(`Delivery failed: ${err.message}`, 'error');
         } finally {
             this.unlockUI();
@@ -215,22 +233,23 @@ export default class extends Controller {
     processUpload(event) {
         event.preventDefault();
 
-        const file = this.fileInputTarget.files[0];
-        if (!file) {
-            this.updateStatus('Please select a document to upload.', 'error');
+        // Instead of reading a hidden file input, we now check the Uppy instance directly
+        const files = this.uppy.getFiles();
+        if (files.length === 0) {
+            this.updateStatus('Please drag and drop a document into the upload zone.', 'error');
+            return;
+        }
+
+        const name = this.senderNameTarget.value;
+        const email = this.senderEmailTarget.value;
+        if (!name || !email) {
+            this.updateStatus('Please provide your name and email address.', 'error');
             return;
         }
 
         this.lockUI();
 
-        // Feed file directly to Uppy
-        this.uppy.addFile({
-            name: file.name,
-            type: file.type,
-            data: file
-        });
-
-        // Fire the upload sequence
+        // Fire the upload sequence, which will automatically trigger the E2EE pre-processor
         this.uppy.upload();
     }
 
