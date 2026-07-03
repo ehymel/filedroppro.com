@@ -1,0 +1,53 @@
+{# Pending / Active Invitations Table #}
+<h3>Clients</h3>
+
+<table class="table table-striped sortable">
+    <thead>
+    <tr>
+        <th>Client</th>
+        <th>Created By</th>
+        <th>Created Date</th>
+        <th>Document Count</th>
+        <th class="no-sort">Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for client in clients %}
+        <tr>
+            <td>
+                <div data-controller="client-name"
+                     data-client-name-url-value="{{ path('internal_client_update_name', {'id': client.id.toString()}) }}">
+                    <span data-client-name-target="display">
+                        <span data-client-name-target="name">{{ client.clientName }}</span>
+                        <a href="#" data-action="click->client-name#toggle" class="ms-1"><span class="fa fa-edit"></span></a>
+                    </span>
+                    <div data-client-name-target="form" class="d-none mt-2">
+                        <textarea class="form-control mb-2" data-client-name-target="input">{{ client.clientName }}</textarea>
+                        <button class="btn btn-sm btn-success" data-action="click->client-name#save">Save</button>
+                        <button class="btn btn-sm btn-link" data-action="click->client-name#toggle">Cancel</button>
+                    </div>
+                </div>
+            </td>
+            <td>{{ client.createdBy?.name }}</td>
+            <td>
+                {{ client.createdAt|date('M d, Y') }}
+                <br />
+                {{ client.createdAt|date('h:i a') }}
+            </td>
+            <td>{{ client.documents|length }}</td>
+            <td>
+                {% if client.documents|length === 0 %}
+                    <form action="{{ path('internal_client_delete', {'id': client.id.toString()}) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this client?');" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_client' ~ client.id.toString()) }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Permanently delete client</button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="4">No clients currently registered for this tenant.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
