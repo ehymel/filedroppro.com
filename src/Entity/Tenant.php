@@ -54,5 +54,6 @@ class Tenant extends MappedSuperclassBase
     public ?string $stripeSubscriptionId = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Choice(['trial', 'active', 'suspended', 'past_due'])]
     public ?string $subscriptionPlan = null; // e.g., 'growth', 'enterprise'
 }
