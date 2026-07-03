@@ -92,6 +92,9 @@
                         <li class="ms-3 nav-item{{ currentRoute matches '{^internal_client}' ? ' active bold'}}">
                             <a class="nav-link" href="{{ path('internal_client_list') }}">Manage Clients</a>
                         </li>
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_billing}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('internal_billing_dashboard') }}">Billing</a>
+                        </li>
                         {% endif %}
                     </ul>
                 {% endif %}
