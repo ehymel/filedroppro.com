@@ -187,8 +187,9 @@ class SecureDropController extends AbstractController
 
         // Build individual wrapped key envelopes
         foreach ($wrappedKeys as $userId => $wrappedKeyHex) {
+            /** @var User $user */
             $user = $this->em->getRepository(User::class)->find($userId);
-            if ($user && $user->getTenant() === $tenant) {
+            if ($user && $user->tenant === $tenant) {
                 $documentKey = new DocumentKey();
                 $documentKey->document = $document;
                 $documentKey->user = $user;
@@ -201,13 +202,14 @@ class SecureDropController extends AbstractController
 
         // Fulfill invitation if verified
         if ($reqToken) {
+            /** @var DropRequest $dropRequest */
             $dropRequest = $this->em->getRepository(DropRequest::class)->findOneBy([
                 'token' => $reqToken,
                 'tenant' => $tenant
             ]);
 
-            if ($dropRequest && $dropRequest->getStatus() === 'pending') {
-                $dropRequest->setStatus('fulfilled');
+            if ($dropRequest && $dropRequest->status === 'pending') {
+                $dropRequest->status = 'fulfilled';
             }
         }
 
