@@ -15,16 +15,17 @@
     {% for client in clients %}
         <tr>
             <td>
-                <div data-controller="client-name"
-                     data-client-name-url-value="{{ path('internal_client_update_name', {'id': client.id.toString()}) }}">
-                    <span data-client-name-target="display">
-                        <span data-client-name-target="name">{{ client.clientName }}</span>
-                        <a href="#" data-action="click->client-name#toggle" class="ms-1"><span class="fa fa-edit"></span></a>
+                <div data-controller="inline-edit"
+                     data-inline-edit-url-value="{{ path('internal_client_update_name', {'id': client.id.toString()}) }}"
+                     data-inline-edit-field-value="clientName">
+                    <span data-inline-edit-target="display">
+                        <span data-inline-edit-target="output">{{ client.clientName }}</span>
+                        <a href="#" data-action="click->inline-edit#toggle" class="ms-1"><span class="fa fa-edit"></span></a>
                     </span>
-                    <div data-client-name-target="form" class="d-none mt-2">
-                        <textarea class="form-control mb-2" data-client-name-target="input">{{ client.clientName }}</textarea>
-                        <button class="btn btn-sm btn-success" data-action="click->client-name#save">Save</button>
-                        <button class="btn btn-sm btn-link" data-action="click->client-name#toggle">Cancel</button>
+                    <div data-inline-edit-target="form" class="d-none mt-2">
+                        <textarea class="form-control mb-2" data-inline-edit-target="input">{{ client.clientName }}</textarea>
+                        <button class="btn btn-sm btn-success" data-action="click->inline-edit#save">Save</button>
+                        <button class="btn btn-sm btn-link" data-action="click->inline-edit#toggle">Cancel</button>
                     </div>
                 </div>
             </td>

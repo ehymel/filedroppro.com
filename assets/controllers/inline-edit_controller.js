@@ -1,10 +1,11 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['display', 'form', 'input'];
-    static values = { url: String };
+    static targets = ['display', 'form', 'input', 'output'];
+    static values = { url: String, field: String, empty: String };
 
-    toggle() {
+    toggle(event) {
+        event?.preventDefault();
         this.displayTarget.classList.toggle('d-none');
         this.formTarget.classList.toggle('d-none');
         if (!this.formTarget.classList.contains('d-none')) {
@@ -13,22 +14,21 @@ export default class extends Controller {
     }
 
     async save() {
-        const note = this.inputTarget.value;
         const response = await fetch(this.urlValue, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ note: note })
+            body: JSON.stringify({ [this.fieldValue]: this.inputTarget.value })
         });
 
         if (response.ok) {
             const data = await response.json();
-            this.displayTarget.textContent = data.note || 'No note added.';
+            this.outputTarget.textContent = data[this.fieldValue] || this.emptyValue;
             this.toggle();
         } else {
-            alert('Failed to save note.');
+            alert('Failed to save changes.');
         }
     }
 }
