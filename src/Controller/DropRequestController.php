@@ -120,6 +120,21 @@ class DropRequestController extends AbstractController
         return $this->redirectToRoute('internal_requests_list');
     }
 
+    #[Route('/delete/{id}', name: 'delete', methods: ['POST'])]
+    public function delete(DropRequest $dropRequest, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('delete_request_' . $dropRequest->id->toString(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Invalid security token.');
+            return $this->redirectToRoute('internal_requests_list');
+        }
+
+        $this->dropRequestRepository->remove($dropRequest, true);
+
+        $this->addFlash('success', 'The secure request link has been deleted.');
+
+        return $this->redirectToRoute('internal_requests_list');
+    }
+
     private function dispatchRequestEmail(DropRequest $dropRequest): bool
     {
         $tenant = $dropRequest->tenant;

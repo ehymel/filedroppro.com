@@ -44,7 +44,7 @@
                     <button type="button" class="btn btn-sm btn-danger"
                             data-controller="sweetalert"
                             data-action="click->sweetalert#remove"
-                            data-sweetalert-title-value="Revoke this link?"
+                            data-sweetalert-title-value="Revoke this request?"
                             data-sweetalert-text-value="The client will no longer be able to use it."
                             data-sweetalert-confirm-button-text-value="Yes, revoke it!"
                             data-sweetalert-delete-url-value="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}"
@@ -52,7 +52,16 @@
                         Revoke
                     </button>
                 {% else %}
-                    <em>No actions available</em>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            data-controller="sweetalert"
+                            data-action="click->sweetalert#remove"
+                            data-sweetalert-title-value="Permanently delete this request?"
+                            data-sweetalert-text-value="The request will be removed from the system."
+                            data-sweetalert-confirm-button-text-value="Yes, delete it!"
+                            data-sweetalert-delete-url-value="{{ path('internal_requests_delete', {'id': request.id.toString()}) }}"
+                            data-sweetalert-csrf-token-value="{{ csrf_token('delete_request_' ~ request.id.toString()) }}">
+                        Delete
+                    </button>
                 {% endif %}
             </td>
         </tr>

@@ -10,16 +10,16 @@
             {{ stimulus_controller('reload-content', { url: currentUrl }) }}
             data-action="modal-form:success->reload-content#refreshContent"
     >
-        <div class="row">
-            <div class="col">
+        <div class="row flex-xl-nowrap">
+            <div class="col-12 col-md-10 col-xl-8">
                 <h1>Manage Clients</h1>
             </div>
         </div>
 
-        <div class="row mt-5">
-            <div class="col-md-8 col-12" data-reload-content-target="content">
+        <div class="row flex-xl-nowrap mt-5">
+            <main class="col-12 col-md-10 col-xl-8" data-reload-content-target="content">
                 {{ include('internal/_client_list.html.twig') }}
-            </div>
+            </main>
         </div>
     </div>
 {% endblock %}

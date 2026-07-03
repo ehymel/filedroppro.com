@@ -10,8 +10,8 @@
             {{ stimulus_controller('reload-content', { url: currentUrl }) }}
             data-action="modal-form:success->reload-content#refreshContent"
     >
-        <div class="row">
-            <div class="col">
+        <div class="row flex-xl-nowrap">
+            <div class="col-12 col-md-10 col-xl-8">
                 <h1>Manage Internal Staff</h1>
                 <p>Generate and manage secure single-use entry tokens for your <strong>internal</strong> staff.</p>
             </div>
@@ -29,10 +29,10 @@
             {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
         </div>
 
-        <div class="row mt-5">
-            <div class="col-md-8 col-12" data-reload-content-target="content">
+        <div class="row flex-xl-nowrap mt-5">
+            <main class="col-12 col-md-10 col-xl-8" data-reload-content-target="content">
                 {{ include('internal/_invitation_list.html.twig') }}
-            </div>
+            </main>
         </div>
     </div>
 {% endblock %}

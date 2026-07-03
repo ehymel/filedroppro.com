@@ -79,15 +79,18 @@
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 {% if app.user.tenant %}
                     <ul class="navbar-nav me-auto d-flex">
-                        <li class="nav-item{{ currentRoute matches '{^internal_documents}' ? ' active bold'}}">
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_documents}' ? ' active bold'}}">
                             <a class="nav-link" href="{{ path('internal_documents_dashboard') }}">Document Viewer</a>
                         </li>
-                        <li class="nav-item{{ currentRoute matches '{^internal_requests}' ? ' active bold'}}">
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_requests}' ? ' active bold'}}">
                             <a class="nav-link" href="{{ path('internal_requests_list') }}">Manage Client Drop Requests</a>
                         </li>
                         {% if is_granted('ROLE_ADMIN') %}
-                        <li class="nav-item{{ currentRoute matches '{^internal_staff}' ? ' active bold'}}">
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_staff}' ? ' active bold'}}">
                             <a class="nav-link" href="{{ path('internal_staff_list') }}">Manage Internal Staff</a>
+                        </li>
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_client}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('internal_client_list') }}">Manage Clients</a>
                         </li>
                         {% endif %}
                     </ul>
