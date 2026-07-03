@@ -6,7 +6,9 @@ use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Class TenantFilterConfigurator
@@ -15,11 +17,12 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
  * active Tenant ID context into our dynamic Doctrine SQL Filter.
  */
 #[AsEventListener(event: RequestEvent::class, method: 'onKernelRequest')]
-class TenantFilterConfigurator
+readonly class TenantFilterConfigurator
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private Security $security
+        private Security               $security,
+        private UrlGeneratorInterface  $router
     ) {}
 
     public function onKernelRequest(RequestEvent $event): void
@@ -34,6 +37,23 @@ class TenantFilterConfigurator
         $tenant = $user->tenant;
         if (!$tenant) {
             return;
+        }
+
+        // --- BILLING BLOCKING ENFORCEMENT ---
+        // If the tenant is suspended (unpaid/canceled/manually revoked)
+        if ($tenant->status === 'suspended') {
+            // Exclude the Billing dashboard route from the blockade
+            // so the Admin can still access the Stripe customer portal to update their card!
+            $currentRoute = $event->getRequest()->attributes->get('_route');
+            if (!in_array($currentRoute, ['app_internal_billing_dashboard', 'app_internal_billing_portal', 'app_logout'])) {
+
+                // Redirect them gracefully to the Billing subscription warning screen
+                $response = new RedirectResponse(
+                    $this->router->generate('internal_billing_dashboard')
+                );
+                $event->setResponse($response);
+                return;
+            }
         }
 
         // 3. Enable the custom SQL filter and set the parameter

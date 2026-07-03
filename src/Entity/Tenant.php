@@ -46,4 +46,13 @@ class Tenant extends MappedSuperclassBase
 
     #[ORM\Column(length: 64, unique: true, nullable: true)]
     public ?string $joinCode = null; // e.g. "TX-LAW-1092"
+
+    #[ORM\Column(nullable: true)]
+    public ?string $stripeCustomerId = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?string $stripeSubscriptionId = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    public ?string $subscriptionPlan = null; // e.g., 'growth', 'enterprise'
 }

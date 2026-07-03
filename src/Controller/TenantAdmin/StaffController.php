@@ -54,10 +54,11 @@ class StaffController extends AbstractController
     {
         $tenant = $this->getUser()->tenant;
         if (!$tenant) {
+            $message = 'You must be a tenant administrator to access this page.';
             if ($request->isXmlHttpRequest() || $request->query->get('ajax')) {
-                return new Response('You must be a tenant administrator to access this page.', Response::HTTP_FORBIDDEN);
+                return new Response($message, Response::HTTP_FORBIDDEN);
             }
-            $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
+            $this->addFlash('danger', $message);
             return $this->redirectToRoute('unauthorized');
         }
 
