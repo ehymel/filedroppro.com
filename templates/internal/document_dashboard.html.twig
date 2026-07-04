@@ -14,6 +14,15 @@
                 <p>Access and unseal end-to-end encrypted items submitted by external clients.</p>
             </div>
         </div>
+        <div class="row">
+            <div class="col mb-4">
+                <h2>Organization Storage Utilization</h2>
+                <p>
+                    The consolidated size of all encrypted client document payloads registered inside your firm's partition:
+                    <strong>{{ format_bytes(storageBytesByClient|sum) }}</strong>
+                </p>
+            </div>
+        </div>
 
         {# Session Authentication Interceptor Modals #}
         <div class="modal fade" id="crypto-session-modal" tabindex="-1" aria-labelledby="cryptoModalLabel" aria-hidden="true" data-document-viewer-target="cryptoModal">
@@ -47,10 +56,11 @@
         </div>
 
         {% for client in clients %}
-        <div class="row mb-5">
+        <div class="row mb-5 border-top">
             <div class="col-md-9 col-12">
                 <h2>Documents uploaded from <span style="text-decoration: underline">{{ client.clientName }}</span></h2>
                 <p>Client records and encrypted transfers linked to this profile.</p>
+                <p>Total Storage Space for this client: {{ format_bytes(storageBytesByClient[client.id.toString]) }}</p>
 
                 <table class="table table-striped sortable">
                     <thead>

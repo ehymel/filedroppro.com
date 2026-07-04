@@ -36,11 +36,18 @@ class DocumentViewerController extends AbstractController
             return $this->redirectToRoute('unauthorized');
         }
 
+        $clients = $clientRepository->findBy([], ['clientName' => 'ASC']);
+        $totalBytes = [];
+        foreach ($clients as $client) {
+            $totalBytes[$client->id->toString()] = $this->documentRepository->totalBytesForClient($client);
+        }
+
         // Fetch clients belonging to this tenant
         // Note: Our MultiTenant SQL Filter automatically enforces tenant boundaries here.
         return $this->render('internal/document_dashboard.html.twig', [
-            'clients' => $clientRepository->findBy([], ['clientName' => 'ASC']),
-            'encryptedPrivateKey' => $this->getUser()->userKey?->encryptedPrivateKey
+            'clients' => $clients,
+            'encryptedPrivateKey' => $this->getUser()->userKey?->encryptedPrivateKey,
+            'storageBytesByClient' => $totalBytes,
         ]);
     }
 

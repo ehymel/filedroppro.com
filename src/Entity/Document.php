@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -38,6 +39,9 @@ class Document extends MappedSuperclassBase
 
     #[ORM\Column(nullable: true)]
     public ?string $originalFileName = null;
+
+    #[ORM\Column(type: Types::BIGINT, nullable: true)]
+    public ?string $fileSize = null;
 
     /**
      * The initialization vector (IV) used in AES-GCM encryption.

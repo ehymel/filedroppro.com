@@ -56,8 +56,4 @@ class Tenant extends MappedSuperclassBase
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\Choice(['trial', 'premium', 'enterprise'])]
     public ?string $subscriptionPlan = null;
-
-    #[ORM\Column(length: 100, nullable: true)]
-    #[Assert\Choice(['active', 'suspended', 'past_due'])]
-    public ?string $subscriptionStatus = null;
 }

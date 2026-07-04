@@ -158,6 +158,7 @@ class SecureDropController extends AbstractController
         $wrappedKeys = $payload['wrappedKeys'] ?? null;
         $s3Key = $payload['s3Key'] ?? null;
         $originalFileName = $payload['originalFileName'] ?? null;
+        $fileSize = $payload['fileSize'] ?? null;
         $reqToken = $payload['reqToken'] ?? null;
 
         if (!$senderName || !$senderEmail || !$iv || !$wrappedKeys || !$s3Key || !$originalFileName) {
@@ -183,6 +184,7 @@ class SecureDropController extends AbstractController
         $document->filePath = $s3Key; // The key on S3 acts as our path
         $document->iv = $iv;
         $document->originalFileName = $originalFileName;
+        $document->fileSize = $fileSize;
         $this->em->persist($document);
 
         // Build individual wrapped key envelopes

@@ -66,7 +66,7 @@ export default class extends Controller {
                 const file = this.uppy.getFile(id);
                 this.updateProgress('Encrypting file locally in-browser...', 30);
 
-                const encryptedData = await this.encryptFileLocally(file.data, file.name);
+                const encryptedData = await this.encryptFileLocally(file.data);
 
                 // Save crypto artifacts mapped specifically to this Uppy file id
                 this.cryptoMetadata[id] = {
@@ -128,6 +128,7 @@ export default class extends Controller {
                 wrappedKeys: crypto.wrappedKeys,
                 s3Key: file.meta.s3Key,
                 originalFileName: crypto.originalFileName,
+                fileSize: file.size,
                 reqToken: this.hasReqTokenTarget ? this.reqTokenTarget.value : null
             };
 
@@ -144,7 +145,7 @@ export default class extends Controller {
     /**
      * Executes the browser Web Crypto encryption task.
      */
-    async encryptFileLocally(fileBlob, fileName) {
+    async encryptFileLocally(fileBlob) {
         const fileArrayBuffer = await fileBlob.arrayBuffer();
 
         // 1. Generate local symmetric session key (K_sym)

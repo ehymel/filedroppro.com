@@ -2,7 +2,9 @@
 
 namespace App\Repository;
 
+use App\Entity\Client;
 use App\Entity\Document;
+use App\Entity\Tenant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -45,5 +47,15 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('document')
             ->addOrderBy('Document.DocumentName', 'ASC')
             ;
+    }
+
+    public function totalBytesForClient(Client $client): int
+    {
+        return (int) $this->createQueryBuilder('document')
+            ->select('SUM(document.fileSize)')
+            ->andWhere('document.client = :client')
+            ->setParameter('client', $client)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }
