@@ -13,7 +13,7 @@
         {% include 'flash_messages.html.twig' %}
 
         <div class="row mt-5">
-            <div class="col-md-8 col-12">
+            <div class="col-md-10 col-12">
                 <h3>Tenants</h3>
 
                 <table class="table table-striped sortable">
@@ -31,9 +31,23 @@
                     {% for tenant in tenants %}
                         <tr>
                             <td>{{ tenant.firmName }}</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td>
+                                {% for user in tenant.users |filter(user => 'ROLE_ADMIN' in user.roles) %}
+                                    {{ user.firstName }} {{ user.lastName }}
+                                    <br />
+                                    ({{user.email }})
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {{ tenant.subscriptionPlan|default('Free Trial') }}
+                                <br />
+                                {{ tenant.subscriptionStatus }}
+                            </td>
+                            <td>
+                                {% for user in tenant.users %}
+                                    {{ user.firstName }} ({{ user.email }}){% if not loop.last %}<br />{% endif %}
+                                {% endfor %}
+                            </td>
                             <td></td>
                             <td></td>
                         </tr>
