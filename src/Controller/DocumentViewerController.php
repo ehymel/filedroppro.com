@@ -39,7 +39,10 @@ class DocumentViewerController extends AbstractController
         $clients = $clientRepository->findBy([], ['clientName' => 'ASC']);
         $totalBytes = [];
         foreach ($clients as $client) {
-            $totalBytes[$client->id->toString()] = $this->documentRepository->totalBytesForClient($client);
+            $totalBytes[$client->id->toString()] = 0;
+            foreach($client->documents as $document) {
+                $totalBytes[$client->id->toString()] += $document->fileSize;
+            }
         }
 
         // Fetch clients belonging to this tenant

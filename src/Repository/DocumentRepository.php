@@ -6,6 +6,7 @@ use App\Entity\Client;
 use App\Entity\Document;
 use App\Entity\Tenant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -49,14 +50,24 @@ class DocumentRepository extends ServiceEntityRepository
             ;
     }
 
+    /**
+     * @throws Exception
+     */
     public function totalBytesForClient(Client $client): string
     {
         // fileSize is a BIGINT (string-backed) to avoid PHP int overflow on large
         // totals, so keep the sum as a string. COALESCE guarantees a definite '0'
         // instead of NULL when the client has no documents.
+//        $conn = $this->getEntityManager()->getConnection();
+//        $sql = sprintf("SELECT SUM(d0_.file_size)
+//                FROM document d0_
+//                WHERE d0_.client_id = CAST(%s AS UUID);", $client->id);
+//
+//        return $conn->executeQuery($sql)->fetchOne();
+
         return (string) $this->createQueryBuilder('document')
             ->select('COALESCE(SUM(document.fileSize), 0)')
-            ->andWhere('document.client = :client')
+            ->andWhere("document.client = :client")
             ->setParameter('client', $client)
             ->getQuery()
             ->getSingleScalarResult();
