@@ -3,5 +3,8 @@
 {% block title %}Error{% endblock %}
 
 {% block body %}
-    {{ error }}
+    <div class="container">
+        <h1>Error</h1>
+        <div class="alert alert-danger">{{ error }}</div>
+    </div>
 {% endblock %}

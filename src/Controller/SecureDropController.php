@@ -82,10 +82,16 @@ class SecureDropController extends AbstractController
                 'tenant' => $tenant,
 //                'status' => 'pending'
             ]);
-
-            $form->get('senderName')->setData($dropRequest->clientName);
-            $form->get('senderEmail')->setData($dropRequest->clientEmail);
         }
+
+        if (empty($dropRequest)) {
+            return $this->render('drop/error.html.twig', [
+                'error' => 'This is not a valid drop request.'
+            ]);
+        }
+
+        $form->get('senderName')->setData($dropRequest->clientName);
+        $form->get('senderEmail')->setData($dropRequest->clientEmail);
 
         return $this->render('drop/upload.html.twig', [
             'tenant' => $tenant,
