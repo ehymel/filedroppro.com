@@ -167,7 +167,7 @@ class SecureDropController extends AbstractController
         $fileSize = $payload['fileSize'] ?? null;
         $reqToken = $payload['reqToken'] ?? null;
 
-        if (!$senderName || !$senderEmail || !$iv || !$wrappedKeys || !$s3Key || !$originalFileName) {
+        if (!$senderName || !$senderEmail || !$iv || !$wrappedKeys || !$s3Key || !$originalFileName || $fileSize === null) {
             return new JsonResponse(['error' => 'Missing required metadata parameters.'], Response::HTTP_BAD_REQUEST);
         }
 

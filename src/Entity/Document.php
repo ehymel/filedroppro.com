@@ -40,7 +40,7 @@ class Document extends MappedSuperclassBase
     #[ORM\Column(nullable: true)]
     public ?string $originalFileName = null;
 
-    #[ORM\Column(type: Types::BIGINT, nullable: true)]
+    #[ORM\Column(type: Types::BIGINT)]
     public ?string $fileSize = null;
 
     /**

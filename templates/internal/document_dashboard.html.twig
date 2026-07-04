@@ -57,7 +57,7 @@
 
         {% for client in clients %}
         <div class="row mb-5 border-top">
-            <div class="col-md-9 col-12">
+            <div class="col-md-10 col-12">
                 <h2>Documents uploaded from <span style="text-decoration: underline">{{ client.clientName }}</span></h2>
                 <p>Client records and encrypted transfers linked to this profile.</p>
                 <p>Total Storage Space for this client: {{ format_bytes(storageBytesByClient[client.id.toString]) }}</p>
@@ -67,6 +67,7 @@
                     <tr>
                         <th>File Reference Path</th>
                         <th>Uploaded date</th>
+                        <th>Size</th>
                         <th class="no-sort">Status</th>
                         <th class="no-sort">Actions</th>
                     </tr>
@@ -97,6 +98,7 @@
                                 <br />
                                 {{ doc.createdAt|date('g:i a') }}
                             </td>
+                            <td>{{ format_bytes(doc.fileSize) }}</td>
                             <td>Encrypted <span class="fa fa-lock"></span></td>
                             <td>
                                 <button class="btn btn-sm btn-primary" type="button"

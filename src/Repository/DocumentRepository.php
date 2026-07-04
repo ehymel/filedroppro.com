@@ -49,10 +49,13 @@ class DocumentRepository extends ServiceEntityRepository
             ;
     }
 
-    public function totalBytesForClient(Client $client): int
+    public function totalBytesForClient(Client $client): string
     {
-        return (int) $this->createQueryBuilder('document')
-            ->select('SUM(document.fileSize)')
+        // fileSize is a BIGINT (string-backed) to avoid PHP int overflow on large
+        // totals, so keep the sum as a string. COALESCE guarantees a definite '0'
+        // instead of NULL when the client has no documents.
+        return (string) $this->createQueryBuilder('document')
+            ->select('COALESCE(SUM(document.fileSize), 0)')
             ->andWhere('document.client = :client')
             ->setParameter('client', $client)
             ->getQuery()
