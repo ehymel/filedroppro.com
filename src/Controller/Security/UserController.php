@@ -53,7 +53,7 @@ class UserController extends AbstractController
         ]);
     }
 
-    #[Route(path: 'activate/{id}/{hash}', name: 'activate')]
+    #[Route(path: '/activate/{id}/{hash}', name: 'activate')]
     public function activate(User $user, Request $request, EntityManagerInterface $em): Response
     {
         $submittedHash = $request->attributes->get('hash');
@@ -116,19 +116,19 @@ class UserController extends AbstractController
         ]);
     }
 
-    #[Route(path: 'password_reset/{id}/{hash}', name: 'reset_password')]
+    #[Route(path: '/password_reset/{id}/{hash}', name: 'reset_password')]
     public function resetPassword(User $user, Request $request, UserPasswordHasherInterface $passwordHasher,
                                   TokenStorageInterface $tokenStorage, EntityManagerInterface $em): Response
     {
+        // force logout of previous user
+        $tokenStorage->setToken(null);
+
         $submittedHash = $request->attributes->get('hash');
         $savedHash = $user->confirmationHash;
 
         if ($submittedHash !== $savedHash) {
             return $this->render('user/password_reset_failed.html.twig');
         }
-
-        // force logout of previous user
-        $tokenStorage->setToken(null);
 
         $form = $this->createForm(UserPasswordResetForm::class, $user);
 
