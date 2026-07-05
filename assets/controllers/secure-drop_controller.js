@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import Swal from 'sweetalert2';
 import Uppy from '@uppy/core';
 import Dashboard from '@uppy/dashboard';
 import AwsS3 from '@uppy/aws-s3';
@@ -23,18 +24,23 @@ export default class extends Controller {
         'progressBar',
         'progressPercent',
         'reqToken',
-        'uploadStatusAlert'
+        'uploadStatusAlert',
+        'uploadedFilesContainer',
+        'uploadedFilesList'
     ];
 
     static values = {
         recipients: Array,
         presignUrl: String,   // Route to generate pre-signed AWS URL
-        finalizeUrl: String   // Route to finalize metadata
+        finalizeUrl: String,  // Route to finalize metadata
+        renameUrlTemplate: String,
+        deleteUrlTemplate: String
     };
 
     connect() {
         this.initializeUppy();
         this.cryptoMetadata = {}; // Temporary lookup for encrypt configurations
+        this.uploadedFiles = []; // Track files uploaded in current session
     }
 
     /**
@@ -222,6 +228,7 @@ export default class extends Controller {
 
             if (response.ok && result.success) {
                 this.batchSucceeded++;
+                this.addUploadedFile(payload.originalFileName, result.documentId);
             } else {
                 throw new Error(result.error || 'Metadata alignment failed.');
             }
@@ -365,6 +372,104 @@ export default class extends Controller {
     showElement(element) {
         if (element) {
             element.classList.remove('d-none');
+        }
+    }
+
+    addUploadedFile(fileName, documentId) {
+        this.uploadedFiles.push({ fileName, documentId });
+        this.renderUploadedFiles();
+    }
+
+    renderUploadedFiles() {
+        if (this.uploadedFiles.length > 0) {
+            this.showElement(this.uploadedFilesContainerTarget);
+        }
+
+        this.uploadedFilesListTarget.innerHTML = '';
+        this.uploadedFiles.forEach(file => {
+            const renameUrl = this.renameUrlTemplateValue.replace('DOCUMENT_ID', file.documentId);
+            const deleteUrl = this.deleteUrlTemplateValue.replace('DOCUMENT_ID', file.documentId);
+
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+                <div data-controller="inline-edit"
+                     data-inline-edit-url-value="${renameUrl}"
+                     data-inline-edit-field-value="originalFileName">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div data-inline-edit-target="display">
+                                <a href="#" data-action="click->inline-edit#toggle" class="ms-1 text-decoration-none">
+                                    <span data-inline-edit-target="output">${file.fileName}</span>
+                                </a>
+                            </div>
+                            <div data-inline-edit-target="form" class="d-none flex-grow-1 me-2">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" data-inline-edit-target="input" value="${file.fileName}">
+                                    <button class="btn btn-success" data-action="click->inline-edit#save">Save</button>
+                                    <button class="btn btn-outline-secondary" data-action="click->inline-edit#toggle">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success rounded-pill me-2">Uploaded</span>
+                            <button class="badge bg-danger rounded-pill me-2" style="border: none;"
+                                    data-action="click->secure-drop#deleteFile"
+                                    data-document-id="${file.documentId}"
+                                    data-delete-url="${deleteUrl}">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            this.uploadedFilesListTarget.appendChild(li);
+        });
+    }
+
+    async deleteFile(event) {
+        const btn = event.currentTarget;
+        const documentId = btn.dataset.documentId;
+        const deleteUrl = btn.dataset.deleteUrl;
+
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'Are you sure you want to delete this file?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const response = await fetch(deleteUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const data = await response.json();
+                        throw new Error(data.error || 'Unknown error');
+                    }
+
+                    return response;
+                } catch (error) {
+                    Swal.showValidationMessage(`Delete failed: ${error.message}`);
+                }
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        });
+
+        if (result.isConfirmed) {
+            this.uploadedFiles = this.uploadedFiles.filter(f => f.documentId !== documentId);
+            this.renderUploadedFiles();
+            if (this.uploadedFiles.length === 0) {
+                this.uploadedFilesContainerTarget.classList.add('d-none');
+            }
         }
     }
 }

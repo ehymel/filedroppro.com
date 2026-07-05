@@ -9,6 +9,8 @@
          data-secure-drop-recipients-value="{{ recipientKeys|json_encode }}"
          data-secure-drop-presign-url-value="{{ path('drop_presign', {'joinCode': joinCode}) }}"
          data-secure-drop-finalize-url-value="{{ path('drop_finalize', {'joinCode': joinCode}) }}"
+         data-secure-drop-rename-url-template-value="{{ path('drop_rename', {'documentId': 'DOCUMENT_ID'}) }}"
+         data-secure-drop-delete-url-template-value="{{ path('drop_delete', {'documentId': 'DOCUMENT_ID'}) }}"
     >
         <div class="row">
             <div class="col">
@@ -67,6 +69,13 @@
                         Encrypt & Upload Securely
                     </button>
                 {{ form_end(form) }}
+            </div>
+            <div class="col-5">
+                <div id="uploaded-files-container" class="mt-4 d-none" data-secure-drop-target="uploadedFilesContainer">
+                    <h4>Files Uploaded in this Session</h4>
+                    <p>Click on the file to edit the file name.</p>
+                    <ul class="list-group" data-secure-drop-target="uploadedFilesList"></ul>
+                </div>
             </div>
         </div>
     </div>

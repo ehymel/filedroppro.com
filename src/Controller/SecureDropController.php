@@ -33,7 +33,7 @@ class SecureDropController extends AbstractController
      * Renders the public file drop interface for a specific Tenant.
      */
     #[Route(path: '/{joinCode}', name: 'portal')]
-    public function dropPortal(string $joinCode, Request $request): Response
+    public function portal(string $joinCode, Request $request): Response
     {
         // Insure no user is actually logged in
         if ($this->getUser()) {
@@ -225,7 +225,59 @@ class SecureDropController extends AbstractController
 
         return new JsonResponse([
             'success' => true,
+            'documentId' => $document->id->toString(),
             'message' => 'Files securely encrypted and successfully uploaded'
         ]);
+    }
+
+    #[Route('/rename/{documentId}', name: 'rename', methods: ['POST'])]
+    public function rename(string $documentId, Request $request): JsonResponse
+    {
+        $document = $this->em->getRepository(Document::class)->find($documentId);
+
+        if (!$document) {
+            return new JsonResponse(['error' => 'Document not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        $newName = $payload['originalFileName'] ?? null;
+
+        if (!$newName) {
+            return new JsonResponse(['error' => 'Missing new filename.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $document->originalFileName = $newName;
+        $this->em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'originalFileName' => $document->originalFileName
+        ]);
+    }
+
+    #[Route('/delete/{documentId}', name: 'delete', methods: ['DELETE'])]
+    public function delete(string $documentId): JsonResponse
+    {
+        $document = $this->em->getRepository(Document::class)->find($documentId);
+
+        if (!$document) {
+            return new JsonResponse(['error' => 'Document not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            // Remove from S3
+            $this->s3Client->deleteObject([
+                'Bucket' => $this->s3BucketName,
+                'Key' => $document->filePath,
+            ]);
+
+            // Remove from database (cascades to DocumentKey)
+            $this->em->remove($document);
+            $this->em->flush();
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Could not delete file: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse(['success' => true]);
     }
 }
