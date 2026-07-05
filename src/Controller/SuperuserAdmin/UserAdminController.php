@@ -48,11 +48,9 @@ class UserAdminController extends AbstractController
             /** @var User $_user */
             $_user = $form->getData();
 
-            // only user ehymel@filedroppro.com can be superuser, and ehymel@filedroppro.com should always be superuser
-            if ($_user->getUserIdentifier() === 'ehymel@filedroppro.com') {
+            // if current user is a superuser, keep it that way (ignore form input)
+            if ($this->isGranted('ROLE_SUPERUSER')) {
                 $_user->roles = ['ROLE_SUPERUSER'];
-            } elseif (in_array('ROLE_SUPERUSER', $_user->getRoles(), true)) {
-                $_user->roles = ['ROLE_ADMIN'];
             }
 
             $this->userRepository->save($_user, true);
