@@ -24,7 +24,6 @@
                         <th>Status</th>
                         <th>Users</th>
                         <th>Documents</th>
-                        <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -41,15 +40,18 @@
                             <td>
                                 {{ tenant.subscriptionPlan|default('Free Trial') }}
                                 <br />
-                                {{ tenant.subscriptionStatus }}
+                                {{ tenant.status }}
                             </td>
                             <td>
                                 {% for user in tenant.users %}
                                     {{ user.firstName }} ({{ user.email }}){% if not loop.last %}<br />{% endif %}
                                 {% endfor %}
                             </td>
-                            <td></td>
-                            <td></td>
+                            <td>
+                                {{ documentCount[tenant.id.toString] }} documents,
+                                <br />
+                                {{ format_bytes(totalBytes[tenant.id.toString]) }}
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
