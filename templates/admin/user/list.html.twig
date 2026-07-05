@@ -12,13 +12,13 @@
         <div class="d-flex flex-row">
             <h1>Users</h1>
 
-            <div class="ms-5" {{ stimulus_controller('modal-form', { formUrl: path('admin_user_new') }) }}>
-                <button class="btn btn-primary btn-sm" data-action="modal-form#open">
-                    Add <span class="fa fa-plus-circle"></span>
-                </button>
+{#            <div class="ms-5" {{ stimulus_controller('modal-form', { formUrl: path('admin_user_new') }) }}>#}
+{#                <button class="btn btn-primary btn-sm" data-action="modal-form#open">#}
+{#                    Add <span class="fa fa-plus-circle"></span>#}
+{#                </button>#}
 
-                {{ include('_modal.html.twig', { modalTitle: 'Add a new user' }) }}
-            </div>
+{#                {{ include('_modal.html.twig', { modalTitle: 'Add a new user' }) }}#}
+{#            </div>#}
         </div>
         {% if is_granted('ROLE_SUPERUSER') %}
             <div class="row">
