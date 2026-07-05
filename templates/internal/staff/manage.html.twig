@@ -3,7 +3,7 @@
 
 {% extends 'base.html.twig' %}
 
-{% block title %}Manage Document Requests - Internal Portal{% endblock %}
+{% block title %}Manage Internal Staff{% endblock %}
 
 {% block body %}
     <div class="container"
@@ -12,26 +12,26 @@
     >
         <div class="row flex-xl-nowrap">
             <div class="col-12 col-md-10 col-xl-8">
-                <h1>Drop Request Management</h1>
-                <p>Generate secure drop links, track pending client uploads, and manage active requests.</p>
+                <h1>Manage Internal Staff</h1>
+                <p>Generate and manage secure single-use entry tokens for your <strong>internal</strong> staff.</p>
             </div>
         </div>
 
         <div {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
             <button class="btn btn-primary btn-sm"
                     data-action="modal-form#open"
-                    data-form-url="{{ path('internal_requests_new') }}"
-                    data-modal-title="Invite External Client"
+                    data-form-url="{{ path('internal_staff_invite') }}"
+                    data-modal-title="Invite Internal Staff Member"
             >
-                Invite External Clients to Upload Files
+                Invite Internal Staff Member <span class="fa fa-plus-circle"></span>
             </button>
 
-            {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
+            {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
         </div>
 
         <div class="row flex-xl-nowrap mt-5">
             <main class="col-12 col-md-10 col-xl-8" data-reload-content-target="content">
-                {{ include('internal/_drop_request_list.html.twig') }}
+                {{ include('internal/staff/_invitation_list.html.twig') }}
             </main>
         </div>
     </div>

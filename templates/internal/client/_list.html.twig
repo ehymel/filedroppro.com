@@ -39,7 +39,7 @@
                 <br />
                 {{ client.createdAt|date('h:i a') }}
             </td>
-            <td>{{ client.documents|length }}</td>
+            <td style="text-align: center;">{{ client.documents|length }}</td>
             <td>
                 {% if client.documents|length === 0 %}
                     <button type="button" class="btn btn-sm btn-danger"

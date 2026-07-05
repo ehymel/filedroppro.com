@@ -37,9 +37,9 @@ class StaffController extends AbstractController
             return $this->redirectToRoute('unauthorized');
         }
 
-        $template = $request->query->get('ajax') ? '_invitation_list.html.twig' : 'invitation_manage.html.twig';
+        $template = $request->query->get('ajax') ? '_invitation_list.html.twig' : 'manage.html.twig';
 
-        return $this->render('internal/'.$template, [
+        return $this->render('internal/staff/'.$template, [
             'invitations' => $this->invitationRepository->findAllSortedByExpiresAt(),
             'tenant' => $tenant,
         ]);
@@ -80,7 +80,7 @@ class StaffController extends AbstractController
                 $form->get('email')->addError(
                     new FormError(sprintf('A registered user with the email "%s" already exists on the platform.', $email))
                 );
-                return $this->render('internal/_invitation_form.html.twig', [
+                return $this->render('internal/staff/_invitation_form.html.twig', [
                     'form' => $form,
                 ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
@@ -95,7 +95,7 @@ class StaffController extends AbstractController
                 $form->get('email')->addError(
                     new FormError(sprintf('An active invitation is already outstanding for %s.', $email))
                 );
-                return $this->render('internal/_invitation_form.html.twig', [
+                return $this->render('internal/staff/_invitation_form.html.twig', [
                     'form' => $form,
                 ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
@@ -112,7 +112,7 @@ class StaffController extends AbstractController
             }
         }
 
-        return $this->render('internal/_invitation_form.html.twig', [
+        return $this->render('internal/staff/_invitation_form.html.twig', [
             'form' => $form
         ]);
     }

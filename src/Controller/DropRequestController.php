@@ -33,9 +33,9 @@ class DropRequestController extends AbstractController
             return $this->redirectToRoute('unauthorized');
         }
 
-        $template = $request->query->get('ajax') ? '_drop_request_list.html.twig' : 'drop_request_manage.html.twig';
+        $template = $request->query->get('ajax') ? '_list.html.twig' : 'manage.html.twig';
 
-        return $this->render('internal/'.$template, [
+        return $this->render('internal/drop_request/'.$template, [
             'requests' => $this->dropRequestRepository->findAllSortedByCreatedAt(),
             'tenant' => $tenant,
         ]);
@@ -82,7 +82,7 @@ class DropRequestController extends AbstractController
             }
         }
 
-        return $this->render('internal/_drop_request_form.html.twig', [
+        return $this->render('internal/drop_request/_form.html.twig', [
             'form' => $form,
         ]);
     }

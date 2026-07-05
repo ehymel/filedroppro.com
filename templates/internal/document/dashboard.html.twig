@@ -99,7 +99,7 @@
                                 {{ doc.createdAt|date('g:i a') }}
                             </td>
                             <td>{{ format_bytes(doc.fileSize) }}</td>
-                            <td>Encrypted <span class="fa fa-lock"></span></td>
+                            <td>Encrypted&nbsp;<span class="fa fa-lock" style="color: green;"></span></td>
                             <td>
                                 <button class="btn btn-sm btn-primary" type="button"
                                         data-action="click->document-viewer#decryptAndDownload"

@@ -47,7 +47,7 @@ class DocumentViewerController extends AbstractController
 
         // Fetch clients belonging to this tenant
         // Note: Our MultiTenant SQL Filter automatically enforces tenant boundaries here.
-        return $this->render('internal/document_dashboard.html.twig', [
+        return $this->render('internal/document/dashboard.html.twig', [
             'clients' => $clients,
             'encryptedPrivateKey' => $this->getUser()->userKey?->encryptedPrivateKey,
             'storageBytesByClient' => $totalBytes,

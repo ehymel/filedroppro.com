@@ -32,9 +32,9 @@ class ClientController extends AbstractController
             return $this->redirectToRoute('unauthorized');
         }
 
-        $template = $request->query->get('ajax') ? '_client_list.html.twig' : 'client_manage.html.twig';
+        $template = $request->query->get('ajax') ? '_list.html.twig' : 'manage.html.twig';
 
-        return $this->render('internal/'.$template, [
+        return $this->render('internal/client/'.$template, [
             'clients' => $this->clientRepository->findAll(),
             'tenant' => $tenant,
         ]);
