@@ -3,7 +3,11 @@
 
 {{ include('flash_messages.html.twig') }}
 
-<table class="table table-striped sortable">
+{% set activeRequests = requests|filter(req => req.deletedAt === null) %}
+{% set deletedRequests = requests|filter(req => req.deletedAt !== null) %}
+
+{% if activeRequests|length > 0 %}
+    <table class="table table-striped sortable">
     <thead>
     <tr>
         <th>Client</th>
@@ -14,7 +18,7 @@
     </tr>
     </thead>
     <tbody>
-    {% for request in requests %}
+    {% for request in activeRequests %}
         <tr>
             <td>
                 {{ request.clientName }}
@@ -55,12 +59,12 @@
                     <button type="button" class="btn btn-sm btn-danger"
                             data-controller="sweetalert"
                             data-action="click->sweetalert#remove"
-                            data-sweetalert-title-value="Permanently delete this request?"
-                            data-sweetalert-text-value="The request will be removed from the system."
-                            data-sweetalert-confirm-button-text-value="Yes, delete it!"
+                            data-sweetalert-title-value="Hide this request?"
+                            data-sweetalert-text-value="The request will be removed from this list. You will have the option to show it again later."
+                            data-sweetalert-confirm-button-text-value="Yes, hide it!"
                             data-sweetalert-delete-url-value="{{ path('internal_requests_soft_delete', {'id': request.id.toString()}) }}"
                             data-sweetalert-csrf-token-value="{{ csrf_token('delete_request_' ~ request.id.toString()) }}">
-                        Delete
+                        Hide
                     </button>
                 {% endif %}
             </td>
@@ -74,3 +78,65 @@
     {% endfor %}
     </tbody>
 </table>
+{% endif %}
+
+{% if deletedRequests|length > 0 %}
+<div data-controller="toggle-visibility">
+    <label class="mt-1">
+        Show Hidden Requests?
+        <input type="checkbox" class="js-toggle-visibility-documents"
+               data-action="change->toggle-visibility#toggle" />
+    </label>
+
+    <table class="table table-striped sortable d-none" data-toggle-visibility-target="element">
+        <thead>
+        <tr>
+            <th>Client</th>
+            <th>Requested Info</th>
+            <th>Status</th>
+            <th class="no-sort">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for request in deletedRequests %}
+            <tr>
+                <td>
+                    <span class="strikethrough">
+                        {{ request.clientName }}
+                        <br />
+                        (<small>{{ request.clientEmail }}</small>)
+                    </span>
+                </td>
+                <td>
+                    Request: {{ request.createdAt|date('M d, Y g:i a') }}
+                        by {{ request.createdBy.name }} (<small>{{ request.createdBy.email }}</small>)
+                    <br />
+                    Hidden: {{ request.deletedAt|date('M d, Y g:i a') }}
+                        by {{ request.deletedBy.name }} (<small>{{ request.deletedBy.email }}</small>)
+                </td>
+                <td>
+                    <span>{{ request.status|capitalize }}</span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            data-controller="sweetalert"
+                            data-action="click->sweetalert#remove"
+                            data-sweetalert-title-value="Permanently delete this request?"
+                            data-sweetalert-confirm-button-text-value="Yes, delete it!"
+                            data-sweetalert-delete-url-value="{{ path('internal_requests_soft_delete', {'id': request.id.toString()}) }}"
+                            data-sweetalert-csrf-token-value="{{ csrf_token('delete_request_' ~ request.id.toString()) }}">
+                        Permanently Delete
+                    </button>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">
+                    No secure file requests have been generated yet.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}

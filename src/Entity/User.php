@@ -39,6 +39,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     #[Assert\NotBlank, Assert\Email]
     public ?string $email = null;
 
+    #[ORM\Column]
+    public ?bool $isVisible = true;
+
     #[ORM\Column(nullable: true)]
     public ?string $password = null;
 

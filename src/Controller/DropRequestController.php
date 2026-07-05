@@ -141,7 +141,7 @@ class DropRequestController extends AbstractController
 
         $this->addFlash('success', 'Drop request deleted successfully.');
 
-        return $this->redirectToRoute('internal_documents_dashboard');
+        return $this->redirectToRoute('internal_requests_list');
     }
 
     #[Route('/delete/{id}', name: 'delete', methods: ['POST'])]
