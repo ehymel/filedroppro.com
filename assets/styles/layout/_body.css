@@ -31,6 +31,10 @@ body {
   font-size: 0.8em;
 }
 
+.strikethrough {
+  text-decoration: line-through;
+}
+
 .indent-left {
   margin-left: 10px;
 }

@@ -28,4 +28,10 @@ class AppExtension
     {
         return array_sum($arr);
     }
+
+    #[AsTwigFilter('truncate_filename')]
+    public function truncateFilename(string $text, int $length, string $append = ' ... .'): string
+    {
+        return mb_strimwidth($text, 0, $length, $append, 'UTF-8') . pathinfo($text, PATHINFO_EXTENSION);
+    }
 }

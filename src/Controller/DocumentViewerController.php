@@ -32,7 +32,7 @@ class DocumentViewerController extends AbstractController
     public function dashboard(ClientRepository $clientRepository): Response
     {
         if (!$this->getUser()->tenant) {
-            $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
+            $this->addFlash('danger', 'You are not authorized to access this page.');
             return $this->redirectToRoute('unauthorized');
         }
 
@@ -62,7 +62,8 @@ class DocumentViewerController extends AbstractController
     {
         // Security Check: Verify that this document belongs to the active user's tenant
         if ($document->client->tenant !== $this->getUser()->tenant) {
-            throw $this->createAccessDeniedException('Unauthorized tenant metadata matching block.');
+            $this->addFlash('danger', 'You are not authorized to access this document.');
+            return $this->redirectToRoute('unauthorized');
         }
 
         try {
@@ -115,12 +116,49 @@ class DocumentViewerController extends AbstractController
         ]);
     }
 
+    #[Route(path: '/soft_delete/{id}', name: 'soft_delete', methods: ['POST'])]
+    public function softDelete(Document $document): Response
+    {
+        // Security Check: Verify that this document belongs to the active user's tenant
+        if ($document->client->tenant !== $this->getUser()->tenant) {
+            $this->addFlash('danger', 'You are not authorized to access this document.');
+            return $this->redirectToRoute('unauthorized');
+        }
+
+        $document->deletedAt = new \DateTimeImmutable();
+        $document->deletedBy = $this->getUser();
+        $this->documentRepository->save($document, true);
+
+        $this->addFlash('success', 'Document deleted successfully.');
+
+        return $this->redirectToRoute('internal_documents_dashboard');
+    }
+
+    #[Route(path: '/restore/{id}', name: 'restore', methods: ['POST'])]
+    public function restore(Document $document): Response
+    {
+        // Security Check: Verify that this document belongs to the active user's tenant
+        if ($document->client->tenant !== $this->getUser()->tenant) {
+            $this->addFlash('danger', 'You are not authorized to access this document.');
+            return $this->redirectToRoute('unauthorized');
+        }
+
+        $document->deletedAt = null;
+        $document->deletedBy = null;
+        $this->documentRepository->save($document, true);
+
+        $this->addFlash('success', 'Document restored successfully.');
+
+        return $this->redirectToRoute('internal_documents_dashboard');
+    }
+
     #[Route(path: '/delete/{id}', name: 'delete', methods: ['POST', 'DELETE'])]
     public function delete(Document $document): Response
     {
         // Security Check: Verify that this document belongs to the active user's tenant
         if ($document->client->tenant !== $this->getUser()->tenant) {
-            throw $this->createAccessDeniedException('Unauthorized tenant metadata matching block.');
+            $this->addFlash('danger', 'You are not authorized to access this document.');
+            return $this->redirectToRoute('unauthorized');
         }
 
         // Remove the encrypted object from AWS S3 before deleting the metadata record
