@@ -35,6 +35,13 @@ class SecureDropController extends AbstractController
     #[Route(path: '/{joinCode}', name: 'portal')]
     public function dropPortal(string $joinCode, Request $request): Response
     {
+        // Insure no user is actually logged in
+        if ($this->getUser()) {
+            return $this->render('drop/error.html.twig', [
+                'error' => 'You must log out to access this secure drop zone.'
+            ]);
+        }
+
         $form = $this->createForm(FileDropFormType::class);
 
         // 1. Locate the target Tenant
@@ -43,7 +50,9 @@ class SecureDropController extends AbstractController
         ]);
 
         if (!$tenant) {
-            throw $this->createNotFoundException('The requested secure drop zone does not exist.');
+            return $this->render('drop/error.html.twig', [
+                'error' => 'The requested secure drop zone does not exist.'
+            ]);
         }
 
         // 2. Fetch all active administrative/internal staff users for this Tenant
