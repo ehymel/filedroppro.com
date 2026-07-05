@@ -44,7 +44,7 @@ export default class extends Controller {
         this.uppy = new Uppy({
             autoProceed: false,
             restrictions: {
-                maxNumberOfFiles: 1,
+                maxNumberOfFiles: 50,
                 maxFileSize: 52428800 // 50MB
             }
         });
@@ -62,9 +62,13 @@ export default class extends Controller {
 
         // Use Uppy's pre-processor step to intercept and locally encrypt file buffers
         this.uppy.addPreProcessor(async (fileIDs) => {
+            let encryptedCount = 0;
             for (const id of fileIDs) {
                 const file = this.uppy.getFile(id);
-                this.updateProgress('Encrypting file locally in-browser...', 30);
+                encryptedCount++;
+                this.setStatusLabel(
+                    `Encrypting file ${encryptedCount} of ${fileIDs.length} locally in-browser...`
+                );
 
                 const encryptedData = await this.encryptFileLocally(file.data);
 
@@ -110,15 +114,14 @@ export default class extends Controller {
             }
         });
 
-        // Wire Uppy's progress state into our UI tracker
-        this.uppy.on('upload-progress', (file, progress) => {
-            const percentage = Math.round((progress.bytesUploaded / progress.bytesTotal) * 100);
-            this.updateProgress('Streaming encrypted binary to cloud...', percentage);
+        // Wire Uppy's aggregate progress (across all files) into our UI tracker
+        this.uppy.on('progress', (percentage) => {
+            this.updateProgress('Streaming encrypted binaries to cloud...', percentage);
         });
 
-        // Handle successful direct S3 transfer
+        // Handle successful direct S3 transfer (fires once per file)
         this.uppy.on('upload-success', async (file, response) => {
-            this.updateProgress('Synchronizing security envelopes...', 90);
+            this.setStatusLabel('Synchronizing security envelopes...');
             const crypto = this.cryptoMetadata[file.id];
 
             const payload = {
@@ -212,18 +215,48 @@ export default class extends Controller {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                this.updateProgress('Upload complete!', 100);
-                this.updateStatus(result.message, 'success');
-                this.formTarget.reset();
-                this.uppy.clear();
+                this.batchSucceeded++;
             } else {
                 throw new Error(result.error || 'Metadata alignment failed.');
             }
         } catch (err) {
-            this.updateStatus(`Delivery failed: ${err.message}`, 'error');
+            this.batchFailed++;
+            console.error(`Finalization failed for ${payload.originalFileName}:`, err);
         } finally {
-            this.unlockUI();
+            this.completeIfBatchDone();
         }
+    }
+
+    /**
+     * Once every file in the batch has been finalized (success or failure),
+     * report the outcome and reset the UI a single time.
+     */
+    completeIfBatchDone() {
+        if (this.batchSucceeded + this.batchFailed < this.batchTotal) {
+            return;
+        }
+
+        if (this.batchFailed === 0) {
+            this.updateProgress('Upload complete!', 100);
+            this.updateStatus(
+                `Successfully delivered ${this.batchSucceeded} file(s).`,
+                'success'
+            );
+            this.formTarget.reset();
+            this.uppy.clear();
+        } else if (this.batchSucceeded === 0) {
+            this.updateStatus(
+                `Delivery failed for all ${this.batchFailed} file(s). Please try again.`,
+                'error'
+            );
+        } else {
+            this.updateStatus(
+                `Delivered ${this.batchSucceeded} file(s); ${this.batchFailed} failed. Please retry the remaining file(s).`,
+                'error'
+            );
+        }
+
+        this.unlockUI();
     }
 
     /**
@@ -247,6 +280,11 @@ export default class extends Controller {
         }
 
         this.lockUI();
+
+        // Initialize batch tracking so we only finalize the UI once every file completes
+        this.batchTotal = files.length;
+        this.batchSucceeded = 0;
+        this.batchFailed = 0;
 
         // Fire the upload sequence, which will automatically trigger the E2EE pre-processor
         this.uppy.upload();
@@ -290,12 +328,16 @@ export default class extends Controller {
     }
 
     updateProgress(statusText, percentage) {
+        this.setStatusLabel(statusText);
+        this.progressBarTarget.value = percentage;
+        this.progressPercentTarget.textContent = `${percentage}%`;
+    }
+
+    setStatusLabel(statusText) {
         const label = this.element.querySelector('#progress-label');
         if (label) {
             label.textContent = `Status: ${statusText}`;
         }
-        this.progressBarTarget.value = percentage;
-        this.progressPercentTarget.textContent = `${percentage}%`;
     }
 
     updateStatus(message, type) {

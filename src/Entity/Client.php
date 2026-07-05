@@ -14,6 +14,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Access is controlled on a multi-user level through the assigned staff users.
  */
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_client_tenant_name', columns: ['tenant_id', 'client_name'])]
 class Client extends MappedSuperclassBase
 {
     public function __construct()

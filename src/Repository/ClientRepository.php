@@ -3,9 +3,11 @@
 namespace App\Repository;
 
 use App\Entity\Client;
+use App\Entity\Tenant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<Client>
@@ -38,6 +40,47 @@ class ClientRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    /**
+     * Returns the Client matching (tenant, clientName), creating it if absent.
+     *
+     * Safe against concurrent callers (e.g. a client dropping several files at once,
+     * each finalizing in a separate parallel request): the insert is a single atomic
+     * `INSERT ... ON CONFLICT DO NOTHING` guarded by the uniq_client_tenant_name
+     * constraint, so a lost race becomes a no-op rather than a duplicate row or a
+     * UniqueConstraintViolationException that would poison the ORM unit of work.
+     *
+     * The returned entity is managed, so callers may attach documents / access grants
+     * and rely on their own flush.
+     */
+    public function findOrCreate(Tenant $tenant, string $clientName): Client
+    {
+        $clientName = trim($clientName);
+
+        $existing = $this->findOneBy(['tenant' => $tenant, 'clientName' => $clientName]);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        // Runs outside any ORM transaction, so it commits immediately and is visible
+        // to concurrent finalizers. On conflict the row already exists — we re-fetch it below.
+        $conn->executeStatement(
+            'INSERT INTO client (id, tenant_id, client_name, created_at)
+             VALUES (:id, :tenant, :name, :createdAt)
+             ON CONFLICT (tenant_id, client_name) DO NOTHING',
+            [
+                'id' => (string) Uuid::v4(),
+                'tenant' => (string) $tenant->id,
+                'name' => $clientName,
+                'createdAt' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            ]
+        );
+
+        // Whether this request won or lost the race, the row now exists.
+        return $this->findOneBy(['tenant' => $tenant, 'clientName' => $clientName]);
     }
 
     public function createAlphabeticalUserQueryBuilder(): QueryBuilder

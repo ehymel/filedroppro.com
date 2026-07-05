@@ -180,18 +180,9 @@ class SecureDropController extends AbstractController
             return new JsonResponse(['error' => 'Missing required metadata parameters.'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Map or generate Client profile
-        $client = $this->em->getRepository(Client::class)->findOneBy([
-            'tenant' => $tenant,
-            'clientName' => $senderName,
-        ]);
-
-        if (!$client) {
-            $client = new Client();
-            $client->tenant = $tenant;
-            $client->clientName = trim($senderName);
-            $this->em->persist($client);
-        }
+        // Map or generate Client profile. Uses a race-safe upsert because a client
+        // dropping several files at once finalizes each in a separate parallel request.
+        $client = $this->em->getRepository(Client::class)->findOrCreate($tenant, $senderName);
 
         // Construct Document record pointing directly to S3
         $document = new Document();
