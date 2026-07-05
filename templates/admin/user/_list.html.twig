@@ -1,6 +1,6 @@
 {{ include('flash_messages.html.twig') }}
 
-<table class="table table-striped sortable" data-turbo="true">
+<table class="table table-striped sortable" data-turbo="false">
     <thead>
     <tr>
         <th>&nbsp;</th>
@@ -16,8 +16,12 @@
     <tbody>
     {% for user in users %}
         <tr{% if not user.isVisible %} class="js-hidden-user d-none" style="background-color: #fee"{% endif %}>
-            <td {{ stimulus_controller('modal-form', { formUrl: path('admin_user_edit', {'id': user.id}) }) }}>
-                <button class="btn btn-sm btn-success" data-action="modal-form#open">
+            <td {{ stimulus_controller('modal-form') }}>
+                <button class="btn btn-sm btn-success"
+                        data-action="modal-form#open"
+                        data-form-url="{{ path('admin_user_edit', { 'id': user.id.toString() }) }}"
+                        data-modal-title="Edit user"
+                >
                     <span class="fa fa-pencil"></span>
                 </button>
                 {{ include('_modal.html.twig', { modalTitle: 'Edit user' }) }}

@@ -58,12 +58,10 @@ class UserAdminController extends AbstractController
             $this->addFlash('success', $_user->getUserIdentifier().' user updated.');
 
             if ($request->request->get('ajax')) {
-                return new Response(null, 204);
+                return new Response(null, Response::HTTP_NO_CONTENT);
             }
 
-            return $this->redirectToRoute('admin_user_list', [
-                'id' => $_user->id,
-            ]);
+            return $this->redirectToRoute('admin_user_list');
         }
 
         $template = $request->query->get('ajax') ? '_form.html.twig' : 'edit.html.twig';
@@ -91,7 +89,7 @@ class UserAdminController extends AbstractController
 
             if ($request->request->get('ajax')) {
                 $this->addFlash('danger', "Don't forget to send the activation email.");
-                return new Response(null, 204);
+                return new Response(null, Response::HTTP_NO_CONTENT);
             }
 
             return $this->redirectToRoute('admin_user_email_activation', [
@@ -107,7 +105,7 @@ class UserAdminController extends AbstractController
     }
 
     #[Route(path: '/delete/{id}', name: 'remove', methods: ['DELETE'])]
-    public function remove(Request $request, User $_user, LoginRepository $loginRepository): RedirectResponse
+    public function remove(User $_user, LoginRepository $loginRepository): RedirectResponse
     {
         foreach ($_user->logins as $login) {
             $loginRepository->remove($login, true);

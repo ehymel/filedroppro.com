@@ -46,8 +46,9 @@ class UserRepository extends ServiceEntityRepository implements PublicKeyCredent
     public function createAlphabeticalUserQueryBuilder(): QueryBuilder
     {
         return $this->createQueryBuilder('user')
-            ->addOrderBy('user.lastName', 'ASC')
             ->addOrderBy('user.firstName', 'ASC')
+            ->addOrderBy('user.lastName', 'ASC')
+            ->addOrderBy('user.email', 'ASC')
             ;
     }
 
