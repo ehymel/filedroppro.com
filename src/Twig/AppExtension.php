@@ -12,6 +12,8 @@ class AppExtension
     #[AsTwigFunction('format_bytes')]
     public function formatBytes(int|string $bytes, int $precision = 2): string
     {
+        if (empty($bytes)) return 'None';
+
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $bytes = max((int) $bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));

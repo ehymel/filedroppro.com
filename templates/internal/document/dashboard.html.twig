@@ -15,12 +15,9 @@
             </div>
         </div>
         <div class="row">
-            <div class="col mb-4">
-                <h2>Organization Storage Utilization</h2>
-                <p>
-                    The consolidated size of all encrypted client document payloads registered inside your firm's partition:
-                    <strong>{{ format_bytes(storageBytesByClient|sum) }}</strong>
-                </p>
+            <div class="col mb-4 larger">
+                The consolidated size of all encrypted client document payloads registered inside your firm's partition:
+                <strong>{{ format_bytes(storageBytesByClient|sum) }}</strong>
             </div>
         </div>
 
@@ -55,92 +52,7 @@
             </div>
         </div>
 
-        {% for client in clients %}
-        <div class="row mb-5 border-top">
-            <div class="col-md-10 col-12">
-                <h2>Documents uploaded from <span style="text-decoration: underline">{{ client.clientName }}</span></h2>
-                <p>Client records and encrypted transfers linked to this profile.</p>
-                <p>Total Storage Space for this client: {{ format_bytes(storageBytesByClient[client.id.toString]) }}</p>
+        {{ include ('internal/document/_list.html.twig') }}
 
-                <table class="table table-striped sortable">
-                    <thead>
-                    <tr>
-                        <th>File Reference Path</th>
-                        <th>Uploaded date</th>
-                        <th>Size</th>
-                        <th class="no-sort">Status</th>
-                        <th class="no-sort">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for doc in client.documents %}
-                        <tr>
-                            <td>
-                                <span class="bold" title="{{ doc.filePath }}">{{ doc.originalFileName|default(doc.filePath) }}</span>
-
-                                <div data-controller="inline-edit"
-                                     data-inline-edit-url-value="{{ path('internal_documents_update_note', {'id': doc.id.toString()}) }}"
-                                     data-inline-edit-field-value="note"
-                                     data-inline-edit-empty-value="No note added.">
-                                    <div data-inline-edit-target="display" class="mb-1">
-                                        <span style="text-decoration: underline">Note:</span> <span data-inline-edit-target="output">{{ doc.note|default('No note added.') }}</span>
-                                        <a href="#" data-action="click->inline-edit#toggle"><span class="fa fa-edit"></span></a>
-                                    </div>
-                                    <div data-inline-edit-target="form" class="d-none mt-2">
-                                        <textarea class="form-control mb-2" data-inline-edit-target="input">{{ doc.note }}</textarea>
-                                        <button class="btn btn-sm btn-success" data-action="click->inline-edit#save">Save</button>
-                                        <button class="btn btn-sm btn-link" data-action="click->inline-edit#toggle">Cancel</button>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                {{ doc.createdAt|date('M d, Y') }}
-                                <br />
-                                {{ doc.createdAt|date('g:i a') }}
-                            </td>
-                            <td>{{ format_bytes(doc.fileSize) }}</td>
-                            <td>Encrypted&nbsp;<span class="fa fa-lock" style="color: green;"></span></td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" type="button"
-                                        data-action="click->document-viewer#decryptAndDownload"
-                                        data-document-id="{{ doc.id.toString() }}"
-                                        data-download-url="{{ path('internal_documents_payload', {'id': doc.id.toString()}) }}"
-                                        data-metadata-url="{{ path('internal_documents_metadata', {'id': doc.id.toString()}) }}">
-                                    Decrypt & Download
-                                </button>
-
-                                <button class="btn btn-sm btn-danger" type="button"
-                                        data-controller="sweetalert"
-                                        data-action="click->sweetalert#remove"
-                                        data-sweetalert-title-value="Permanently delete document?"
-                                        data-sweetalert-delete-url-value="{{ path('internal_documents_delete', {'id': doc.id.toString()}) }}">
-                                    Permanently Delete
-                                </button>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td>No documents uploaded for this client yet.</td>
-                            <td colspan="2"></td>
-                            <td {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
-                                <button class="btn btn-primary btn-sm"
-                                            data-action="modal-form#open"
-                                            data-form-url="{{ path('internal_requests_new', { 'client_id': client.id.toString() }) }}"
-                                            data-modal-title="Invite External Client"
-                                    >
-                                    Invite this client to upload documents
-                                    </button>
-
-                                    {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% else %}
-            <p>No client drop-boxes registered inside this tenant structure yet.</p>
-        {% endfor %}
     </div>
 {% endblock %}
