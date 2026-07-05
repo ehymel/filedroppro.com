@@ -2,9 +2,23 @@
     <div class="row mb-5 border-left">
         <div class="col-md-10 col-12">
             <h2>Documents uploaded from <span style="text-decoration: underline">{{ client.clientName }}</span></h2>
-            <p>Total Storage Space for this client: <span style="text-decoration: underline;">{{ format_bytes(storageBytesByClient[client.id.toString]) }}</span></p>
 
-            <table class="table table-striped sortable">
+            {% if client.documents|length === 0 %}
+                <div {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
+                    <button class="btn btn-primary btn-sm ms-4 mb-3"
+                            data-action="modal-form#open"
+                            data-form-url="{{ path('internal_requests_new', { 'client_id': client.id.toString() }) }}"
+                            data-modal-title="Invite External Client"
+                    >
+                        Invite this client to upload documents
+                    </button>
+
+                    {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
+                </div>
+            {% else %}
+                <p>Total Storage Space for this client: <span style="text-decoration: underline;">{{ format_bytes(storageBytesByClient[client.id.toString]) }}</span></p>
+
+                <table class="table table-striped sortable">
                 <thead>
                 <tr>
                     <th>File</th>
@@ -60,25 +74,10 @@
                             </button>
                         </td>
                     </tr>
-                {% else %}
-                    <tr>
-                        <td>No documents uploaded for this client yet.</td>
-                        <td colspan="2"></td>
-                        <td {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
-                            <button class="btn btn-primary btn-sm"
-                                    data-action="modal-form#open"
-                                    data-form-url="{{ path('internal_requests_new', { 'client_id': client.id.toString() }) }}"
-                                    data-modal-title="Invite External Client"
-                            >
-                                Invite this client to upload documents
-                            </button>
-
-                            {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
-                        </td>
-                    </tr>
                 {% endfor %}
                 </tbody>
             </table>
+            {% endif %}
         </div>
     </div>
 {% else %}
