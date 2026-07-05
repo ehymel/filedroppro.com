@@ -114,8 +114,13 @@ export default class extends Controller {
             }
         });
 
-        // Wire Uppy's aggregate progress (across all files) into our UI tracker
+        // Wire Uppy's aggregate progress (across all files) into our UI tracker.
+        // Ignored once the batch is finalized, so the reset that uppy.clear() triggers
+        // can't stomp the "Upload complete!" state with a stray 0% progress event.
         this.uppy.on('progress', (percentage) => {
+            if (!this.uploadActive) {
+                return;
+            }
             this.updateProgress('Streaming encrypted binaries to cloud...', percentage);
         });
 
@@ -140,6 +145,7 @@ export default class extends Controller {
 
         this.uppy.on('error', (error) => {
             console.error('Uppy Direct upload collapsed:', error);
+            this.uploadActive = false;
             this.updateStatus(`Security transmission failed: ${error.message}`, 'error');
             this.unlockUI();
         });
@@ -236,6 +242,10 @@ export default class extends Controller {
             return;
         }
 
+        // Batch is done: stop reacting to Uppy progress events so the terminal
+        // status below survives the reset triggered by uppy.clear().
+        this.uploadActive = false;
+
         if (this.batchFailed === 0) {
             this.updateProgress('Upload complete!', 100);
             this.updateStatus(
@@ -285,6 +295,7 @@ export default class extends Controller {
         this.batchTotal = files.length;
         this.batchSucceeded = 0;
         this.batchFailed = 0;
+        this.uploadActive = true;
 
         // Fire the upload sequence, which will automatically trigger the E2EE pre-processor
         this.uppy.upload();
