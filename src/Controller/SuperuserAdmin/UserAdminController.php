@@ -49,7 +49,7 @@ class UserAdminController extends AbstractController
             $_user = $form->getData();
 
             // if current user is a superuser, keep it that way (ignore form input)
-            if ($this->isGranted('ROLE_SUPERUSER')) {
+            if ($this->getUser()->getUserIdentifier() === $_user->getUserIdentifier() && $this->isGranted('ROLE_SUPERUSER')) {
                 $_user->roles = ['ROLE_SUPERUSER'];
             }
 

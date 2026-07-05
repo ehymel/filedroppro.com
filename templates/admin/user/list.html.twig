@@ -6,9 +6,7 @@
 
 {% block body %}
     <div class="container mt-4"
-        {{ stimulus_controller('reload-content', {
-            url: currentUrl
-        }) }}
+        {{ stimulus_controller('reload-content', { url: currentUrl }) }}
          data-action="modal-form:success->reload-content#refreshContent"
     >
         <div class="d-flex flex-row">
@@ -24,7 +22,7 @@
         </div>
         {% if is_granted('ROLE_SUPERUSER') %}
             <div class="row">
-                <div {{ stimulus_controller('admin--show-hidden') }} class="col-10 ms-auto">
+                <div class="col-10 ms-auto">
                     <label for="showHiddenToggle">Show hidden?</label>
                     <input id="showHiddenToggle" type="checkbox" data-action="admin--show-hidden#toggleClass" data-toggle-class=".js-hidden-user">
                 </div>
