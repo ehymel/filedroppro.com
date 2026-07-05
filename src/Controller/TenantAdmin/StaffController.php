@@ -74,7 +74,28 @@ class StaffController extends AbstractController
             $email = $invitation->email;
 
             // Guard 1: Check if a registered user with this email already exists in the database
+            // We disable the tenant filter to check across all tenants
+            $filters = $this->userRepository->getEntityManager()->getFilters();
+            $tenantFilterEnabled = $filters->isEnabled('tenant_filter');
+            if ($tenantFilterEnabled) {
+                $filters->disable('tenant_filter');
+            }
+
             $existingUser = $this->userRepository->findOneByEmail($email);
+
+            // Guard 2: Check if there's already an active, unused invitation outstanding for this email
+            $existingInvitation = $this->invitationRepository->findOneBy([
+                'email' => $email,
+                'used' => false,
+            ]);
+
+            // Re-enable the filter if it was enabled
+            if ($tenantFilterEnabled) {
+                $filters->enable('tenant_filter');
+                // The filter configurator will have already set the parameter, but just in case
+                // or if we want to be explicit, but usually we just want to restore state.
+                // However, the SQLFilter state (parameters) is preserved when disabling/enabling.
+            }
 
             if ($existingUser) {
                 $form->get('email')->addError(
@@ -84,12 +105,6 @@ class StaffController extends AbstractController
                     'form' => $form,
                 ], new Response(null, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
-
-            // Guard 2: Check if there's already an active, unused invitation outstanding for this email
-            $existingInvitation = $this->invitationRepository->findOneBy([
-                'email' => $email,
-                'used' => false,
-            ]);
 
             if ($existingInvitation && $existingInvitation->expiresAt > new \DateTimeImmutable()) {
                 $form->get('email')->addError(

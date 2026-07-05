@@ -166,7 +166,17 @@ class UserController extends AbstractController
         if ($form->isSubmitted()) {
             $data = $form->getData();
 
+            $filters = $userRepository->getEntityManager()->getFilters();
+            $tenantFilterEnabled = $filters->isEnabled('tenant_filter');
+            if ($tenantFilterEnabled) {
+                $filters->disable('tenant_filter');
+            }
+
             $user = $userRepository->findOneByEmail($data['_email']);
+
+            if ($tenantFilterEnabled) {
+                $filters->enable('tenant_filter');
+            }
 
             if (!$user instanceof User) {
                 $this->addFlash(
