@@ -1,3 +1,5 @@
+{{ include('flash_messages.html.twig') }}
+
 {% for client in clients %}
     <div class="row mb-5 border-left">
         <div class="col-md-10 col-12">
@@ -63,7 +65,8 @@
                                     data-action="click->sweetalert#remove"
                                     data-sweetalert-title-value="Delete document?"
                                     data-sweetalert-text-value="This action will mark the file for deletion in 10 days. Are you sure you want to continue?"
-                                    data-sweetalert-delete-url-value="{{ path('internal_documents_soft_delete', {'id': doc.id.toString()}) }}">
+                                    data-sweetalert-delete-url-value="{{ path('internal_documents_soft_delete', {'id': doc.id.toString()}) }}"
+                                    data-sweetalert-csrf-token-value="{{ csrf_token('delete_document_' ~ doc.id.toString()) }}">
                                 Delete
                             </button>
                         </td>
@@ -129,7 +132,8 @@
                                         data-controller="sweetalert"
                                         data-action="click->sweetalert#remove"
                                         data-sweetalert-title-value="Permanently delete document?"
-                                        data-sweetalert-delete-url-value="{{ path('internal_documents_delete', {'id': doc.id.toString()}) }}">
+                                        data-sweetalert-delete-url-value="{{ path('internal_documents_delete', {'id': doc.id.toString()}) }}"
+                                        data-sweetalert-csrf-token-value="{{ csrf_token('delete_document_' ~ doc.id.toString()) }}">
                                     Permanently Delete
                                 </button>
                                 <button class="btn btn-sm btn-success" type="button"
@@ -138,7 +142,8 @@
                                         data-sweetalert-title-value="Restore document?"
                                         data-sweetalert-text-value="This action will restore the file to the active documents list. Continue?"
                                         data-sweetalert-confirm-button-text-value="Restore"
-                                        data-sweetalert-delete-url-value="{{ path('internal_documents_restore', {'id': doc.id.toString()}) }}">
+                                        data-sweetalert-delete-url-value="{{ path('internal_documents_restore', {'id': doc.id.toString()}) }}"
+                                        data-sweetalert-csrf-token-value="{{ csrf_token('restore_document_' ~ doc.id.toString()) }}">
                                     Restore
                                 </button>
                             </td>

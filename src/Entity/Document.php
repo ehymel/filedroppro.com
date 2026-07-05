@@ -45,12 +45,6 @@ class Document extends MappedSuperclassBase
     #[ORM\Column(type: Types::BIGINT)]
     public ?string $fileSize = null;
 
-    #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    public ?\DateTimeImmutable $deletedAt = null;
-
-    #[ManyToOne(targetEntity: User::class)]
-    public ?User $deletedBy = null;
-
     /**
      * The initialization vector (IV) used in AES-GCM encryption.
      * This is a non-secret required to kick off the client-side decryption ceremony.

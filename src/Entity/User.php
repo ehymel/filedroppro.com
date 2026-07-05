@@ -26,7 +26,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     // can impersonate another user in url by adding ?_switch_user=jsmith to impersonate jsmith
     public function __construct()
     {
-        $this->isActive = true;
         $this->logins = new ArrayCollection();
     }
 
@@ -39,12 +38,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     #[ORM\Column]
     #[Assert\NotBlank, Assert\Email]
     public ?string $email = null;
-
-    #[ORM\Column]
-    public bool $isActive = true;
-
-    #[ORM\Column]
-    public ?bool $isVisible = true;
 
     #[ORM\Column(nullable: true)]
     public ?string $password = null;

@@ -2,7 +2,10 @@
 
 namespace App\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\ManyToOne;
 use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\MappedSuperclass]
@@ -27,4 +30,10 @@ class MappedSuperclassBase
     #[ORM\ManyToOne]
     #[Gedmo\Blameable(on: 'update')]
     public ?User $modifiedBy = null;
+
+    #[Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    public ?\DateTimeImmutable $deletedAt = null;
+
+    #[ManyToOne(targetEntity: User::class)]
+    public ?User $deletedBy = null;
 }

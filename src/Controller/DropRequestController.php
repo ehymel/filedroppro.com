@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Client;
+use App\Entity\Document;
 use App\Entity\DropRequest;
 use App\Form\DropRequestFormType;
 use App\Repository\ClientRepository;
@@ -120,6 +121,29 @@ class DropRequestController extends AbstractController
         return $this->redirectToRoute('internal_requests_list');
     }
 
+    #[Route(path: '/soft_delete/{id}', name: 'soft_delete', methods: ['POST'])]
+    public function softDelete(DropRequest $dropRequest, Request $request): Response
+    {
+        // Security Check: Verify that this document belongs to the active user's tenant
+        if ($dropRequest->tenant !== $this->getUser()->tenant) {
+            $this->addFlash('danger', 'You are not authorized to access this document.');
+            return $this->redirectToRoute('unauthorized');
+        }
+
+        if (!$this->isCsrfTokenValid('delete_request_' . $dropRequest->id->toString(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Invalid security token.');
+            return $this->redirectToRoute('internal_requests_list');
+        }
+
+        $dropRequest->deletedAt = new \DateTimeImmutable();
+        $dropRequest->deletedBy = $this->getUser();
+        $this->dropRequestRepository->save($dropRequest, true);
+
+        $this->addFlash('success', 'Drop request deleted successfully.');
+
+        return $this->redirectToRoute('internal_documents_dashboard');
+    }
+
     #[Route('/delete/{id}', name: 'delete', methods: ['POST'])]
     public function delete(DropRequest $dropRequest, Request $request): Response
     {
@@ -130,7 +154,7 @@ class DropRequestController extends AbstractController
 
         $this->dropRequestRepository->remove($dropRequest, true);
 
-        $this->addFlash('success', 'The secure request link has been deleted.');
+        $this->addFlash('success', 'The secure request link has been permanently deleted.');
 
         return $this->redirectToRoute('internal_requests_list');
     }

@@ -58,7 +58,7 @@
                             data-sweetalert-title-value="Permanently delete this request?"
                             data-sweetalert-text-value="The request will be removed from the system."
                             data-sweetalert-confirm-button-text-value="Yes, delete it!"
-                            data-sweetalert-delete-url-value="{{ path('internal_requests_delete', {'id': request.id.toString()}) }}"
+                            data-sweetalert-delete-url-value="{{ path('internal_requests_soft_delete', {'id': request.id.toString()}) }}"
                             data-sweetalert-csrf-token-value="{{ csrf_token('delete_request_' ~ request.id.toString()) }}">
                         Delete
                     </button>

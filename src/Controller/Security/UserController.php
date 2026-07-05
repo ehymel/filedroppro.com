@@ -148,7 +148,7 @@ class UserController extends AbstractController
                 'Successfully changed password for '.$user->name
             );
 
-            return $this->redirectToRoute('login_redirect');
+            return $this->redirectToRoute('security_login');
         }
 
         return $this->render('user/password_reset.html.twig', [

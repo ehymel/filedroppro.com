@@ -117,12 +117,17 @@ class DocumentViewerController extends AbstractController
     }
 
     #[Route(path: '/soft_delete/{id}', name: 'soft_delete', methods: ['POST'])]
-    public function softDelete(Document $document): Response
+    public function softDelete(Document $document, Request $request): Response
     {
         // Security Check: Verify that this document belongs to the active user's tenant
         if ($document->client->tenant !== $this->getUser()->tenant) {
             $this->addFlash('danger', 'You are not authorized to access this document.');
             return $this->redirectToRoute('unauthorized');
+        }
+
+        if (!$this->isCsrfTokenValid('delete_document_' . $document->id->toString(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Invalid security token.');
+            return $this->redirectToRoute('internal_requests_list');
         }
 
         $document->deletedAt = new \DateTimeImmutable();
@@ -135,12 +140,17 @@ class DocumentViewerController extends AbstractController
     }
 
     #[Route(path: '/restore/{id}', name: 'restore', methods: ['POST'])]
-    public function restore(Document $document): Response
+    public function restore(Document $document, Request $request): Response
     {
         // Security Check: Verify that this document belongs to the active user's tenant
         if ($document->client->tenant !== $this->getUser()->tenant) {
             $this->addFlash('danger', 'You are not authorized to access this document.');
             return $this->redirectToRoute('unauthorized');
+        }
+
+        if (!$this->isCsrfTokenValid('restore_document_' . $document->id->toString(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Invalid security token.');
+            return $this->redirectToRoute('internal_requests_list');
         }
 
         $document->deletedAt = null;
@@ -153,12 +163,17 @@ class DocumentViewerController extends AbstractController
     }
 
     #[Route(path: '/delete/{id}', name: 'delete', methods: ['POST', 'DELETE'])]
-    public function delete(Document $document): Response
+    public function delete(Document $document, Request $request): Response
     {
         // Security Check: Verify that this document belongs to the active user's tenant
         if ($document->client->tenant !== $this->getUser()->tenant) {
             $this->addFlash('danger', 'You are not authorized to access this document.');
             return $this->redirectToRoute('unauthorized');
+        }
+
+        if (!$this->isCsrfTokenValid('delete_document_' . $document->id->toString(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Invalid security token.');
+            return $this->redirectToRoute('internal_requests_list');
         }
 
         // Remove the encrypted object from AWS S3 before deleting the metadata record
