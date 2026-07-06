@@ -69,7 +69,9 @@ class SecurityController extends AbstractController
     {
         // Send user to admin page or order page based on credentials
         if ($this->isGranted('ROLE_SUPERUSER')) {
-            return $this->redirectToRoute('admin_home');
+            return $this->redirectToRoute('admin_tenant_list');
+        } elseif ($this->isGranted('ROLE_USER')) {
+            return $this->redirectToRoute('internal_documents_dashboard');
         }
 
         return $this->redirectToRoute('homepage');
