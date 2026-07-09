@@ -1,5 +1,26 @@
 {% extends 'base.html.twig' %}
 
+{% block header_navigation %}
+    <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">My Files</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Pricing</a>
+            </li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
+            <a href="#" class="btn btn-sm btn-outline-secondary d-none d-lg-inline-block">Documentation</a>
+            <a href="{{ path('security_login') }}" class="btn btn-sm btn-brand px-3 rounded-pill shadow-sm">Login</a>
+        </div>
+    </div>
+{% endblock %}
+
 {% block body %}
 <div class="container">
     <div class="row">

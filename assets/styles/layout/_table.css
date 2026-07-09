@@ -5,6 +5,6 @@ table {
   text-align: start;
 }
 
-td.nowrap {
+th.nowrap, td.nowrap {
     white-space: nowrap;
 }

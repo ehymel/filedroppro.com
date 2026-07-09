@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - FileDrop{% endblock %}
+
+{% block body %}
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h1 class="h3 fw-bold tracking-tight mb-2">Welcome back</h1>
+                    <p class="text-secondary mb-4">Securely upload and share your documents in seconds.</p>
+
+                    <div
+                        data-controller="file-upload"
+                        class="border border-2 border-dashed rounded-4 p-5 text-center bg-body-tertiary transition-all"
+                        style="cursor: pointer;"
+                    >
+                        <input
+                            type="file"
+                            id="dropzone-file"
+                            class="d-none"
+                            multiple
+                            data-file-upload-target="input"
+                            data-action="change->file-upload#onFileSelect"
+                        >
+                        <label for="dropzone-file" class="w-100 h-100 mb-0" style="cursor: pointer;">
+                            <div class="d-flex flex-column align-items-center gap-3">
+                                <div class="p-3 bg-body rounded-circle shadow-sm">
+                                    <i class="bi bi-cloud-arrow-up text-primary fs-1"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-bold text-body">Click to upload</span> or drag and drop
+                                    <div class="small text-muted mt-1">PDF, ZIP, PNG, or JPG (Max 50MB)</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3 small text-uppercase tracking-wider text-muted">Storage Usage</h5>
+                    <div class="d-flex align-items-baseline gap-1 mb-2">
+                        <span class="fs-3 fw-bold">12.4</span>
+                        <span class="text-muted small">GB of 50 GB used</span>
+                    </div>
+                    <div class="progress progress-sm rounded-pill mb-0" style="height: 6px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3 small text-uppercase tracking-wider text-muted">Recent Activity</h5>
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-3">
+                        <li class="d-flex align-items-start gap-3">
+                            <i class="bi bi-file-earmark-zip text-warning fs-4"></i>
+                            <div class="overflow-hidden">
+                                <div class="text-truncate fw-medium small">archive_2026.zip</div>
+                                <span class="text-muted small text-secondary">Uploaded 2 hours ago</span>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start gap-3">
+                            <i class="bi bi-file-earmark-pdf text-danger fs-4"></i>
+                            <div class="overflow-hidden">
+                                <div class="text-truncate fw-medium small">contract_agreement.pdf</div>
+                                <span class="text-muted small text-secondary">Shared yesterday</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

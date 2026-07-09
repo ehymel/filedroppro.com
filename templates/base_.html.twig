@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FileDrop Pro {% block title %}Welcome!{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/FDP_icon.ico') }}" />
+    {% block stylesheets %}
+    {% endblock %}
+
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+
+    {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
+    {% if frankenphpHotReload %}
+    <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
+    <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
+    <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
+    {% endif %}
+</head>
+<body>
+{% block header %}
+<header class="flexheader">
+    <img class="logo-icon me-4" alt="FDP logo" src="{{ asset('images/FDP_logo_100.png') }}">
+    {% if is_granted('ROLE_USER') %}
+        <h2 class="title mt-4">
+            {{ app.user.tenant?.firmName }}
+        </h2>
+    {% endif %}
+    <span class="nav">
+        {% if is_granted('ROLE_USER') %}
+            <nav class="navbar-expand navbar-light">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown mt-3">
+                        <a class="nav-link dropdown-toggle" href="#"
+                           id="userDropdown" aria-haspopup="true" aria-expanded="false"
+                           data-bs-toggle="dropdown" role="button"
+                        >
+                            <span class="fa fa-user"></span>
+                            {{ app.user ? app.user.name|default }}
+                            <br />
+                            {{ app.user ? app.user.email|default }}
+                            <span class="caret"></span>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="{{ path('security_logout') }}" data-turbo-prefetch="false">Logout</a>
+                            <a class="dropdown-item" href="{{ path('2fa_manage') }}" data-turbo-prefetch="false">Manage 2fa</a>
+                            <a class="dropdown-item" href="{{ path('passkey_manage') }}" data-turbo-prefetch="false">Manage Passkeys</a>
+                            <a class="dropdown-item" href="{{ path('user_edit') }}">My Account</a>
+                        </div>
+                        {% if is_granted('IS_IMPERSONATOR') %}
+                            <a href="{{ impersonation_exit_path(path('homepage')) }}">Exit impersonation</a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
+        {% else %}
+            <nav class="navbar-expand navbar-light">
+                <ul class="navbar-nav ms-auto me-4">
+                    <li class="nav-item larger">
+                        <a class="nav-link" href="{{ path('security_login') }}">Login</a>
+                    </li>
+                </ul>
+            </nav>
+        {% endif %}
+    </span>
+</header>
+{% endblock %}
+
+{% block navigation %}
+    {% if is_granted('ROLE_USER') %}
+        {% set currentRoute = app.request.attributes.get('_route') %}
+        <nav class="navbar navbar-expand-sm navbar-light">
+            <button class="navbar-toggler" type="button"
+                data-toggle="collapse" data-target="#navbarNavAltMarkup"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                {% if app.user.tenant %}
+                    <ul class="navbar-nav me-auto d-flex">
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_documents}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('internal_documents_dashboard') }}">Document Viewer</a>
+                        </li>
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_requests}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('internal_requests_list') }}">Manage Client Drop Requests</a>
+                        </li>
+                        {% if is_granted('ROLE_ADMIN') %}
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_staff}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('internal_staff_list') }}">Manage Internal Staff</a>
+                        </li>
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_client}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('internal_client_list') }}">Manage Clients</a>
+                        </li>
+                        <li class="ms-3 nav-item{{ currentRoute matches '{^internal_billing}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('internal_billing_dashboard') }}">Billing</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+                {% if is_granted('ROLE_SUPERUSER') %}
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item{{ currentRoute matches '{^admin_tenant}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('admin_tenant_list') }}">Tenant Admin</a>
+                        </li>
+                        <li class="nav-item{{ currentRoute matches '{^admin_user}' ? ' active bold'}}">
+                            <a class="nav-link" href="{{ path('admin_user_list') }}">User Admin</a>
+                        </li>
+                    </ul>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
+{% endblock %}
+
+<div class="main-content">
+    {% block body %}{% endblock %}
+</div>
+
+<div class="footer mt-3">
+    <span class="footer-text">
+        Oncology Support &copy; {{ "now"|date("Y") }}
+        &nbsp;&nbsp;
+        <a href="mailto:info@practicetally.com">info@oncologysupport.com</a>
+    </span>
+</div>
+</body>
+</html>

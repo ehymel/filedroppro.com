@@ -30,6 +30,7 @@ return [
     '@popperjs/core' => ['version' => '2.11.8'],
     'bootstrap' => ['version' => '5.3.8'],
     'bootstrap/dist/css/bootstrap.min.css' => ['version' => '5.3.8', 'type' => 'css'],
+    'bootstrap-icons/font/bootstrap-icons.css' => ['version' => '1.13.1', 'type' => 'css'],
     'bootstrap-datepicker' => ['version' => '1.10.1'],
     'bootstrap-datepicker/dist/css/bootstrap-datepicker3.standalone.css' => ['version' => '1.10.1', 'type' => 'css'],
     'font-awesome/css/font-awesome.min.css' => ['version' => '4.7.0', 'type' => 'css'],
