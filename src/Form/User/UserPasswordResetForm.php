@@ -14,16 +14,39 @@ class UserPasswordResetForm extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('plainPassword', RepeatedType::class, [
-                'type' => PasswordType::class,
-            ]);
+            ->add('currentPassword', PasswordType::class, [
+                'attr' => [
+                    'id' => 'current-password',
+                    'name' => 'current_password',
+                    'required' => true,
+                    'autocomplete' => 'current-password',
+                    'data-password-update-target' => 'currentPasswordInput',
+                ],
+                'help' => 'Required to decrypt and safely transfer your private E2EE key envelope.',
+            ])
+            ->add('newPassword', PasswordType::class, [
+                'attr' => [
+                    'id' => 'new-password',
+                    'name' => 'new_password',
+                    'required' => true,
+                    'autocomplete' => 'new-password',
+                    'data-password-update-target' => 'newPasswordInput',
+                ],
+                'help' => 'Must be at least 8 characters long.',
+            ])
+            ->add('confirmPassword', PasswordType::class, [
+                'attr' => [
+                    'id' => 'confirm-password',
+                    'name' => 'confirm_password',
+                    'required' => true,
+                    'autocomplete' => 'new-password',
+                    'data-password-update-target' => 'confirmPasswordInput',
+                ],
+                'help' => 'Must match the new password.',
+            ])
+            ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setDefaults([
-            'data_class' => User::class,
-            'validation_groups' => ['Default', 'Registration'],
-        ]);
-    }
+    {}
 }

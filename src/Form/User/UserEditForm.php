@@ -32,12 +32,6 @@ class UserEditForm extends AbstractType
             ->add('credentials', null, [
                 'row_attr' => ['class' => 'form-floating mb-2'],
             ])
-            ->add('plainPassword', RepeatedType::class, [
-                'type' => PasswordType::class,
-                'label' => [
-                    'data-help' => 'Leave blank for no change',
-                ],
-            ])
             ->add('cellNumber', TelType::class, [
                 'label' => 'Cell #',
                 'row_attr' => ['class' => 'form-floating mb-2'],

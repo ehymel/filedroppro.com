@@ -18,25 +18,20 @@
                     {{ form_row(form.lastName) }}
                     {{ form_row(form.credentials) }}
                     {{ form_row(form.cellNumber) }}
-                    {{ form_row(form.plainPassword.first, {
-                        'label': 'Password (blank for no change)',
-                        'attr': {'autocomplete': 'off', 'readonly': true, 'onfocus': 'this.removeAttribute("readonly");'},
-                        'row_attr': {'class': 'form-floating mb-2'},
-                    }) }}
-                    {{ form_row(form.plainPassword.second, {
-                        'label': 'Repeat password',
-                        'attr': {'autocomplete': 'off', 'readonly': true, 'onfocus': 'this.removeAttribute("readonly");'},
-                        'row_attr': {'class': 'form-floating mb-2'},
-                    }) }}
 
                     <button type="submit" class="btn btn-primary mt-3" formnovalidate>Update</button>
                     &nbsp;&nbsp;
                     <button type="button" class="btn btn-primary mt-3" data-action="sweetalert#cancel">Cancel</button>
                 {{ form_end(form) }}
             </div>
-            <div class="row ms-1 mt-4">
-                <a href="{{ path('2fa_manage') }}">Manage 2FA (two-factor authentication)</a>
-            </div>
+        </div>
+
+        <div class="row ms-1 mt-4">
+            <a href="{{ path('app_profile_change_password') }}">Change Password</a>
+        </div>
+
+        <div class="row ms-1 mt-4">
+            <a href="{{ path('2fa_manage') }}">Manage 2FA (two-factor authentication)</a>
         </div>
     </div>
 {% endblock %}
