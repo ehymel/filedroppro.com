@@ -33,7 +33,6 @@ return [
     'bootstrap-icons/font/bootstrap-icons.css' => ['version' => '1.13.1', 'type' => 'css'],
     'bootstrap-datepicker' => ['version' => '1.10.1'],
     'bootstrap-datepicker/dist/css/bootstrap-datepicker3.standalone.css' => ['version' => '1.10.1', 'type' => 'css'],
-    'font-awesome/css/font-awesome.min.css' => ['version' => '4.7.0', 'type' => 'css'],
     'sortable-tablesort' => ['version' => '4.1.7'],
     'sortable-tablesort/dist/sortable.min.css' => ['version' => '4.1.7', 'type' => 'css'],
     'sweetalert2' => ['version' => '11.26.25'],

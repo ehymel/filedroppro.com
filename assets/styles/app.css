@@ -36,14 +36,20 @@ main {
     letter-spacing: -0.5px;
 }
 
+.navlink.active {
+    font-size: 1.2rem;
+}
+
 /* Custom getbootstrap.com brand purple accents */
 .btn-brand {
     --bs-btn-color: #fff;
-    --bs-btn-bg: #6f42c1;
-    --bs-btn-border-color: #6f42c1;
+    /*--bs-btn-bg: #6f42c1;*/
+    /*--bs-btn-border-color: #6f42c1;*/
+    --bs-btn-bg: #446e7f;
+    --bs-btn-border-color: #446e7f;
     --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #59359a;
-    --bs-btn-hover-border-color: #533190;
+    --bs-btn-hover-bg: #2d4770;
+    --bs-btn-hover-border-color: #4b7b85;
 }
 
 /* Fluid transitions for custom dashboard interaction components */

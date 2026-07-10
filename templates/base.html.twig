@@ -36,44 +36,72 @@
             </button>
 
             {% block header_navigation %}
-                <div class="collapse navbar-collapse" id="mainNavbar">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">My Files</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Pricing</a>
-                        </li>
-                    </ul>
+                {% if is_granted('ROLE_USER') %}
+                    {% set currentRoute = app.request.attributes.get('_route') %}
+                    <div class="collapse navbar-collapse" id="mainNavbar">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                            {% if is_granted('ROLE_SUPERUSER') %}
+                                <li class="nav-item">
+                                    <a class="nav-link{{ currentRoute matches '{^admin_tenant*}' ? ' active'}}"
+                                       href="{{ path('admin_tenant_list') }}">Tenant Admin</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link{{ currentRoute matches '{^admin_user*}' ? ' active'}}"
+                                       href="{{ path('admin_user_list') }}">Users</a>
+                                </li>
 
-                    <div class="d-flex align-items-center gap-3">
-                        <a href="#" class="btn btn-sm btn-outline-secondary d-none d-lg-inline-block">Documentation</a>
-                        <div class="dropdown">
-                            <a class="nav-link dropdown-toggle" href="#"
-                               id="userDropdown" aria-haspopup="true" aria-expanded="false"
-                               data-bs-toggle="dropdown" role="button"
-                            >
-                                <span class="bi bi-person"></span>
-                                {{ app.user ? app.user.name|default }}
-                                <br />
-                                {{ app.user ? app.user.email|default }}
-                                <span class="caret"></span>
-                            </a>
-                            <div class="dropdown-menu" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{{ path('security_logout') }}" data-turbo-prefetch="false">Logout</a>
-                                <a class="dropdown-item" href="{{ path('2fa_manage') }}" data-turbo-prefetch="false">Manage 2fa</a>
-                                <a class="dropdown-item" href="{{ path('passkey_manage') }}" data-turbo-prefetch="false">Manage Passkeys</a>
-                                <a class="dropdown-item" href="{{ path('user_edit') }}">My Account</a>
-                            </div>
-                            {% if is_granted('IS_IMPERSONATOR') %}
-                                <a href="{{ impersonation_exit_path(path('homepage')) }}">Exit impersonation</a>
+                            {% else %}
+                                <li class="nav-item">
+                                    <a class="nav-link{{ currentRoute matches '{^internal_documents*}' ? ' active bold'}}"
+                                       href="{{ path('internal_documents_dashboard') }}">Documents</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link{{ currentRoute matches '{^internal_requests*}' ? ' active bold'}}"
+                                       href="{{ path('internal_requests_list') }}">Client Drop Requests</a>
+                                </li>
+                                {% if is_granted('ROLE_ADMIN') %}
+                                    <li class="nav-item">
+                                        <a class="nav-link{{ currentRoute matches '{^internal_staff*}' ? ' active bold'}}"
+                                           href="{{ path('internal_staff_list') }}">Internal Staff</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link{{ currentRoute matches '{^internal_client*}' ? ' active bold'}}"
+                                           href="{{ path('internal_client_list') }}">External Clients</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link{{ currentRoute matches '{^internal_billing*}' ? ' active bold'}}"
+                                           href="{{ path('internal_billing_dashboard') }}">Billing</a>
+                                    </li>
+                                {% endif %}
                             {% endif %}
+                        </ul>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <a href="#" class="btn btn-sm btn-outline-secondary d-none d-lg-inline-block">Documentation</a>
+                            <div class="dropdown">
+                                <a class="nav-link dropdown-toggle" href="#"
+                                   id="userDropdown" aria-haspopup="true" aria-expanded="false"
+                                   data-bs-toggle="dropdown" role="button"
+                                >
+                                    <span class="bi bi-person"></span>
+                                    {{ app.user ? app.user.name|default }}
+                                    <br />
+                                    {{ app.user ? app.user.email|default }}
+                                    <span class="caret"></span>
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="userDropdown">
+                                    <a class="dropdown-item" href="{{ path('security_logout') }}" data-turbo-prefetch="false">Logout</a>
+                                    <a class="dropdown-item" href="{{ path('2fa_manage') }}" data-turbo-prefetch="false">Manage 2fa</a>
+                                    <a class="dropdown-item" href="{{ path('passkey_manage') }}" data-turbo-prefetch="false">Manage Passkeys</a>
+                                    <a class="dropdown-item" href="{{ path('user_edit') }}">My Account</a>
+                                </div>
+                                {% if is_granted('IS_IMPERSONATOR') %}
+                                    <a href="{{ impersonation_exit_path(path('homepage')) }}">Exit impersonation</a>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             {% endblock %}
         </div>
     </nav>

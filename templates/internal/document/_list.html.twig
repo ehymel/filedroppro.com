@@ -50,7 +50,7 @@
                             {{ doc.createdAt|date('g:i a') }}
                         </td>
                         <td class="nowrap">{{ format_bytes(doc.fileSize) }}</td>
-                        <td class="nowrap"><span class="fa fa-lock" style="color: green;"></span> Encrypted</td>
+                        <td class="nowrap"><span class="bi bi-lock-fill" style="color: green;"></span> Encrypted</td>
                         <td>
                             <button class="btn btn-sm btn-primary" type="button"
                                     data-action="click->document-viewer#decryptAndDownload"
@@ -123,9 +123,9 @@
                                 Size: {{ format_bytes(doc.fileSize) }}
                             </td>
                             <td class="nowrap">
-                                <span class="fa fa-lock" style="color: green;"></span> Encrypted
+                                <span class="bi bi-lock-fill" style="color: green;"></span> Encrypted
                                 <br />
-                                <span class="fa fa-trash" style="color: red;"></span> Deleted
+                                <span class="bi bi-trash3-fill" style="color: red;"></span> Deleted
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-danger" type="button"

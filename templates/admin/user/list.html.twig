@@ -5,31 +5,15 @@
 {% block title %}User Admin{% endblock %}
 
 {% block body %}
-    <div class="container mt-4"
+    <div class="container"
         {{ stimulus_controller('reload-content', { url: currentUrl }) }}
          data-action="modal-form:success->reload-content#refreshContent"
     >
         <div class="d-flex flex-row">
             <h1>Users</h1>
-
-{#            <div class="ms-5" {{ stimulus_controller('modal-form', { formUrl: path('admin_user_new') }) }}>#}
-{#                <button class="btn btn-primary btn-sm" data-action="modal-form#open">#}
-{#                    Add <span class="bi bi-person-add"></span>#}
-{#                </button>#}
-
-{#                {{ include('_modal.html.twig', { modalTitle: 'Add a new user' }) }}#}
-{#            </div>#}
         </div>
-        {% if is_granted('ROLE_SUPERUSER') %}
-            <div class="row">
-                <div class="col-10 ms-auto">
-                    <label for="showHiddenToggle">Show hidden?</label>
-                    <input id="showHiddenToggle" type="checkbox" data-action="admin--show-hidden#toggleClass" data-toggle-class=".js-hidden-user">
-                </div>
-            </div>
-        {% endif %}
         <div class="row">
-            <div class="col ms-4" data-reload-content-target="content">
+            <div class="col ms-4" data-reload-content-target="content" data-turbo="false">
                 {{ include('admin/user/_list.html.twig') }}
             </div>
         </div>
