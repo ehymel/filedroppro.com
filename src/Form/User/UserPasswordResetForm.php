@@ -22,6 +22,7 @@ class UserPasswordResetForm extends AbstractType
                     'autocomplete' => 'current-password',
                     'data-password-update-target' => 'currentPasswordInput',
                 ],
+                'row_attr' => ['class' => 'form-floating mb-4'],
                 'help' => 'Required to decrypt and safely transfer your private E2EE key envelope.',
             ])
             ->add('newPassword', PasswordType::class, [
@@ -32,6 +33,7 @@ class UserPasswordResetForm extends AbstractType
                     'autocomplete' => 'new-password',
                     'data-password-update-target' => 'newPasswordInput',
                 ],
+                'row_attr' => ['class' => 'form-floating mb-4'],
                 'help' => 'Must be at least 8 characters long.',
             ])
             ->add('confirmPassword', PasswordType::class, [
@@ -42,6 +44,7 @@ class UserPasswordResetForm extends AbstractType
                     'autocomplete' => 'new-password',
                     'data-password-update-target' => 'confirmPasswordInput',
                 ],
+                'row_attr' => ['class' => 'form-floating mb-4'],
                 'help' => 'Must match the new password.',
             ])
             ;
