@@ -28,4 +28,22 @@ class DefaultController extends AbstractController
 
         return $this->render('security/unauthorized.html.twig');
     }
+
+    #[Route(path: '/terms', name: 'terms')]
+    public function terms(): Response
+    {
+        return $this->render('main/terms.html.twig');
+    }
+
+    #[Route(path: '/privacy', name: 'privacy')]
+    public function privacy(): Response
+    {
+        return $this->render('main/privacy.html.twig');
+    }
+
+    #[Route(path: '/support', name: 'support')]
+    public function support(): Response
+    {
+        return $this->render('main/support.html.twig');
+    }
 }

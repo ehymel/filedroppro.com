@@ -1,0 +1,205 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Optional minimal baseline styles for the FAQ layout. You can completely replace or modify this in your global CSS. #}
+    <style>
+        .faq-page-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        .faq-header {
+            margin-bottom: 3rem;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 2rem;
+        }
+        .faq-header h1 {
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+        .faq-header p {
+            font-size: 1.125rem;
+            color: #475569;
+            margin: 0;
+        }
+        .faq-category-section {
+            margin-bottom: 3rem;
+        }
+        .faq-category-title {
+            font-size: 1.5rem;
+            color: #1e293b;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .faq-item {
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        .faq-question {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+        }
+        .faq-answer {
+            color: #334155;
+            line-height: 1.625;
+            font-size: 1rem;
+        }
+        .faq-answer p {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        .faq-answer p:last-child {
+            margin-bottom: 0;
+        }
+        .faq-math-block {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        .faq-note {
+            background-color: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 1rem;
+            margin: 1.25rem 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            color: #14532d;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {# Configure MathJax to process inline and display math tags #}
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            }
+        };
+    </script>
+    {# Load MathJax v3 from CDN #}
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="faq-page-container">
+
+    <header class="faq-header">
+        <h1>Frequently Asked Questions</h1>
+        <p>Learn how our zero-knowledge end-to-end encryption, secure file drops, and billing systems operate.</p>
+    </header>
+
+    <main class="faq-accordion-group">
+
+        {# Section 1: End-to-End Encryption #}
+        <section class="faq-category-section">
+            <h2 class="faq-category-title">Cryptographic Privacy & E2EE</h2>
+
+            <div class="faq-item">
+                <h3 class="faq-question">What does "Client-Side End-to-End Encryption" (E2EE) mean?</h3>
+                <div class="faq-answer">
+                    <p>It means your files are fully encrypted directly in your web browser before they ever leave your computer. By the time the files are sent to our servers and routed to AWS S3, they are already completely scrambled. Because we never receive your decryption keys, we cannot read your files, view your metadata, or inspect your documents. This is a "zero-knowledge" security architecture.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">What is my Master Password, and can you reset it if I lose it?</h3>
+                <div class="faq-answer">
+                    <p>Your Master Password is the cornerstone of your security. When you register, your browser uses PBKDF2 with $100,000$ hashing iterations to derive a local master key ($K_{master}$) from your password. This master key is used to lock and unlock your private cryptographic credentials directly in your browser's memory.</p>
+                    <div class="faq-note">
+                        <strong>CRITICAL WARNING:</strong> Because we operate on a strict zero-knowledge model, your Master Password never travels to our servers. Consequently, <strong>we cannot reset your password</strong>. If you lose your Master Password, you will permanently lose access to your private key ($K_{priv}$) and all encrypted historical files associated with it.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">How can multiple staff members access the same encrypted document?</h3>
+                <div class="faq-answer">
+                    <p>We solve this using a system called <strong>Envelope Encryption</strong>. When a file is uploaded, a random 256-bit symmetric session key ($K_{sym}$) is generated on-the-fly to encrypt the file buffer. To grant access to multiple users, we encrypt ("wrap") that single symmetric key multiple times using the public key ($K_{pub}$) of each authorized user. This wrapped key is saved in our database:</p>
+                    <div class="faq-math-block">
+                        $$WrappedKey_{user1} = \text{Encrypt}(K_{sym} \text{ using } K_{pub\_user1})$$
+                    </div>
+                    <p>When you attempt to view the file, your browser retrieves your specific wrapped key block, unseals it using your decrypted private identity key ($K_{priv}$), extracts $K_{sym}$, and decrypts the file in-browser.</p>
+                </div>
+            </div>
+        </section>
+
+        {# Section 2: File Drop & S3 Storage #}
+        <section class="faq-category-section">
+            <h2 class="faq-category-title">Secure Drops & Cloud Storage</h2>
+
+            <div class="faq-item">
+                <h3 class="faq-question">What is a "Secure Drop"?</h3>
+                <div class="faq-answer">
+                    <p>A Secure Drop allows external clients, patients, or partners to securely upload highly sensitive documents to your organization without needing to register or log in. When they visit your firm's custom drop link, their browser automatically fetches the public keys of your authorized staff, locally encrypts the selected files, and uploads them directly to S3.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">Where are our documents actually stored?</h3>
+                <div class="faq-answer">
+                    <p>Documents are stored as encrypted blobs directly in an AWS S3 (Simple Storage Service) container linked to your organization's subscription. Since S3 only holds the encrypted raw binary envelopes (`.enc` extensions), your files remain mathematically secure even if a malicious actor were to gain full access to your AWS console or database tables.</p>
+                </div>
+            </div>
+        </section>
+
+        {# Section 3: User Onboarding #}
+        <section class="faq-category-section">
+            <h2 class="faq-category-title">Invitations & Onboarding</h2>
+
+            <div class="faq-item">
+                <h3 class="faq-question">What is a "Security Join Code" and how does the onboarding flow work?</h3>
+                <div class="faq-answer">
+                    <p>To prevent malicious registration attempts, new users trying to join an existing organization must supply a valid <strong>Security Join Code</strong>. Entering this code places the user into a <code>PENDING_APPROVAL</code> state.</p>
+                    <p>Once an administrator approves the pending user, an active staff browser executes a **Key Sync Ceremony** behind the scenes. This sync decrypts the historical document symmetric keys and re-wraps them using the new user's newly generated public key ($K_{pub\_new}$), instantly granting them access to past cases without the server ever touching the keys.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">How long do secure invitation links remain active?</h3>
+                <div class="faq-answer">
+                    <p>Any secure single-use invitation generated by an administrator is cryptographically bound to the invitee's email address and will automatically expire exactly **48 hours** after creation. Administrators can easily renew, extend, or revoke outstanding invitation links from their Admin dashboard.</p>
+                </div>
+            </div>
+        </section>
+
+        {# Section 4: Billing & Account Management #}
+        <section class="faq-category-section">
+            <h2 class="faq-category-title">Subscriptions & Billing</h2>
+
+            <div class="faq-item">
+                <h3 class="faq-question">How is billing managed for our organization?</h3>
+                <div class="faq-answer">
+                    <p>We utilize **Stripe Checkout** and **Stripe Billing** to securely manage subscription plans. All card transactions, payment credentials, and recurring invoices are processed on Stripe's secure infrastructure. Organization administrators can access the self-service Stripe Customer Portal directly from their account dashboard to update billing profiles or cancel active subscriptions.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">What happens to our documents if our subscription is suspended?</h3>
+                <div class="faq-answer">
+                    <p>If a subscription payment fails or the subscription is cancelled, access to the workspace is temporarily locked. However, your documents and cryptographic keys remain safely saved on your cloud instance. Once your billing card details are successfully updated or reactivated, you will regain full access to decrypt your historical archives.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    </div>
+{% endblock %}
