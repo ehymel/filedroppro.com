@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -45,6 +46,7 @@ class PasswordResetController extends AbstractController
                 return $this->redirectToRoute('user_password_forgot');
             }
 
+            /** @var User $user */
             $user = $this->em->getRepository(User::class)->findOneBy(['email' => $emailInput]);
 
             // Protect against user enumeration by displaying a success message regardless of email existence
@@ -56,8 +58,8 @@ class PasswordResetController extends AbstractController
                 // (Assuming user record or auxiliary entity tracks token + expiration)
                 $session = $request->getSession();
                 $session->set('pwd_reset_token_' . $resetToken, [
-                    'email' => $user->getEmail(),
-                    'expires_at' => (new \DateTimeImmutable('+1 hour'))->getTimestamp()
+                    'email' => $user->email,
+                    'expires_at' => new \DateTimeImmutable('+1 hour')->getTimestamp()
                 ]);
 
                 $resetUrl = $this->generateUrl(
@@ -68,18 +70,20 @@ class PasswordResetController extends AbstractController
 
                 // Send the reset notification email
                 $emailMessage = new Email()
-                    ->from('security@yoursecureportal.com')
-                    ->to($user->getEmail())
+                    ->from('info@filedroppro.com')
+                    ->to($user->email)
                     ->subject('Reset Your Security Workspace Credentials')
                     ->html($this->renderView('emails/user_reset_password.html.twig', [
                         'resetUrl' => $resetUrl,
-                        'firmName' => $user->getTenant()->getFirmName()
+                        'firmName' => $user->tenant->firmName
                     ]));
 
                 try {
                     $mailer->send($emailMessage);
+                } catch (TransportExceptionInterface $e) {
+                    $this->addFlash('error', 'An error occurred while sending the password reset email. Please try again later.');
                 } catch (\Exception $e) {
-                    // Fail silently or log error internally
+                    $this->addFlash('error', 'An unexpected error occurred while sending the password reset email. Please try again later.');
                 }
             }
 
@@ -111,6 +115,7 @@ class PasswordResetController extends AbstractController
             return $this->redirectToRoute('user_password_forgot');
         }
 
+        /** @var User $user */
         $user = $this->em->getRepository(User::class)->findOneBy(['email' => $tokenData['email']]);
         if (!$user) {
             $this->addFlash('danger', 'The user associated with this token could not be verified.');
@@ -133,12 +138,12 @@ class PasswordResetController extends AbstractController
                 return $this->redirectToRoute('user_password_reset', ['token' => $token]);
             }
 
-            // 1. Hash and save the login password using Argon2id
+            // 1. Hash and save the login password
             $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
-            $user->setPassword($hashedPassword);
+            $user->password = $hashedPassword;
 
             // 2. Overwrite the user's asymmetric E2EE keys in database
-            $userKey = $user->getUserKey();
+            $userKey = $user->userKey;
             if (!$userKey) {
                 $userKey = new UserKey();
                 $userKey->user = $user;
@@ -150,17 +155,17 @@ class PasswordResetController extends AbstractController
             // 3. Status Transition: Restrict access until approved and synchronized via Admin Escrow
             if (in_array('ROLE_ADMIN', $user->getRoles())) {
                 // Admins acts as an authority, they can remain active but must be warned
-                $user->setStatus('active');
+                $user->status = 'active';
             } else {
                 // Staff users are locked to allow Admin re-wrapping ceremony
-                $user->setStatus('pending_approval');
+                $user->status = 'pending_approval';
             }
 
             // Burn the temporary reset session token
             $session->remove('pwd_reset_token_' . $token);
             $this->em->flush();
 
-            if ($user->getStatus() === 'pending_approval') {
+            if ($user->status === 'pending_approval') {
                 $this->addFlash('success', 'Your password has been successfully reset! Because your security keys were regenerated, you must wait for an administrator to approve your account and synchronize historical vault documents before you can log in.');
             } else {
                 $this->addFlash('success', 'Your administrator password has been successfully reset! You can now log in, but historical documents will remain unreadable until escrow recovery is performed.');
@@ -171,7 +176,7 @@ class PasswordResetController extends AbstractController
 
         return $this->render('security/reset_forgotten_password.html.twig', [
             'token' => $token,
-            'userEmail' => $user->getEmail()
+            'userEmail' => $user->email
         ]);
     }
 }

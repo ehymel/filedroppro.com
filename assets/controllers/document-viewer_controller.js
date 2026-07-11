@@ -117,7 +117,10 @@ export default class extends Controller {
                 const metadataResponse = await fetch(metadataUrl);
                 const metadata = await metadataResponse.json();
 
-                if (metadata.error) throw new Error(metadata.error);
+                if (metadata.error) {
+                    console.error('Error fetching metadata:', metadata.error);
+                    throw new Error(metadata.error);
+                }
 
                 // Step B: Unwrap the Document's Symmetric AES Key using the User's unlocked Private Key
                 const wrappedKeyBytes = this.hexToUint8Array(metadata.wrappedKeyHex);
