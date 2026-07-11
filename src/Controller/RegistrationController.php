@@ -7,8 +7,10 @@ use App\Entity\User;
 use App\Entity\UserKey;
 use App\Entity\Invitation;
 use App\Form\User\RegistrationFormType;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,7 +47,7 @@ class RegistrationController extends AbstractController
                 }
 
                 // Scenario B: Token expired
-                if ($invitation->expiresAt <= new \DateTimeImmutable()) {
+                if ($invitation->expiresAt <= new DateTimeImmutable()) {
                     $this->addFlash('danger', 'This invitation link has expired (tokens are valid for 48 hours). Please ask your administrator to issue a new invitation.');
                     return $this->redirectToRoute('security_login');
                 }
@@ -65,6 +67,12 @@ class RegistrationController extends AbstractController
             'has_invitation' => $hasInvitation,
         ]);
 
+        // Manually bind the dynamic Escrow Key fields onto the form configuration block
+        if (!$hasInvitation && $request->isMethod('POST')) {
+            $form->add('tenantPublicKey', HiddenType::class, ['mapped' => false]);
+            $form->add('wrappedTenantPrivateKey', HiddenType::class, ['mapped' => false]);
+        }
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -82,6 +90,18 @@ class RegistrationController extends AbstractController
                     $tenant = new Tenant();
                     $tenant->firmName = $form->get('firmName')->getData();
                     $tenant->status = 'active';
+
+                    // Enforce Institutional Escrow Properties on the new Tenant
+                    $tenantPublicKey = $form->get('tenantPublicKey')->getData();
+                    $wrappedTenantPrivateKey = $form->get('wrappedTenantPrivateKey')->getData();
+
+                    if ($tenantPublicKey && $wrappedTenantPrivateKey) {
+                        $tenant->tenantPublicKey = $tenantPublicKey;
+                        $tenant->wrappedTenantPrivateKey = $wrappedTenantPrivateKey;
+                    } else {
+                        $this->addFlash('danger', 'Escrow Key pair generation was interrupted. Tenant configuration aborted.');
+                        return $this->redirectToRoute('register');
+                    }
 
                     // Generate a unique 12-character uppercase Join Code for the new firm
                     $uniqueJoinCode = 'TX-' . strtoupper(bin2hex(random_bytes(4)));

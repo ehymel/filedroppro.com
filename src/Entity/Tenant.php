@@ -56,4 +56,10 @@ class Tenant extends MappedSuperclassBase
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\Choice(choices: ['trial', 'premium', 'enterprise'])]
     public ?string $subscriptionPlan = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    public ?string $tenantPublicKey = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    public ?string $wrappedTenantPrivateKey = null;
 }
