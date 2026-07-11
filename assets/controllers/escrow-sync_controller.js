@@ -17,6 +17,7 @@ export default class extends Controller {
 
     connect() {
         this.unlockedAdminPrivateKey = null;
+        this.unlockedAdminPrivateKeyBuffer = null; // Store raw unlocked private key buffer for legacy fallbacks
         this.activePendingUserId = null;
         this.activeSyncDataUrl = null;
         this.activeSubmitUrl = null;
@@ -26,7 +27,6 @@ export default class extends Controller {
      * Initializes the approval sequence, prompting the admin for their master password.
      */
     startSync(event) {
-        // Safety Check: If the user is pending approval, block the session unlock entirely
         if (!this.tenantWrappedPrivateKeyValue) {
             this.showMissingTenantPrivateKeyNotice();
             return;
@@ -89,7 +89,7 @@ export default class extends Controller {
             );
 
             // 2. Decrypt the Admin's raw private key buffer
-            const decryptedPrivateKeyBuffer = await window.crypto.subtle.decrypt(
+            this.unlockedAdminPrivateKeyBuffer = await window.crypto.subtle.decrypt(
                 {
                     name: 'AES-GCM',
                     iv: this.hexToUint8Array(privateKeyEnvelope.iv)
@@ -98,13 +98,13 @@ export default class extends Controller {
                 this.base64ToArrayBuffer(privateKeyEnvelope.ciphertext)
             );
 
-            // 3. Import the private key object
+            // 3. Import the private key object with standard multi-use capabilities
             this.unlockedAdminPrivateKey = await window.crypto.subtle.importKey(
                 'pkcs8',
-                decryptedPrivateKeyBuffer,
+                this.unlockedAdminPrivateKeyBuffer,
                 { name: 'RSA-OAEP', hash: 'SHA-256' },
                 false,
-                ['decrypt']
+                ['decrypt', 'unwrapKey']
             );
 
             this.unlockUI();
@@ -146,21 +146,47 @@ export default class extends Controller {
             }
 
             const tenantEnvelope = JSON.parse(data.wrappedTenantPrivateKey);
-
             let decryptedTenantPrivateKeyBuffer;
 
             if (tenantEnvelope.wrappedKey) {
-                // Hybrid Encryption path (New)
+                // Hybrid Encryption path
                 const wrappedAesKeyBytes = this.base64ToArrayBuffer(tenantEnvelope.wrappedKey);
-                const aesKey = await window.crypto.subtle.unwrapKey(
-                    'raw',
-                    wrappedAesKeyBytes,
-                    this.unlockedAdminPrivateKey,
-                    { name: 'RSA-OAEP' },
-                    { name: 'AES-GCM', length: 256 },
-                    true,
-                    ['decrypt']
-                );
+                let aesKey;
+
+                try {
+                    // Try unwrap using standard SHA-256 admin keys
+                    aesKey = await window.crypto.subtle.unwrapKey(
+                        'raw',
+                        wrappedAesKeyBytes,
+                        this.unlockedAdminPrivateKey,
+                        { name: 'RSA-OAEP' },
+                        { name: 'AES-GCM', length: 256 },
+                        true,
+                        ['decrypt']
+                    );
+                } catch (unwrapError) {
+                    console.warn("Hybrid key unwrap failed under SHA-256. Attempting legacy SHA-1 fallback...");
+                    try {
+                        const legacyAdminPrivateKey = await window.crypto.subtle.importKey(
+                            'pkcs8',
+                            this.unlockedAdminPrivateKeyBuffer,
+                            { name: 'RSA-OAEP', hash: 'SHA-1' },
+                            false,
+                            ['decrypt', 'unwrapKey']
+                        );
+                        aesKey = await window.crypto.subtle.unwrapKey(
+                            'raw',
+                            wrappedAesKeyBytes,
+                            legacyAdminPrivateKey,
+                            { name: 'RSA-OAEP' },
+                            { name: 'AES-GCM', length: 256 },
+                            true,
+                            ['decrypt']
+                        );
+                    } catch (sha1UnwrapError) {
+                        throw new Error(`Hybrid key decryption failed under both hashes: ${sha1UnwrapError.message}`);
+                    }
+                }
 
                 decryptedTenantPrivateKeyBuffer = await window.crypto.subtle.decrypt(
                     {
@@ -171,21 +197,42 @@ export default class extends Controller {
                     this.base64ToArrayBuffer(tenantEnvelope.ciphertext)
                 );
             } else {
-                // Legacy path: Direct RSA encryption (might fail for large keys)
+                // Legacy path: Direct RSA encryption
                 const wrappedTenantPrivateKeyBytes = this.base64ToArrayBuffer(tenantEnvelope.ciphertext);
-                decryptedTenantPrivateKeyBuffer = await window.crypto.subtle.decrypt(
-                    { name: 'RSA-OAEP' },
-                    this.unlockedAdminPrivateKey,
-                    wrappedTenantPrivateKeyBytes
-                );
+                try {
+                    decryptedTenantPrivateKeyBuffer = await window.crypto.subtle.decrypt(
+                        { name: 'RSA-OAEP' },
+                        this.unlockedAdminPrivateKey,
+                        wrappedTenantPrivateKeyBytes
+                    );
+                } catch (sha256DirectError) {
+                    console.warn("Direct RSA decryption failed under SHA-256. Attempting legacy SHA-1 fallback...");
+                    try {
+                        const legacyAdminPrivateKey = await window.crypto.subtle.importKey(
+                            'pkcs8',
+                            this.unlockedAdminPrivateKeyBuffer,
+                            { name: 'RSA-OAEP', hash: 'SHA-1' },
+                            false,
+                            ['decrypt', 'unwrapKey']
+                        );
+                        decryptedTenantPrivateKeyBuffer = await window.crypto.subtle.decrypt(
+                            { name: 'RSA-OAEP' },
+                            legacyAdminPrivateKey,
+                            wrappedTenantPrivateKeyBytes
+                        );
+                    } catch (sha1DirectError) {
+                        throw new Error(`Asymmetric decryption failed under both standard and legacy hash configurations: ${sha1DirectError.message}`);
+                    }
+                }
             }
 
+            // Import the Escrow Private Key
             const tenantEscrowPrivateKey = await window.crypto.subtle.importKey(
                 'pkcs8',
                 decryptedTenantPrivateKeyBuffer,
                 { name: 'RSA-OAEP', hash: 'SHA-256' },
                 false,
-                ['decrypt']
+                ['decrypt', 'unwrapKey']
             );
 
             // Step C: Import the resetting user's newly generated Public Key
@@ -195,7 +242,7 @@ export default class extends Controller {
                 this.convertPemToBinary(data.pendingUserPublicKey),
                 { name: 'RSA-OAEP', hash: 'SHA-256' },
                 false,
-                ['encrypt']
+                ['encrypt', 'wrapKey']
             );
 
             // Step D: Decrypt symmetric keys using Escrow and re-wrap for the target user
@@ -207,13 +254,31 @@ export default class extends Controller {
                 this.updateStatus(`Decrypting & Re-encrypting envelope ${i + 1} of ${totalEnvelopes}...`, 'info');
 
                 try {
-                    // 1. Unwrap symmetric key (K_sym) with Tenant Escrow Private Key
                     const wrappedSymmetricBytes = this.hexToUint8Array(env.wrappedEscrowKeyHex);
-                    const rawSymmetricKeyBuffer = await window.crypto.subtle.decrypt(
-                        { name: 'RSA-OAEP' },
-                        tenantEscrowPrivateKey,
-                        wrappedSymmetricBytes
-                    );
+                    let rawSymmetricKeyBuffer;
+
+                    // Support fallback logic directly within the document key decryption loop
+                    try {
+                        rawSymmetricKeyBuffer = await window.crypto.subtle.decrypt(
+                            { name: 'RSA-OAEP' },
+                            tenantEscrowPrivateKey,
+                            wrappedSymmetricBytes
+                        );
+                    } catch (escrowSha256Error) {
+                        console.warn(`Symmetric key decryption failed under SHA-256 for envelope ${env.documentId}. Trying legacy SHA-1 escrow fallback...`);
+                        const legacyEscrowPrivateKey = await window.crypto.subtle.importKey(
+                            'pkcs8',
+                            decryptedTenantPrivateKeyBuffer,
+                            { name: 'RSA-OAEP', hash: 'SHA-1' },
+                            false,
+                            ['decrypt', 'unwrapKey']
+                        );
+                        rawSymmetricKeyBuffer = await window.crypto.subtle.decrypt(
+                            { name: 'RSA-OAEP' },
+                            legacyEscrowPrivateKey,
+                            wrappedSymmetricBytes
+                        );
+                    }
 
                     // 2. Wrap symmetric key (K_sym) with User's new Public Key
                     const wrappedUserKeyBuffer = await window.crypto.subtle.encrypt(
@@ -264,7 +329,6 @@ export default class extends Controller {
             confirmButtonColor: '#0d6efd'
         });
     }
-
 
     convertPemToBinary(pem) {
         const lines = pem.split('\n');
