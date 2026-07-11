@@ -61,4 +61,10 @@ class Document extends MappedSuperclassBase
 
     #[ORM\Column(type: 'text', nullable: true)]
     public ?string $note = null;
+
+    /**
+     * Symmetric AES-GCM key encrypted with the Tenant's Master Escrow Public Key.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    public ?string $wrappedEscrowKeyHex = null;
 }

@@ -191,9 +191,16 @@ class SecureDropController extends AbstractController
         $document->iv = $iv;
         $document->originalFileName = $originalFileName;
         $document->fileSize = $fileSize;
+
+        // --- Pattern 2: Process Institutional Escrow Wrapping Key ---
+        if (isset($wrappedKeys['tenant_escrow'])) {
+            $document->wrappedEscrowKeyHex = $wrappedKeys['tenant_escrow'];
+            unset($wrappedKeys['tenant_escrow']); // Remove it so we don't try to loop it as a user record
+        }
+
         $this->em->persist($document);
 
-        // Build individual wrapped key envelopes
+        // Map personal wrapped keys to specific active staff users
         foreach ($wrappedKeys as $userId => $wrappedKeyHex) {
             /** @var User $user */
             $user = $this->em->getRepository(User::class)->find($userId);

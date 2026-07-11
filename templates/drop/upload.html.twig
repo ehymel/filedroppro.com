@@ -7,6 +7,7 @@
          id="drop-portal"
          data-controller="secure-drop"
          data-secure-drop-recipients-value="{{ recipientKeys|json_encode }}"
+         data-secure-drop-tenant-public-key-value="{{ tenant.tenantPublicKey }}"
          data-secure-drop-presign-url-value="{{ path('drop_presign', {'joinCode': joinCode}) }}"
          data-secure-drop-finalize-url-value="{{ path('drop_finalize', {'joinCode': joinCode}) }}"
          data-secure-drop-rename-url-template-value="{{ path('drop_rename', {'documentId': 'DOCUMENT_ID'}) }}"
