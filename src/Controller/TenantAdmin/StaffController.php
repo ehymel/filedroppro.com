@@ -55,6 +55,7 @@ class StaffController extends AbstractController
             'invitations' => $this->invitationRepository->findAllSortedByExpiresAt(),
             'pendingUsers' => $this->userRepository->findAllPending(),
             'adminEncryptedPrivateKey' => $admin->userKey?->encryptedPrivateKey,
+            'tenantWrappedPrivateKey' => $tenant->wrappedTenantPrivateKey,
         ]);
     }
 
@@ -243,10 +244,11 @@ class StaffController extends AbstractController
             ->getResult();
 
         $escrowEnvelopes = [];
+        /** @var Document $doc */
         foreach ($documents as $doc) {
             $escrowEnvelopes[] = [
-                'documentId' => $doc->getId()->toString(),
-                'wrappedEscrowKeyHex' => $doc->getWrappedEscrowKeyHex()
+                'documentId' => $doc->id->toString(),
+                'wrappedEscrowKeyHex' => $doc->wrappedEscrowKeyHex
             ];
         }
 

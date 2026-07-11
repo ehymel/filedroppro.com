@@ -1,6 +1,8 @@
 <div class="approval-container"
      data-controller="escrow-sync"
-     data-escrow-sync-admin-encrypted-private-key-value="{{ adminEncryptedPrivateKey|escape('html_attr') }}">
+     data-escrow-sync-admin-encrypted-private-key-value="{{ adminEncryptedPrivateKey|escape('html_attr') }}"
+     data-escrow-sync-tenant-wrapped-private-key-value="{{ tenantWrappedPrivateKey|escape('html_attr') }}"
+>
 
     {{ include('flash_messages.html.twig') }}
 

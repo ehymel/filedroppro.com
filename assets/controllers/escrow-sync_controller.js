@@ -12,7 +12,7 @@ export default class extends Controller {
     static targets = ['passwordModal', 'passwordInput', 'statusMessage', 'submitButton'];
     static values = {
         adminEncryptedPrivateKey: String, // Holds the logged-in admin's private key envelope
-        tenantEncryptedPrivateKey: String // Holds the admin's tenant private key envelope
+        tenantWrappedPrivateKey: String // Holds the admin's tenant private key envelope
     };
 
     connect() {
@@ -27,7 +27,7 @@ export default class extends Controller {
      */
     startSync(event) {
         // Safety Check: If the user is pending approval, block the session unlock entirely
-        if (!this.tenantEncryptedPrivateKeyValue) {
+        if (!this.tenantWrappedPrivateKeyValue) {
             this.showMissingTenantPrivateKeyNotice();
             return;
         }
