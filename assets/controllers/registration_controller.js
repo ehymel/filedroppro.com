@@ -58,6 +58,9 @@ export default class extends Controller {
                 `;
             }
 
+            const activeRadio = this.element.querySelector('input[name="registration_form[registrationMode]"]:checked');
+            const isNewTenant = !this.hasInvitationValue && activeRadio && activeRadio.value === 'new';
+
             // --- 1. Generate Admin Personal Key Pair (RSA-OAEP) ---
             const adminKeyPair = await window.crypto.subtle.generateKey(
                 {
@@ -119,6 +122,8 @@ export default class extends Controller {
 
             // --- 3. Generate Tenant Master Escrow Keypair (If registering a new organization) ---
             if (isNewTenant) {
+                console.log('Generating Tenant Master Escrow Keypair...');
+
                 const tenantKeyPair = await window.crypto.subtle.generateKey(
                     {
                         name: 'RSA-OAEP',

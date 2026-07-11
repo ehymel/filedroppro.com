@@ -88,6 +88,18 @@ class RegistrationFormType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'E2EE Encrypted Private Key envelope generation failed. Please refresh and try again.'),
                 ],
+            ])
+            ->add('tenantPublicKey', HiddenType::class, [
+                'mapped' => false,
+                'constraints' => [
+                    new NotBlank(message:  'E2EE Public Key validation failed. Please check that JavaScript is enabled and your browser supports the Web Crypto API.'),
+                ],
+            ])
+            ->add('wrappedTenantPrivateKey', HiddenType::class, [
+                'mapped' => false,
+                'constraints' => [
+                    new NotBlank(message: 'E2EE Encrypted Private Key envelope generation failed. Please refresh and try again.'),
+                ],
             ]);
 
         // If the registering user does NOT have an invitation, render tenant creation/joining controls
