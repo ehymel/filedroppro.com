@@ -23,6 +23,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[UniqueEntity(fields: ['email'], message: 'This email address is already in use.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwoFactorInterface, EmailTwoFactorInterface, TwoFactorTextInterface, Stringable
 {
+    const STATUS_PENDING = 'pending_approval';
+    const STATUS_ACTIVE = 'active';
+
     // can impersonate another user in url by adding ?_switch_user=jsmith to impersonate jsmith
     public function __construct()
     {

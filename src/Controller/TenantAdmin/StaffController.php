@@ -2,14 +2,20 @@
 
 namespace App\Controller\TenantAdmin;
 
+use App\Entity\Document;
+use App\Entity\DocumentKey;
 use App\Entity\Invitation;
+use App\Entity\User;
 use App\Form\InvitationFormType;
+use App\Repository\DocumentKeyRepository;
+use App\Repository\DocumentRepository;
 use App\Repository\InvitationRepository;
 use App\Repository\UserRepository;
 use Random\RandomException;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -22,7 +28,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class StaffController extends AbstractController
 {
-    public function __construct(private readonly InvitationRepository $invitationRepository, private readonly MailerInterface $mailer, private readonly UserRepository $userRepository) {}
+    public function __construct(private readonly InvitationRepository $invitationRepository,
+                                private readonly MailerInterface      $mailer,
+                                private readonly UserRepository       $userRepository,
+                                private readonly DocumentRepository   $documentRepository) {}
 
     /**
      * @throws TransportExceptionInterface
@@ -31,7 +40,9 @@ class StaffController extends AbstractController
     #[Route(path: '/', name: 'list')]
     public function list(Request $request): Response
     {
-        $tenant = $this->getUser()->tenant;
+        /** @var User $admin */
+        $admin = $this->getUser();
+        $tenant = $admin->tenant;
         if (!$tenant) {
             $this->addFlash('danger', 'You must be a tenant administrator to access this page.');
             return $this->redirectToRoute('unauthorized');
@@ -40,8 +51,10 @@ class StaffController extends AbstractController
         $template = $request->query->get('ajax') ? '_invitation_list.html.twig' : 'manage.html.twig';
 
         return $this->render('internal/staff/'.$template, [
-            'invitations' => $this->invitationRepository->findAllSortedByExpiresAt(),
             'tenant' => $tenant,
+            'invitations' => $this->invitationRepository->findAllSortedByExpiresAt(),
+            'pendingUsers' => $this->userRepository->findAllPending(),
+            'adminEncryptedPrivateKey' => $admin->userKey?->encryptedPrivateKey,
         ]);
     }
 
@@ -199,5 +212,102 @@ class StaffController extends AbstractController
 
         // Store the link temporarily in the session flash so the admin can copy-paste it directly if needed for testing
         $this->addFlash('invitation_link', $registrationUrl);
+    }
+
+    /**
+     * API Endpoint: Yields the necessary cryptographic escrow envelopes and the target user's public key.
+     */
+    #[Route('/sync-data/{id}', name: 'approval_sync', methods: ['GET'])]
+    public function getSyncData(User $pendingUser): JsonResponse
+    {
+        /** @var User $admin */
+        $admin = $this->getUser();
+        $tenant = $admin->tenant;
+
+        if ($pendingUser->tenant !== $tenant) {
+            return new JsonResponse(['error' => 'Access Denied: Tenant mismatch.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $pendingUserKey = $pendingUser->userKey;
+        if (!$pendingUserKey || !$pendingUserKey->publicKey) {
+            return new JsonResponse(['error' => 'The target user has not generated a new public identity key.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Fetch all documents belonging to this tenant that contain a Master Escrow Envelope
+        $documents = $this->documentRepository->createQueryBuilder('d')
+            ->join('d.client', 'c')
+            ->where('c.tenant = :tenant')
+            ->andWhere('d.wrappedEscrowKeyHex IS NOT NULL')
+            ->setParameter('tenant', $tenant)
+            ->getQuery()
+            ->getResult();
+
+        $escrowEnvelopes = [];
+        foreach ($documents as $doc) {
+            $escrowEnvelopes[] = [
+                'documentId' => $doc->getId()->toString(),
+                'wrappedEscrowKeyHex' => $doc->getWrappedEscrowKeyHex()
+            ];
+        }
+
+        return new JsonResponse([
+            'pendingUserPublicKey' => $pendingUserKey->publicKey,
+            'wrappedTenantPrivateKey' => $tenant->wrappedTenantPrivateKey,
+            'escrowEnvelopes' => $escrowEnvelopes
+        ]);
+    }
+
+    /**
+     * API Endpoint: Receives the re-wrapped key blocks, persists them, and activates the user account.
+     */
+    #[Route('/submit-sync/{id}', name: 'approval_submit', methods: ['POST'])]
+    public function submitSync(User $pendingUser, Request $request, DocumentKeyRepository $documentKeyRepository): JsonResponse
+    {
+        /** @var User $admin */
+        $admin = $this->getUser();
+        $tenant = $admin->tenant;
+
+        if ($pendingUser->tenant !== $tenant) {
+            return new JsonResponse(['error' => 'Access Denied: Tenant mismatch.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        $reKeyedMap = $payload['reKeyedMap'] ?? null; // Map of [documentId => wrappedKeyHex]
+
+        if (!$reKeyedMap || !is_array($reKeyedMap)) {
+            return new JsonResponse(['error' => 'Invalid or missing cryptographic key alignment map.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Persist each re-wrapped file key for the user
+        foreach ($reKeyedMap as $docId => $wrappedKeyHex) {
+            $document = $this->documentRepository->find($docId);
+            if ($document && $document->client->tenant === $tenant) {
+                // Remove any stale/old wrapped keys for this specific document/user combination
+                $staleKey = $documentKeyRepository->findOneBy([
+                    'document' => $document,
+                    'user' => $pendingUser
+                ]);
+                if ($staleKey) {
+                    $documentKeyRepository->remove($staleKey);
+                }
+
+                $newKey = new DocumentKey();
+                $newKey->document = $document;
+                $newKey->user = $pendingUser;
+                $newKey->wrappedKeyHex = $wrappedKeyHex;
+                $documentKeyRepository->save($newKey);
+            }
+        }
+
+        // Activate the user's account status
+        $pendingUser->status = 'active';
+        $this->userRepository->save($pendingUser, true);
+
+        $this->addFlash('success', sprintf('Cryptographic keys successfully synchronized! User "%s" is now active with restored file access.', $pendingUser->email));
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Escrow synchronization completed successfully.'
+        ]);
     }
 }

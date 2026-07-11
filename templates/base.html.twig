@@ -83,11 +83,16 @@
                                    id="userDropdown" aria-haspopup="true" aria-expanded="false"
                                    data-bs-toggle="dropdown" role="button"
                                 >
-                                    <span class="bi bi-person"></span>
-                                    {{ app.user ? app.user.name|default }}
+                                    <span class="bi bi-person-fill"></span> {{ app.user ? app.user.name|default }}
                                     <br />
-                                    {{ app.user ? app.user.email|default }}
-                                    <span class="caret"></span>
+                                    {% if app.user?.tenant %}
+                                        <span class="bi bi-building-fill"></span> {{ app.user ? app.user.tenant?.firmName }}
+                                        <br />
+                                    {% endif %}
+                                    {% if app.user?.email %}
+                                        <span class="bi bi-envelope-fill"></span> {{ app.user.email|default }}
+                                        <span class="caret"></span>
+                                    {% endif %}
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="userDropdown">
                                     <a class="dropdown-item" href="{{ path('security_logout') }}" data-turbo-prefetch="false">Logout</a>

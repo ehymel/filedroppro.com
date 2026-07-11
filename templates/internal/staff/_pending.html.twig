@@ -1,0 +1,108 @@
+<div class="approval-container"
+     data-controller="escrow-sync"
+     data-escrow-sync-admin-encrypted-private-key-value="{{ adminEncryptedPrivateKey|escape('html_attr') }}">
+
+    {{ include('flash_messages.html.twig') }}
+
+    {# Javascript Cryptographic Progress Alerts #}
+    <div data-escrow-sync-target="statusMessage" class="alert d-none" role="alert"></div>
+
+    {# Active Admin Decryption Prompt Modal #}
+    <div class="modal fade" id="crypto-session-modal" tabindex="-1" aria-hidden="true" data-escrow-sync-target="passwordModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cryptoModalLabel">Unlock Administrative Key</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter your Master Password to locally derive your private key and unseal the Tenant Escrow Private Key during this ceremony.</p>
+                    <div class="form-floating mb-3">
+                        <input type="password"
+                               id="admin-master-password" class="form-control"
+                               data-escrow-sync-target="passwordInput"
+                               autocomplete="current-password"
+                        >
+                        <label for="vault-session-password">Password</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button"
+                            class="btn btn-primary"
+                            data-action="click->escrow-sync#unlockAdminPrivateKey"
+                    >
+                        Unlock Escrow Key
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <dialog class="crypto-dialog d-none" >
+        <div class="dialog-wrapper">
+            <h3></h3>
+            <p>Enter your Master Password to locally derive your private key and unseal the Tenant Escrow Private Key during this ceremony.</p>
+
+            <div class="form-group">
+                <label for="admin-master-password">Master Password</label>
+                <input type="password"
+                       id="admin-master-password"
+                       data-escrow-sync-target="passwordInput"
+                       placeholder="••••••••"
+                       autocomplete="current-password">
+            </div>
+
+            <button type="button" class="btn-unlock" data-action="click->escrow-sync#unlockAdminPrivateKey">
+                Unlock Escrow Key
+            </button>
+        </div>
+    </dialog>
+
+    <h2>Users Awaiting Security Sync</h2>
+
+    <table class="table table-striped sortable ms-4">
+        <thead>
+        <tr>
+            <th>Email Address</th>
+            <th>Account Role</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for pending in pendingUsers %}
+            <tr>
+                <td>{{ pending.email }}</td>
+                <td>
+                    {% if 'ROLE_ADMIN' in pending.roles %}
+                        Administrator
+                    {% else %}
+                        Staff
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="bi bi-shield-slash-fill" style="color: red;"></span> Keys Out of Sync
+                </td>
+                <td>
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            data-user-id="{{ pending.id.toString() }}"
+                            data-sync-data-url="{{ path('internal_staff_approval_sync', {'id': pending.id.toString()}) }}"
+                            data-submit-url="{{ path('internal_staff_approval_submit', {'id': pending.id.toString()}) }}"
+                            data-action="click->escrow-sync#startSync"
+                            data-escrow-sync-target="submitButton">
+                        Sync Keys & Approve
+                    </button>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" class="empty-state">
+                    All user keys are successfully synchronized with the master escrow system. No approvals pending.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -13,6 +13,7 @@
         <th>Email</th>
         <th># logins</th>
         <th>Last login</th>
+        <th>Status</th>
         <th>Access level</th>
     </tr>
     </thead>
@@ -39,6 +40,7 @@
             <td>{{ user.tenant?.firmName }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.logins|length }}</td>
+            <td>{{ user.status }}</td>
             <td data-sort="{{ user.lastLogin ? user.lastLogin.loginTime|date("Y-m-d") : '' }}">
                 {{ user.lastLogin ? user.lastLogin.loginTime|date("n/j/Y") : '' }}
             </td>

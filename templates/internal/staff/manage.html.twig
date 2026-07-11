@@ -16,23 +16,10 @@
             </div>
         </div>
 
-        <div class="ms-4" {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
-            <p>Generate and manage secure single-use entry tokens for your <strong>internal</strong> staff.</p>
-            <button class="btn btn-primary btn-sm"
-                    data-action="modal-form#open"
-                    data-form-url="{{ path('internal_staff_invite') }}"
-                    data-modal-title="Invite Internal Staff Member"
-            >
-                <span class="bi bi-person-plus me-2"></span> Invite Internal Staff Member
-            </button>
+        {{ include('internal/staff/_pending.html.twig') }}
 
-            {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
-        </div>
+        <hr>
 
-        <div class="row flex-xl-nowrap mt-5">
-            <main class="col-12 col-md-10 col-xl-8" data-reload-content-target="content">
-                {{ include('internal/staff/_invitation_list.html.twig') }}
-            </main>
-        </div>
+        {{ include('internal/staff/_invitations.html.twig') }}
     </div>
 {% endblock %}

@@ -94,4 +94,9 @@ class UserRepository extends ServiceEntityRepository implements PublicKeyCredent
             null
         );
     }
+
+    public function findAllPending(): array
+    {
+        return $this->findBy(['status' => User::STATUS_PENDING], ['lastName' => 'ASC', 'firstName' => 'ASC', 'email' => 'ASC']);
+    }
 }

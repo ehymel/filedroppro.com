@@ -122,6 +122,9 @@ export default class extends Controller {
 
         } catch (error) {
             console.error('Cryptographic Workspace initialization failed:', error);
+            if (this.modal) {
+                this.modal.hide();
+            }
             Swal.fire({
                 title: 'Unlock Failed',
                 text: 'Invalid Master Password. Security workspace could not be unlocked.',

@@ -5,8 +5,7 @@
 {% block title %}User Admin{% endblock %}
 
 {% block body %}
-    <div class="container"
-        {{ stimulus_controller('reload-content', { url: currentUrl }) }}
+    <div {{ stimulus_controller('reload-content', { url: currentUrl }) }}
          data-action="modal-form:success->reload-content#refreshContent"
     >
         <div class="d-flex flex-row">
