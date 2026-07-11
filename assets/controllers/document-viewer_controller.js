@@ -15,7 +15,6 @@ export default class extends Controller {
     connect() {
         // Clear runtime transient variables from local memory
         this.unlockedPrivateKey = null;
-        this.modal = new Modal(this.cryptoModalTarget);
     }
 
     /**
@@ -27,6 +26,15 @@ export default class extends Controller {
             return;
         }
 
+        if (!this.modal) {
+            if (this.hasCryptoModalTarget) {
+                this.modal = new Modal(this.cryptoModalTarget);
+            } else {
+                console.warn('Missing target element "cryptoModal" for "document-viewer" controller');
+                return;
+            }
+        }
+
         // Show the Bootstrap modal to capture password context
         this.modal.show();
         this.cachedAction = pendingAction;
@@ -35,7 +43,14 @@ export default class extends Controller {
     /**
      * Orchestrates the local PBKDF2 derivation and unlocks the User's RSA Private Key inside the browser.
      */
-    async initializeCryptoSession() {
+    async initializeCryptoSession(event) {
+        if (event) event.preventDefault();
+
+        if (!this.hasMasterPasswordInputTarget) {
+            console.error('Missing master password input target.');
+            return;
+        }
+
         const password = this.masterPasswordInputTarget.value;
         if (!password) return;
 
@@ -85,8 +100,12 @@ export default class extends Controller {
             );
 
             // Clean up UI state and execute the cached download action
-            this.masterPasswordInputTarget.value = '';
-            this.modal.hide();
+            if (this.hasMasterPasswordInputTarget) {
+                this.masterPasswordInputTarget.value = '';
+            }
+            if (this.modal) {
+                this.modal.hide();
+            }
 
             if (this.cachedAction) {
                 this.cachedAction();
@@ -125,7 +144,7 @@ export default class extends Controller {
                 // Step B: Unwrap the Document's Symmetric AES Key using the User's unlocked Private Key
                 const wrappedKeyBytes = this.hexToUint8Array(metadata.wrappedKeyHex);
                 const rawSymmetricKeyBuffer = await window.crypto.subtle.decrypt(
-                    { name: 'RSA-OAEP' },
+                    { name: 'RSA-OAEP', hash: 'SHA-256' },
                     this.unlockedPrivateKey,
                     wrappedKeyBytes
                 );
