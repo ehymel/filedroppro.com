@@ -51,6 +51,7 @@ class DocumentViewerController extends AbstractController
             'clients' => $clients,
             'encryptedPrivateKey' => $this->getUser()->userKey?->encryptedPrivateKey,
             'storageBytesByClient' => $totalBytes,
+            'userStatus' => $this->getUser()->status
         ]);
     }
 

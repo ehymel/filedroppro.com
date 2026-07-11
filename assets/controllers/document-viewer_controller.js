@@ -1,5 +1,6 @@
 import { Controller } from '@hotwired/stimulus';
 import { Modal } from 'bootstrap';
+import Swal from 'sweetalert2';
 
 /**
  * Document Viewer Controller
@@ -9,7 +10,8 @@ import { Modal } from 'bootstrap';
 export default class extends Controller {
     static targets = ['cryptoModal', 'masterPasswordInput'];
     static values = {
-        encryptedPrivateKey: String // Holds the JSON string containing private key ciphertext, salt, and iv
+        encryptedPrivateKey: String, // Holds the JSON string containing private key ciphertext, salt, and iv
+        userStatus: String          // The status of the current user session ('active' or 'pending_approval')
     };
 
     connect() {
@@ -21,6 +23,12 @@ export default class extends Controller {
      * Prompts the user to input their master password to decrypt their private key into memory.
      */
     ensureCryptoSession(pendingAction) {
+        // Safety Check: If the user is pending approval, block the session unlock entirely
+        if (this.userStatusValue === 'pending_approval') {
+            this.showPendingApprovalNotice();
+            return;
+        }
+
         if (this.unlockedPrivateKey) {
             pendingAction();
             return;
@@ -114,7 +122,12 @@ export default class extends Controller {
 
         } catch (error) {
             console.error('Cryptographic Workspace initialization failed:', error);
-            alert('Invalid Master Password. Security workspace could not be unlocked.');
+            Swal.fire({
+                title: 'Unlock Failed',
+                text: 'Invalid Master Password. Security workspace could not be unlocked.',
+                icon: 'error',
+                confirmButtonColor: '#0d6efd'
+            });
         }
     }
 
@@ -122,6 +135,12 @@ export default class extends Controller {
      * Core execution loop coordinating encrypted asset stream acquisition and local unsealing ceremonies.
      */
     decryptAndDownload(event) {
+        // Strict Guard: Prevent any execution if the user status is not active
+        if (this.userStatusValue === 'pending_approval') {
+            this.showPendingApprovalNotice();
+            return;
+        }
+
         const button = event.currentTarget;
         const metadataUrl = button.getAttribute('data-metadata-url');
         const downloadUrl = button.getAttribute('data-download-url');
@@ -134,6 +153,14 @@ export default class extends Controller {
             try {
                 // Step A: Fetch Cryptographic Key Envelopes and Metadata from Symfony
                 const metadataResponse = await fetch(metadataUrl);
+                if (!metadataResponse.ok) {
+                    let errorMessage = 'Could not retrieve document security metadata.';
+                    try {
+                        const errData = await metadataResponse.json();
+                        if (errData.error) errorMessage = errData.error;
+                    } catch (_) {}
+                    throw new Error(`${errorMessage} (Status: ${metadataResponse.status})`);
+                }
                 const metadata = await metadataResponse.json();
 
                 if (metadata.error) {
@@ -143,11 +170,50 @@ export default class extends Controller {
 
                 // Step B: Unwrap the Document's Symmetric AES Key using the User's unlocked Private Key
                 const wrappedKeyBytes = this.hexToUint8Array(metadata.wrappedKeyHex);
-                const rawSymmetricKeyBuffer = await window.crypto.subtle.decrypt(
-                    { name: 'RSA-OAEP', hash: 'SHA-256' },
-                    this.unlockedPrivateKey,
-                    wrappedKeyBytes
-                );
+                let rawSymmetricKeyBuffer;
+
+                console.log("Diagnostic: Attempting asymmetric RSA unwrap...");
+                console.log("Diagnostic: Modulus length =", this.unlockedPrivateKey.algorithm.modulusLength);
+                console.log("Diagnostic: Wrapped key block length =", wrappedKeyBytes.length, "bytes");
+
+                try {
+                    // Try unsealing using default SHA-256 import
+                    rawSymmetricKeyBuffer = await window.crypto.subtle.decrypt(
+                        { name: 'RSA-OAEP' },
+                        this.unlockedPrivateKey,
+                        wrappedKeyBytes
+                    );
+                    console.log("Diagnostic: Unwrapped symmetric key using SHA-256 successfully.");
+                } catch (sha256Error) {
+                    console.warn("Decryption failed under SHA-256. Attempting legacy SHA-1 alignment fallback...");
+                    try {
+                        // Fallback: Re-import user's private key using SHA-1 (common in standard legacy workflows)
+                        const legacyPrivateKey = await window.crypto.subtle.importKey(
+                            'pkcs8',
+                            this.unlockedPrivateKeyBuffer,
+                            { name: 'RSA-OAEP', hash: 'SHA-1' },
+                            false,
+                            ['decrypt']
+                        );
+                        rawSymmetricKeyBuffer = await window.crypto.subtle.decrypt(
+                            { name: 'RSA-OAEP' },
+                            legacyPrivateKey,
+                            wrappedKeyBytes
+                        );
+                        console.log("Diagnostic: Unwrapped symmetric key using legacy SHA-1 successfully.");
+                    } catch (sha1Error) {
+                        console.error("Diagnostic: Both SHA-256 and SHA-1 unwrap operations failed.");
+                        console.error("Diagnostic: sha256Error =", sha256Error);
+                        console.error("Diagnostic: sha1Error =", sha1Error);
+
+                        // Output explicit context mapping guidance for Pattern 2 Escrow architectures
+                        throw new Error(
+                            "Asymmetric unwrap collapsed. This occurs when the file's symmetric key is encrypted for a different RSA keypair. " +
+                            "If you performed a 'Forgot Password' reset recently, your cryptographic identity was regenerated, " +
+                            "and an Administrator must perform an Escrow Key-Sync Ceremony to restore your access to this file."
+                        );
+                    }
+                }
 
                 const aesKey = await window.crypto.subtle.importKey(
                     'raw',
@@ -159,17 +225,36 @@ export default class extends Controller {
 
                 // Step C: Fetch the raw encrypted document binary payload
                 const fileResponse = await fetch(downloadUrl);
+                if (!fileResponse.ok) {
+                    let errorMessage = 'Failed to download document envelope from secure S3 storage.';
+                    try {
+                        // Attempt to extract structured JSON error payloads
+                        const errData = await fileResponse.json();
+                        if (errData.error) errorMessage = errData.error;
+                    } catch (_) {}
+                    throw new Error(`${errorMessage} (Status: ${fileResponse.status})`);
+                }
                 const encryptedFileBuffer = await fileResponse.arrayBuffer();
 
                 // Step D: Decrypt the raw binary file block locally inside the browser
-                const decryptedFileBuffer = await window.crypto.subtle.decrypt(
-                    {
-                        name: 'AES-GCM',
-                        iv: this.hexToUint8Array(metadata.iv)
-                    },
-                    aesKey,
-                    encryptedFileBuffer
-                );
+                let decryptedFileBuffer;
+                try {
+                    decryptedFileBuffer = await window.crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: this.hexToUint8Array(metadata.iv)
+                        },
+                        aesKey,
+                        encryptedFileBuffer
+                    );
+                } catch (gcmError) {
+                    // Perform an analytical check on the buffer to see if the server outputted PHP error blocks / HTML instead of binary
+                    const textSample = new TextDecoder().decode(encryptedFileBuffer.slice(0, 250));
+                    if (textSample.includes('<!DOCTYPE html>') || textSample.includes('<!--') || textSample.includes('<html')) {
+                        throw new Error("The downloaded S3 package is corrupted. The server returned a PHP or HTML exception warning page instead of raw binary cipher.");
+                    }
+                    throw gcmError;
+                }
 
                 // Step E: Convert decrypted buffer data to a browser Blob download link trigger
                 const clearBlob = new Blob([decryptedFileBuffer], { type: 'application/octet-stream' });
@@ -185,7 +270,6 @@ export default class extends Controller {
                     || metadata.original_file_name
                     || metadata.filename
                     || button.getAttribute('data-original-file-name')
-                    || button.dataset.originalFileName
                     || button.dataset.originalFilename;
 
                 const originalExtension = metadata.originalExtension
@@ -210,11 +294,33 @@ export default class extends Controller {
 
             } catch (err) {
                 console.error('Decryption workflow collapsed:', err);
-                alert(`Decryption failure: ${err.message}`);
+
+                if (err.message.includes('Escrow Key-Sync Ceremony')) {
+                    this.showPendingApprovalNotice();
+                } else {
+                    Swal.fire({
+                        title: 'Decryption Failure',
+                        text: err.message,
+                        icon: 'error',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                }
             } finally {
                 button.disabled = false;
                 button.textContent = originalButtonText;
             }
+        });
+    }
+
+    showPendingApprovalNotice() {
+        Swal.fire({
+            title: 'Account Access Restricted',
+            html: `
+                <p class="text-start">Your cryptographic identity was recently regenerated (likely due to a password reset).</p>
+                <p class="text-start">An <strong>Administrator</strong> must perform an <strong>Escrow Key-Sync Ceremony</strong> to restore your access to this file.</p>
+            `,
+            icon: 'warning',
+            confirmButtonColor: '#0d6efd'
         });
     }
 
