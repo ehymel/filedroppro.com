@@ -143,14 +143,32 @@ export default class extends Controller {
                 // Export & Wrap Tenant Private Key using the Admin's Public Key (Asymmetric Escrow Envelope)
                 const exportedTenantPrivateKey = await window.crypto.subtle.exportKey('pkcs8', tenantKeyPair.privateKey);
 
-                const wrappedTenantPrivateKeyBuffer = await window.crypto.subtle.encrypt(
-                    { name: 'RSA-OAEP' },
-                    adminKeyPair.publicKey, // Wrapped directly with Admin's Public Key
+                // RSA-OAEP 2048 cannot encrypt the full private key directly due to size limits.
+                // We use a hybrid approach: encrypt the private key with AES-GCM, then wrap the AES key with RSA-OAEP.
+                const aesKey = await window.crypto.subtle.generateKey(
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
+                );
+
+                const tenantIv = window.crypto.getRandomValues(new Uint8Array(12));
+                const encryptedTenantPrivateKey = await window.crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: tenantIv },
+                    aesKey,
                     exportedTenantPrivateKey
                 );
 
+                const wrappedAesKey = await window.crypto.subtle.wrapKey(
+                    'raw',
+                    aesKey,
+                    adminKeyPair.publicKey,
+                    { name: 'RSA-OAEP' }
+                );
+
                 const wrappedTenantPrivateKeyPayload = JSON.stringify({
-                    ciphertext: this.arrayBufferToBase64(wrappedTenantPrivateKeyBuffer)
+                    ciphertext: this.arrayBufferToBase64(encryptedTenantPrivateKey),
+                    wrappedKey: this.arrayBufferToBase64(wrappedAesKey),
+                    iv: this.arrayToHex(tenantIv)
                 });
 
                 // Append Tenant Escrow credentials to the form post transaction

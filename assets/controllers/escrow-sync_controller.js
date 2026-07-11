@@ -147,13 +147,38 @@ export default class extends Controller {
 
             const tenantEnvelope = JSON.parse(data.wrappedTenantPrivateKey);
 
-            const wrappedTenantPrivateKeyBytes = this.base64ToArrayBuffer(tenantEnvelope.ciphertext);
+            let decryptedTenantPrivateKeyBuffer;
 
-            const decryptedTenantPrivateKeyBuffer = await window.crypto.subtle.decrypt(
-                { name: 'RSA-OAEP' },
-                this.unlockedAdminPrivateKey,
-                wrappedTenantPrivateKeyBytes
-            );
+            if (tenantEnvelope.wrappedKey) {
+                // Hybrid Encryption path (New)
+                const wrappedAesKeyBytes = this.base64ToArrayBuffer(tenantEnvelope.wrappedKey);
+                const aesKey = await window.crypto.subtle.unwrapKey(
+                    'raw',
+                    wrappedAesKeyBytes,
+                    this.unlockedAdminPrivateKey,
+                    { name: 'RSA-OAEP' },
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['decrypt']
+                );
+
+                decryptedTenantPrivateKeyBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: this.hexToUint8Array(tenantEnvelope.iv)
+                    },
+                    aesKey,
+                    this.base64ToArrayBuffer(tenantEnvelope.ciphertext)
+                );
+            } else {
+                // Legacy path: Direct RSA encryption (might fail for large keys)
+                const wrappedTenantPrivateKeyBytes = this.base64ToArrayBuffer(tenantEnvelope.ciphertext);
+                decryptedTenantPrivateKeyBuffer = await window.crypto.subtle.decrypt(
+                    { name: 'RSA-OAEP' },
+                    this.unlockedAdminPrivateKey,
+                    wrappedTenantPrivateKeyBytes
+                );
+            }
 
             const tenantEscrowPrivateKey = await window.crypto.subtle.importKey(
                 'pkcs8',
