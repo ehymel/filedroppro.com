@@ -1,0 +1,177 @@
+<?php
+
+namespace App\Controller\Security;
+
+use App\Entity\User;
+use App\Entity\UserKey;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+/**
+ * Handles secure unauthenticated password resets under E2EE Pattern 2 (Institutional Escrow).
+ */
+#[Route('/user/password', name: 'user_password_', methods: ['GET', 'POST'])]
+class PasswordResetController extends AbstractController
+{
+    public function __construct(private EntityManagerInterface $em) {}
+
+    /**
+     * Step 1: Request Password Reset Link.
+     */
+    #[Route('/password/forgot/', name: 'forgot', methods: ['GET', 'POST'])]
+    public function requestReset(Request $request, MailerInterface $mailer): Response
+    {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('internal_documents_dashboard');
+        }
+
+        if ($request->isMethod('POST')) {
+            $submittedToken = $request->request->get('_token');
+            if (!$this->isCsrfTokenValid('forgot_password_request', $submittedToken)) {
+                $this->addFlash('danger', 'Invalid security token.');
+                return $this->redirectToRoute('user_password_forgot');
+            }
+
+            $emailInput = trim((string)$request->request->get('email'));
+            if (empty($emailInput)) {
+                $this->addFlash('danger', 'Please enter your email address.');
+                return $this->redirectToRoute('user_password_forgot');
+            }
+
+            $user = $this->em->getRepository(User::class)->findOneBy(['email' => $emailInput]);
+
+            // Protect against user enumeration by displaying a success message regardless of email existence
+            if ($user) {
+                // Generate a cryptographically secure token
+                $resetToken = bin2hex(random_bytes(32));
+
+                // Set temporary mock reset values directly into session or database
+                // (Assuming user record or auxiliary entity tracks token + expiration)
+                $session = $request->getSession();
+                $session->set('pwd_reset_token_' . $resetToken, [
+                    'email' => $user->getEmail(),
+                    'expires_at' => (new \DateTimeImmutable('+1 hour'))->getTimestamp()
+                ]);
+
+                $resetUrl = $this->generateUrl(
+                    'user_password_reset',
+                    ['token' => $resetToken],
+                    UrlGeneratorInterface::ABSOLUTE_URL
+                );
+
+                // Send the reset notification email
+                $emailMessage = new Email()
+                    ->from('security@yoursecureportal.com')
+                    ->to($user->getEmail())
+                    ->subject('Reset Your Security Workspace Credentials')
+                    ->html($this->renderView('emails/user_reset_password.html.twig', [
+                        'resetUrl' => $resetUrl,
+                        'firmName' => $user->getTenant()->getFirmName()
+                    ]));
+
+                try {
+                    $mailer->send($emailMessage);
+                } catch (\Exception $e) {
+                    // Fail silently or log error internally
+                }
+            }
+
+            $this->addFlash('success', 'If a matching account exists, a secure password reset link has been dispatched to your inbox.');
+            return $this->redirectToRoute('user_password_forgot');
+        }
+
+        return $this->render('security/forgot_password_request.html.twig');
+    }
+
+    /**
+     * Step 2: Render Reset Interface & Execute Keypair Generation.
+     */
+    #[Route('/reset/{token}', name: 'reset', methods: ['GET', 'POST'])]
+    public function executeReset(
+        string $token,
+        Request $request,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('internal_documents_dashboard');
+        }
+
+        $session = $request->getSession();
+        $tokenData = $session->get('pwd_reset_token_' . $token);
+
+        if (!$tokenData || $tokenData['expires_at'] < time()) {
+            $this->addFlash('danger', 'The password reset token is invalid, has expired, or has already been used.');
+            return $this->redirectToRoute('user_password_forgot');
+        }
+
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $tokenData['email']]);
+        if (!$user) {
+            $this->addFlash('danger', 'The user associated with this token could not be verified.');
+            return $this->redirectToRoute('user_password_forgot');
+        }
+
+        if ($request->isMethod('POST')) {
+            $submittedToken = $request->request->get('_token');
+            if (!$this->isCsrfTokenValid('reset_forgotten_password_token', $submittedToken)) {
+                $this->addFlash('danger', 'Invalid security token.');
+                return $this->redirectToRoute('user_password_reset', ['token' => $token]);
+            }
+
+            $newPassword = $request->request->get('new_password');
+            $newPublicKey = $request->request->get('new_public_key');
+            $newEncPrivateKeyPayload = $request->request->get('new_encrypted_private_key');
+
+            if (empty($newPassword) || empty($newPublicKey) || empty($newEncPrivateKeyPayload)) {
+                $this->addFlash('danger', 'Cryptographic identity parameters are missing. Refusing server-side authentication update.');
+                return $this->redirectToRoute('user_password_reset', ['token' => $token]);
+            }
+
+            // 1. Hash and save the login password using Argon2id
+            $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
+            $user->setPassword($hashedPassword);
+
+            // 2. Overwrite the user's asymmetric E2EE keys in database
+            $userKey = $user->getUserKey();
+            if (!$userKey) {
+                $userKey = new UserKey();
+                $userKey->user = $user;
+                $this->em->persist($userKey);
+            }
+            $userKey->publicKey = $newPublicKey;
+            $userKey->encryptedPrivateKey = $newEncPrivateKeyPayload;
+
+            // 3. Status Transition: Restrict access until approved and synchronized via Admin Escrow
+            if (in_array('ROLE_ADMIN', $user->getRoles())) {
+                // Admins acts as an authority, they can remain active but must be warned
+                $user->setStatus('active');
+            } else {
+                // Staff users are locked to allow Admin re-wrapping ceremony
+                $user->setStatus('pending_approval');
+            }
+
+            // Burn the temporary reset session token
+            $session->remove('pwd_reset_token_' . $token);
+            $this->em->flush();
+
+            if ($user->getStatus() === 'pending_approval') {
+                $this->addFlash('success', 'Your password has been successfully reset! Because your security keys were regenerated, you must wait for an administrator to approve your account and synchronize historical vault documents before you can log in.');
+            } else {
+                $this->addFlash('success', 'Your administrator password has been successfully reset! You can now log in, but historical documents will remain unreadable until escrow recovery is performed.');
+            }
+
+            return $this->redirectToRoute('security_login');
+        }
+
+        return $this->render('security/reset_forgotten_password.html.twig', [
+            'token' => $token,
+            'userEmail' => $user->getEmail()
+        ]);
+    }
+}
