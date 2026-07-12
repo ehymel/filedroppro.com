@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -70,7 +71,7 @@ class PasswordResetController extends AbstractController
 
                 // Send the reset notification email
                 $emailMessage = new Email()
-                    ->from('info@filedroppro.com')
+                    ->from(new Address('info@filedroppro.com', 'FileDrop Pro'))
                     ->to($user->email)
                     ->subject('Reset Your Security Workspace Credentials')
                     ->html($this->renderView('emails/user_reset_password.html.twig', [

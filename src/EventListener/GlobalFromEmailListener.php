@@ -9,11 +9,8 @@ use Symfony\Component\Mailer\Event\MessageEvent;
 
 final readonly class GlobalFromEmailListener
 {
-    public function __construct(
-        #[Autowire('%global_from_email%')]
-        private string $fromEmail
-    ) {
-    }
+    public function __construct(#[Autowire('%global_from_email%')] private string $fromEmail)
+    {}
 
     #[AsEventListener]
     public function onMessageEvent(MessageEvent $event): void

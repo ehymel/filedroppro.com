@@ -1,9 +1,22 @@
 {% apply inky_to_html|inline_css(source('@styles/email.css')) %}
-<container>
-    <row class="header">
-        <columns>
-            Here is your login authentication code: {{ authCode }}
-        </columns>
-    </row>
-</container>
+    <container>
+        <row class="header">
+            <columns>
+                <img src="https://filedroppro.com/assets/images/FDP_logo_100.png" alt="FileDrop Pro">
+            </columns>
+        </row>
+        <row class="content">
+            <columns>
+                <h2>Authentication Code</h2>
+                <p>Here is your login authentication code:</p>
+                <h1 style="text-align: center; letter-spacing: 5px; color: #4f46e5;">{{ authCode }}</h1>
+                <p class="secondary-text">If you did not request this code, you can safely ignore this email.</p>
+            </columns>
+        </row>
+        <row class="footer">
+            <columns>
+                &copy; {{ "now"|date("Y") }} FileDrop Pro. All rights reserved.
+            </columns>
+        </row>
+    </container>
 {% endapply %}
