@@ -248,6 +248,7 @@ export default class extends Controller {
             // Step D: Decrypt symmetric keys using Escrow and re-wrap for the target user
             const reKeyedMap = {};
             const totalEnvelopes = data.escrowEnvelopes.length;
+            let reKeyedCount = 0;
 
             for (let i = 0; i < totalEnvelopes; i++) {
                 const env = data.escrowEnvelopes[i];
@@ -288,13 +289,18 @@ export default class extends Controller {
                     );
 
                     reKeyedMap[env.documentId] = this.arrayBufferToHex(wrappedUserKeyBuffer);
+                    reKeyedCount++;
                 } catch (err) {
                     console.warn(`Escrow unwrap failed for document: ${env.documentId}. Skipping.`, err);
                 }
             }
 
+            if (reKeyedCount === 0 && totalEnvelopes > 0) {
+                throw new Error('All cryptographic unwrap operations failed. This usually indicates a master escrow key mismatch.');
+            }
+
             // Step E: POST the re-wrapped key blocks back to Symfony
-            this.updateStatus('Submitting re-keyed parameters to server...', 'info');
+            this.updateStatus(`Submitting ${reKeyedCount} re-keyed parameters to server...`, 'info');
             const submitResponse = await fetch(this.activeSubmitUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

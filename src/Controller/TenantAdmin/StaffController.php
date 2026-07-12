@@ -276,7 +276,7 @@ class StaffController extends AbstractController
         $payload = json_decode($request->getContent(), true);
         $reKeyedMap = $payload['reKeyedMap'] ?? null; // Map of [documentId => wrappedKeyHex]
 
-        if (!$reKeyedMap || !is_array($reKeyedMap)) {
+        if ($reKeyedMap === null || !is_array($reKeyedMap)) {
             return new JsonResponse(['error' => 'Invalid or missing cryptographic key alignment map.'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -290,14 +290,14 @@ class StaffController extends AbstractController
                     'user' => $pendingUser
                 ]);
                 if ($staleKey) {
-                    $documentKeyRepository->remove($staleKey);
+                    $documentKeyRepository->remove($staleKey, true);
                 }
 
                 $newKey = new DocumentKey();
                 $newKey->document = $document;
                 $newKey->user = $pendingUser;
                 $newKey->wrappedKeyHex = $wrappedKeyHex;
-                $documentKeyRepository->save($newKey);
+                $documentKeyRepository->save($newKey, true);
             }
         }
 
