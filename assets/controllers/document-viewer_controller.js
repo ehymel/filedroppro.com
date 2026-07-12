@@ -317,12 +317,12 @@ export default class extends Controller {
 
     showPendingApprovalNotice() {
         Swal.fire({
-            title: 'Account Access Restricted',
+            title: 'Security Synchronization Required',
             html: `
-                <p class="text-start">Your cryptographic identity was recently regenerated (likely due to a password reset).</p>
-                <p class="text-start">An <strong>Administrator</strong> must perform an <strong>Escrow Key-Sync Ceremony</strong> to restore your access to this file.</p>
+                <p class="text-start">For your protection, an <strong>Administrator</strong> must perform a <strong>Security Synchronization Ceremony</strong> before you can access documents in this organization.</p>
+                <p class="text-start">This process ensures your cryptographic identity is correctly linked to existing files.</p>
             `,
-            icon: 'warning',
+            icon: 'info',
             confirmButtonColor: '#0d6efd'
         });
     }

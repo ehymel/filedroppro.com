@@ -85,7 +85,7 @@ class RegistrationController extends AbstractController
             if ($hasInvitation && $invitation) {
                 $tenant = $invitation->tenant;
                 $user->tenant = $tenant;
-                $user->status = 'active'; // Approved by invitation
+                $user->status = User::STATUS_PENDING; // Requires security synchronization by an admin
                 $invitation->used = true;
                 $user->roles = ['ROLE_USER'];
             } else {
@@ -114,7 +114,7 @@ class RegistrationController extends AbstractController
                     $entityManager->persist($tenant);
 
                     $user->tenant = $tenant;
-                    $user->status = 'active'; // Admins are active by default on creation
+                    $user->status = User::STATUS_ACTIVE; // Admins are active by default on creation
                     $user->roles = ['ROLE_ADMIN'];
                 } else {
                     $joinCode = strtoupper(trim((string)$form->get('joinCode')->getData()));
@@ -139,7 +139,7 @@ class RegistrationController extends AbstractController
                     }
 
                     $user->tenant = $tenant;
-                    $user->status = 'pending_approval'; // Requires existing admin verification
+                    $user->status = User::STATUS_PENDING; // Requires existing admin verification
                     $user->roles = ['ROLE_USER'];
                 }
             }
@@ -167,8 +167,8 @@ class RegistrationController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
 
-            if (!$hasInvitation && isset($mode) && $mode === 'join') {
-                $this->addFlash('success', 'Your request to join the organization has been dispatched to administrators for approval.');
+            if ($user->status === User::STATUS_PENDING) {
+                $this->addFlash('success', 'Account registered! For security, an administrator must now synchronize your cryptographic keys before you can access documents.');
                 return $this->redirectToRoute('security_login');
             }
 
