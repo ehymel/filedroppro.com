@@ -3,17 +3,18 @@
 namespace App\Controller\Security;
 
 use App\Entity\User;
-use Erkens\Security\TwoFactorTextBundle\Generator\CodeGeneratorInterface;
+use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Email\Generator\CodeGeneratorInterface as EmailCodeGeneratorInterface;
+use Erkens\Security\TwoFactorTextBundle\Generator\CodeGeneratorInterface as TextCodeGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/2fa/', name: '2fa_')]
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
 class TwoFAController extends AbstractController
 {
     #[Route('manage', name: 'manage')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function manage(): Response
     {
         /** @var User $currentUser */
@@ -25,12 +26,42 @@ class TwoFAController extends AbstractController
     }
 
     #[Route('email/resend', name: 'email_resend')]
-    public function resendAuthEmail(CodeGeneratorInterface $codeGenerator): Response
+    public function resendAuthEmail(EmailCodeGeneratorInterface $codeGenerator): Response
     {
         /** @var User $user */
         $user = $this->getUser();
 
-        $codeGenerator->reSend($user);
+        if (!$user) {
+            return $this->redirectToRoute('security_login');
+        }
+
+        try {
+            $codeGenerator->reSend($user);
+        } catch (\LogicException) {
+            $codeGenerator->generateAndSend($user);
+        }
+
+        $this->addFlash('success', 'Authentication code re-sent.');
+
+        return $this->redirectToRoute('2fa_login');
+    }
+
+    #[Route('text/resend', name: 'text_resend')]
+    public function resendAuthText(TextCodeGeneratorInterface $codeGenerator): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->redirectToRoute('security_login');
+        }
+
+        try {
+            $codeGenerator->reSend($user);
+        } catch (\LogicException) {
+            $codeGenerator->generateAndSend($user);
+        }
+
         $this->addFlash('success', 'Authentication code re-sent.');
 
         return $this->redirectToRoute('2fa_login');

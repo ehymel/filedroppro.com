@@ -5,6 +5,8 @@
 {% block body %}
     <div class="container">
         <div class="row">
+            {{ include('flash_messages.html.twig') }}
+
             <div class="login-form bg-light mt-4 p-4 col-xl-4 col-md-8 col-12">
                 <h1 class="h3 mb-3 font-weight-normal">Two-factor authentication</h1>
 
@@ -16,7 +18,7 @@
                     <div class="alert alert-danger">{{ authenticationError|trans(authenticationErrorData, 'SchebTwoFactorBundle') }}</div>
                 {% endif %}
 
-                <form class="form" action="{{ checkPathUrl ? checkPathUrl: path(checkPathRoute) }}" method="post">
+                <form class="form" action="{{ checkPathUrl ?? path(checkPathRoute) }}" method="post">
                     <p class="widget">
                         <input
                                 id="_auth_code"
@@ -26,6 +28,8 @@
                                 class="form-control"
                                 autofocus
                                 style="padding: 10px 5px; line-height: 28px; font-size: 24px; text-align: center;"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
                         />
                     </p>
 
@@ -42,6 +46,16 @@
                     {% endif %}
                     <a class="btn btn-link" href="{{ logoutPath }}">{{ "cancel"|trans({}, 'SchebTwoFactorBundle') }}</a>
                     <button class="btn btn-primary">{{ "login"|trans({}, 'SchebTwoFactorBundle') }}</button>
+                    <a id="resend-text-link"
+                       class="btn btn-link"
+                       href="{{ path('2fa_text_resend') }}"
+                       data-controller="resend-countdown"
+                       data-resend-countdown-duration-value=30
+                       data-resend-countdown-target="link"
+                       data-resend-countdown-label-value="Resend text"
+                       data-resend-countdown-auto-start-value="true"
+                       data-action="click->resend-countdown#startCountdown"
+                    >Resend text</a>
                 </form>
             </div>
         </div>
