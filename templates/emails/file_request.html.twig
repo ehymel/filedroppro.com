@@ -1,38 +1,24 @@
-{% apply inky_to_html|inline_css(source('@styles/email.css')) %}
-    <container>
-        <row class="header">
-            <columns>
-                <img src="https://filedroppro.com/assets/images/FDP_logo_100.png" alt="FileDrop Pro">
-            </columns>
-        </row>
-        <row class="content">
-            <columns>
-                <h2>Secure Document Request</h2>
-                <p>Dear {{ clientName }},</p>
+{% extends 'emails/email_base.html.twig' %}
 
-                <p><strong>{{ senderName }}</strong> at <strong>{{ firmName }}</strong> has requested that you securely upload files to their document vault.</p>
+{% block content
+    <h2>Secure Document Request</h2>
+    <p>Dear {{ clientName }},</p>
 
-                {% if instructions is not empty %}
-                    <blockquote style="margin: 20px 0; padding-left: 15px; border-left: 3px solid #666; font-style: italic;">
-                        "{{ instructions }}"
-                    </blockquote>
-                {% endif %}
+    <p><strong>{{ senderName }}</strong> at <strong>{{ firmName }}</strong> has requested that you securely upload files to their document vault.</p>
 
-                <p>Please click the secure, direct link below to access our privacy-compliant drop zone. Files uploaded through this portal are fully encrypted directly within your web browser before transmission:</p>
+    {% if instructions is not empty %}
+        <blockquote style="margin: 20px 0; padding-left: 15px; border-left: 3px solid #666; font-style: italic;">
+            "{{ instructions }}"
+        </blockquote>
+    {% endif %}
 
-                <center>
-                    <button href="{{ dropUrl }}" class="button">Access Secure File Drop Portal</button>
-                </center>
+    <p>Please click the secure, direct link below to access our privacy-compliant drop zone. Files uploaded through this portal are fully encrypted directly within your web browser before transmission:</p>
 
-                <p class="secondary-text">
-                    Security Notice: This document transfer system utilizes Client-Side End-to-End Encryption (E2EE). Only your designated providers possess the private cryptographic credentials required to access or unseal your data components.
-                </p>
-            </columns>
-        </row>
-        <row class="footer">
-            <columns>
-                &copy; {{ "now"|date("Y") }} FileDrop Pro. All rights reserved.
-            </columns>
-        </row>
-    </container>
-{% endapply %}
+    <center>
+        <button href="{{ dropUrl }}" class="button">Access Secure File Drop Portal</button>
+    </center>
+
+    <p class="secondary-text">
+        Security Notice: This document transfer system utilizes Client-Side End-to-End Encryption (E2EE). Only your designated providers possess the private cryptographic credentials required to access or unseal your data components.
+    </p>
+{% endblock %}

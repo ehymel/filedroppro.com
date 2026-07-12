@@ -1,31 +1,18 @@
-{% apply inky_to_html|inline_css(source('@styles/email.css')) %}
-    <container>
-        <row class="header">
-            <columns>
-                <img src="https://filedroppro.com/assets/images/FDP_logo_100.png" alt="FileDrop Pro">
-            </columns>
-        </row>
-        <row class="content">
-            <columns>
-                <h2>You've Been Invited!</h2>
-                <p>You have been invited to join FileDrop Pro.</p>
+{% extends 'emails/email_base.html.twig' %}
 
-                <p>Please click the button below to activate your account and set up your secure workspace.</p>
+{% block content %}
+    <h2>You've Been Invited!</h2>
 
-                <center>
-                    <button href="{{ registrationUrl }}" class="button">Activate My Account</button>
-                </center>
+    <p>You have been invited to join FileDrop Pro.</p>
 
-                <p class="secondary-text">
-                    If you cannot click the button above, copy and paste this link into your browser:<br>
-                    {{ registrationUrl }}
-                </p>
-            </columns>
-        </row>
-        <row class="footer">
-            <columns>
-                &copy; {{ "now"|date("Y") }} FileDrop Pro. All rights reserved.
-            </columns>
-        </row>
-    </container>
-{% endapply %}
+    <p>Please click the button below to activate your account and set up your secure workspace.</p>
+
+    <center>
+        <button href="{{ registrationUrl }}" class="button">Activate My Account</button>
+    </center>
+
+    <p class="secondary-text">
+        If you cannot click the button above, copy and paste this link into your browser:<br>
+        {{ registrationUrl }}
+    </p>
+{% endblock %}

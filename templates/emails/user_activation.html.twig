@@ -1,38 +1,25 @@
-{% apply inky_to_html|inline_css(source('@styles/email.css')) %}
-    <container>
-        <row class="header">
-            <columns>
-                <img src="https://filedroppro.com/assets/images/FDP_logo_100.png" alt="FileDrop Pro">
-            </columns>
-        </row>
-        <row class="content">
-            <columns>
-                <h2>Activate Your Account</h2>
-                <p>Dear {{ user.name }},</p>
+{% extends 'emails/email_base.html.twig' %}
 
-                <p>An account has been created for you on the FileDrop Pro website.</p>
+{% block content %}
+    <h2>Activate Your Account</h2>
 
-                <p>Please make a note of your email: <strong>{{ user.email }}</strong></p>
+    <p>Dear {{ user.name }},</p>
 
-                <p>You must activate your account using the link below before your first login. Once your account is activated, you will be asked to create a password.</p>
+    <p>An account has been created for you on the FileDrop Pro website.</p>
 
-                <center>
-                    <button href="{{ url('user_activate', {'id': user.id, 'hash': hash}) }}" class="button">Activate My Account</button>
-                </center>
+    <p>Please make a note of your email: <strong>{{ user.email }}</strong></p>
 
-                <p class="secondary-text">
-                    If you cannot click the button above, copy and paste this link into your browser:<br>
-                    {{ url('user_activate', {'id': user.id, 'hash': hash}) }}
-                </p>
+    <p>You must activate your account using the link below before your first login. Once your account is activated, you will be asked to create a password.</p>
 
-                <h3>Having trouble logging in?</h3>
-                <p>You can try: <a href="{{ url('security_login') }}">Request password change email</a></p>
-            </columns>
-        </row>
-        <row class="footer">
-            <columns>
-                &copy; {{ "now"|date("Y") }} FileDrop Pro. All rights reserved.
-            </columns>
-        </row>
-    </container>
-{% endapply %}
+    <center>
+        <button href="{{ url('user_activate', {'id': user.id, 'hash': hash}) }}" class="button">Activate My Account</button>
+    </center>
+
+    <p class="secondary-text">
+        If you cannot click the button above, copy and paste this link into your browser:<br>
+        {{ url('user_activate', {'id': user.id, 'hash': hash}) }}
+    </p>
+
+    <h3>Having trouble logging in?</h3>
+    <p>You can try: <a href="{{ url('security_login') }}">Request password change email</a></p>
+{% endblock %}
