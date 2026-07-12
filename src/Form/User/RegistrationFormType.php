@@ -91,13 +91,15 @@ class RegistrationFormType extends AbstractType
             ])
             ->add('tenantPublicKey', HiddenType::class, [
                 'mapped' => false,
-                'constraints' => [
+                'required' => false,
+                'constraints' => $options['has_invitation'] ? [] : [
                     new NotBlank(message:  'E2EE Public Key validation failed. Please check that JavaScript is enabled and your browser supports the Web Crypto API.'),
                 ],
             ])
             ->add('wrappedTenantPrivateKey', HiddenType::class, [
                 'mapped' => false,
-                'constraints' => [
+                'required' => false,
+                'constraints' => $options['has_invitation'] ? [] : [
                     new NotBlank(message: 'E2EE Encrypted Private Key envelope generation failed. Please refresh and try again.'),
                 ],
             ]);

@@ -68,9 +68,14 @@ class RegistrationController extends AbstractController
         ]);
 
         // Manually bind the dynamic Escrow Key fields onto the form configuration block
+        // Only if it's a new tenant registration (NOT an invitation)
         if (!$hasInvitation && $request->isMethod('POST')) {
-            $form->add('tenantPublicKey', HiddenType::class, ['mapped' => false]);
-            $form->add('wrappedTenantPrivateKey', HiddenType::class, ['mapped' => false]);
+            $registrationData = $request->request->all();
+            $registrationMode = $registrationData['registration_form']['registrationMode'] ?? null;
+            if ($registrationMode === 'new') {
+                $form->add('tenantPublicKey', HiddenType::class, ['mapped' => false]);
+                $form->add('wrappedTenantPrivateKey', HiddenType::class, ['mapped' => false]);
+            }
         }
 
         $form->handleRequest($request);
