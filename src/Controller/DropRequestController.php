@@ -189,7 +189,7 @@ class DropRequestController extends AbstractController
             $this->mailer->send($email);
             return true;
         } catch (\Exception $e) {
-//            $this->addFlash('danger', $e->getCode() . ': ' . $e->getMessage());
+            $this->addFlash('danger', $e->getCode() . ': ' . $e->getMessage());
             return false;
         }
     }

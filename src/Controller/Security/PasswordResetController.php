@@ -71,7 +71,6 @@ class PasswordResetController extends AbstractController
 
                 // Send the reset notification email
                 $email = new TemplatedEmail()
-                    ->from(new Address('info@filedroppro.com', 'FileDrop Pro'))
                     ->to($user->email)
                     ->subject('Reset Your Security Workspace Credentials')
                     ->htmlTemplate('emails/user_reset_password.html.twig')

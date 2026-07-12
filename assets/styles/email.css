@@ -1,10 +1,11 @@
 body {
-    background-color: #f3f4f6;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    /*background-color: #f8f8f8;*/
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 container {
-    background-color: #ffffff;
     margin-top: 20px;
     margin-bottom: 20px;
     border-radius: 8px;
@@ -13,7 +14,6 @@ container {
 }
 
 .header {
-    background-color: #4f46e5;
     padding: 20px;
     text-align: center;
 }
@@ -27,6 +27,7 @@ container {
     padding: 30px;
     color: #374151;
     line-height: 1.6;
+    text-align: left;
 }
 
 .content h2 {
@@ -42,13 +43,19 @@ container {
 }
 
 .button {
-    background-color: #4f46e5;
-    color: #ffffff;
-    text-decoration: none;
-    padding: 12px 24px;
+    border: 1px solid #4f46e5;
+    background-color: #446e7f;
     border-radius: 6px;
+    color: #ffffff!important;
+    text-decoration: none!important;
+    padding: 12px 24px;
     font-weight: bold;
     display: inline-block;
+}
+
+table.button td a {
+    color: #ffffff!important;
+    text-decoration: none!important;
 }
 
 .notice {
