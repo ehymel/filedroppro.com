@@ -280,10 +280,18 @@ class StaffController extends AbstractController
             return new JsonResponse(['error' => 'Invalid or missing cryptographic key alignment map.'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Persist each re-wrapped file key for the user
+        // Fetch each document record without relying on standard find() to bypass potential tenant filter state issues
         foreach ($reKeyedMap as $docId => $wrappedKeyHex) {
-            $document = $this->documentRepository->find($docId);
-            if ($document && $document->client->tenant === $tenant) {
+            $document = $this->documentRepository->createQueryBuilder('d')
+                ->join('d.client', 'c')
+                ->where('d.id = :id')
+                ->andWhere('c.tenant = :tenant')
+                ->setParameter('id', $docId)
+                ->setParameter('tenant', $tenant)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if ($document) {
                 // Remove any stale/old wrapped keys for this specific document/user combination
                 $staleKey = $documentKeyRepository->findOneBy([
                     'document' => $document,

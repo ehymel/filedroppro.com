@@ -204,6 +204,32 @@ export default class extends Controller {
             }
         }
 
+        // --- Pattern 2: Institutional Escrow Wrapping ---
+        // We also wrap the symmetric key with the Tenant's Master Escrow Public Key.
+        // This ensures the firm can recover the file if the staff user is unavailable or resets their password.
+        const tenantPublicKeyPem = this.element.getAttribute('data-secure-drop-tenant-public-key-value');
+        if (tenantPublicKeyPem) {
+            try {
+                const escrowPublicKey = await window.crypto.subtle.importKey(
+                    'spki',
+                    this.convertPemToBinary(tenantPublicKeyPem),
+                    { name: 'RSA-OAEP', hash: 'SHA-256' },
+                    false,
+                    ['encrypt', 'wrapKey']
+                );
+
+                const wrappedEscrowBuffer = await window.crypto.subtle.encrypt(
+                    { name: 'RSA-OAEP' },
+                    escrowPublicKey,
+                    rawAesKey
+                );
+
+                wrappedKeys['tenant_escrow'] = this.arrayBufferToHex(wrappedEscrowBuffer);
+            } catch (err) {
+                console.error('Institutional Escrow keywrap failed:', err);
+            }
+        }
+
         const encryptedBlob = new Blob([encryptedFileBuffer], { type: 'application/octet-stream' });
 
         return {
