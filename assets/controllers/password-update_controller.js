@@ -26,6 +26,7 @@ export default class extends Controller {
     async executeCeremony(event) {
         event.preventDefault();
 
+        // Check if we have the inputs needed. If it's a Symfony form, they might be nested.
         const newPassword = this.newPasswordInputTarget.value;
         const confirmPassword = this.confirmPasswordInputTarget.value;
 
@@ -41,11 +42,17 @@ export default class extends Controller {
 
         this.lockUI('Processing cryptographic keys...');
 
+        const mode = this.modeValue || 'change';
+
+        console.log('Password Ceremony Mode:', mode);
+
         try {
-            if (this.modeValue === 'change') {
+            if (mode === 'change') {
                 await this.performReencryptionCeremony(newPassword);
-            } else if (this.modeValue === 'reset') {
+            } else if (mode === 'reset') {
                 await this.performRegenerationCeremony(newPassword);
+            } else {
+                throw new Error(`Invalid security workflow mode: ${mode}`);
             }
         } catch (err) {
             console.error('Password Ceremony Collapsed:', err);
@@ -59,7 +66,11 @@ export default class extends Controller {
      * Unlocks the current private key and wraps it with the new master password.
      */
     async performReencryptionCeremony(newPassword) {
-        const currentPassword = this.currentPasswordInputTarget.value;
+        let currentPassword = '';
+        if (this.hasCurrentPasswordInputTarget) {
+            currentPassword = this.currentPasswordInputTarget.value;
+        }
+
         if (!currentPassword) {
             throw new Error('You must enter your current password to unlock your existing key envelope.');
         }
@@ -281,7 +292,8 @@ export default class extends Controller {
     }
 
     injectHiddenField(name, value) {
-        let input = this.formTarget.querySelector(`input[name="${name}"]`);
+        // Attempt to find existing field, including those that might be nested in a Symfony form
+        let input = this.formTarget.querySelector(`input[name="${name}"], input[name$="[${name}]"]`);
         if (!input) {
             input = document.createElement('input');
             input.type = 'hidden';

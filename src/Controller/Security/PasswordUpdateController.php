@@ -32,7 +32,8 @@ class PasswordUpdateController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $newPassword = $request->request->get('new_password');
+            $formData = $form->getData();
+            $newPassword = $formData['newPassword'] ?? null;
             $newEncPrivateKeyPayload = $request->request->get('new_encrypted_private_key');
 
             if (empty($newPassword) || empty($newEncPrivateKeyPayload)) {
@@ -73,7 +74,7 @@ class PasswordUpdateController extends AbstractController
     ): Response {
         // Find the user mapped to this reset token. (Mock lookup for demonstration purposes)
         // In your real system, match this to your Token entity or ResetPassword database lookup.
-        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $request->query->get('email')]);
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $request->request->get('email') ?: $request->query->get('email')]);
 
         if (!$user) {
             $this->addFlash('danger', 'Invalid or expired password reset request parameters.');
