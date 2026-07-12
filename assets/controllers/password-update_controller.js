@@ -129,6 +129,24 @@ export default class extends Controller {
             throw new Error('Your current password is incorrect. Unable to unlock your security workspace.');
         }
 
+        // Safety Pre-flight Check: Verify decrypted private key matches valid PKCS#8 specifications
+        if (!rawPrivateKeyBuffer || rawPrivateKeyBuffer.byteLength === 0) {
+            throw new Error('Decrypted private key buffer is empty or corrupted.');
+        }
+
+        try {
+            // Attempt to temporarily import the private key to prove it is valid and fully intact
+            await window.crypto.subtle.importKey(
+                'pkcs8',
+                rawPrivateKeyBuffer,
+                { name: 'RSA-OAEP', hash: 'SHA-256' },
+                false,
+                ['decrypt']
+            );
+        } catch (importVerifyError) {
+            throw new Error('Decrypted private key validation failed. Key format is corrupted.');
+        }
+
         // 4. Derive New K_master from New Password
         this.updateStatus('Deriving new security credentials...', 'info');
         const newPbkdf2BaseKey = await window.crypto.subtle.importKey(
@@ -156,13 +174,15 @@ export default class extends Controller {
         // 5. Re-encrypt the raw private key buffer under new master password
         this.updateStatus('Encrypting keys under new password...', 'info');
         const newIv = window.crypto.getRandomValues(new Uint8Array(12));
+
+        // FIX: Wrap 'rawPrivateKeyBuffer' inside a typed Uint8Array to prevent browser-specific memory alignment corruption
         const newEncryptedBuffer = await window.crypto.subtle.encrypt(
             {
                 name: 'AES-GCM',
                 iv: newIv
             },
             newMasterKey,
-            rawPrivateKeyBuffer
+            new Uint8Array(rawPrivateKeyBuffer)
         );
 
         // 6. Assemble the payload envelope and submit
@@ -235,7 +255,7 @@ export default class extends Controller {
                 iv: newIv
             },
             newMasterKey,
-            exportedPrivateKey
+            new Uint8Array(exportedPrivateKey) // Safe aligned array wrapping
         );
 
         const newEncryptedEnvelope = JSON.stringify({
@@ -253,11 +273,21 @@ export default class extends Controller {
     // --- Parsing Utility Helpers ---
 
     hexToUint8Array(hexString) {
-        return new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        if (!hexString) return new Uint8Array(0);
+        // Strips any potential white space, carriage returns, or HTML entities
+        const cleanHex = hexString.replace(/[^0-9a-fA-F]/g, '');
+        const numBytes = cleanHex.length / 2;
+        const byteArray = new Uint8Array(numBytes);
+        for (let i = 0; i < numBytes; i++) {
+            byteArray[i] = parseInt(cleanHex.substr(i * 2, 2), 16);
+        }
+        return byteArray;
     }
 
     base64ToArrayBuffer(base64) {
-        const binaryString = window.atob(base64);
+        // Strip any unexpected white spaces, newlines, or escaped characters from input
+        const cleanBase64 = base64.replace(/[^A-Za-z0-9+/=]/g, "");
+        const binaryString = window.atob(cleanBase64);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
         for (let i = 0; i < len; i++) {
