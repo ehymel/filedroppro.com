@@ -156,5 +156,8 @@
         </div>
     </div>
 {% else %}
-    <p>No client drop-boxes registered inside this tenant structure yet.</p>
+    <p>
+        No documents have been uploaded for this tenant yet.
+        Invite clients to upload files by sending a <a href="{{ path('internal_requests_list') }}">drop request</a>.
+    </p>
 {% endfor %}

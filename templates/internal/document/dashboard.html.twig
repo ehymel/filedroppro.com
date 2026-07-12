@@ -12,15 +12,21 @@
             <div class="col">
                 <span>Internal Secure Vault</span>
                 <h1>Document Management</h1>
-                <p>Access and unseal end-to-end encrypted items submitted by external clients.</p>
             </div>
         </div>
-        <div class="row">
-            <div class="col mb-4 larger">
-                The consolidated size of all encrypted client document payloads registered inside your firm's partition:
-                <strong>{{ format_bytes(storageBytesByClient|sum) }}</strong>
+
+        {% if clients|length > 0 %}
+            <div class="row">
+                <div class="col mb-4 larger">
+                    <p>Access and unseal end-to-end encrypted items submitted by external clients.</p>
+
+                    <p>
+                        The consolidated size of all encrypted client document payloads registered inside your firm's partition:
+                        <strong>{{ format_bytes(storageBytesByClient|sum) }}</strong>
+                    </p>
+                </div>
             </div>
-        </div>
+        {% endif %}
 
         {# Session Authentication Interceptor Modals #}
         <div class="modal fade" id="crypto-session-modal" tabindex="-1" aria-labelledby="cryptoModalLabel" aria-hidden="true" data-document-viewer-target="cryptoModal">
