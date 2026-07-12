@@ -2,7 +2,7 @@
 
 {% for client in clients %}
     <div class="row mb-5 border-left">
-        <div class="col-md-10 col-12">
+        <div class="col ms-4">
             <h2>Documents uploaded from <span style="text-decoration: underline">{{ client.clientName }}</span></h2>
 
             {% set activeDocuments = client.documents|filter(doc => doc.deletedAt === null) %}

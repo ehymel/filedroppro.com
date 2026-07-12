@@ -12,6 +12,7 @@
     <tr>
         <th>Client</th>
         <th>Requested By</th>
+        <th>Instructions</th>
         <th>Date Sent</th>
         <th>Status</th>
         <th class="no-sort">Actions</th>
@@ -29,6 +30,22 @@
                 {{ request.createdBy.name }}
                 <br />
                 (<small>{{ request.createdBy.email }}</small>)
+            </td>
+            <td>
+                <div data-controller="inline-edit"
+                     data-inline-edit-url-value="{{ path('internal_requests_update_instructions', {'id': request.id.toString()}) }}"
+                     data-inline-edit-field-value="instructions"
+                     data-inline-edit-empty-value="No instructions added.">
+                    <div data-inline-edit-target="display" class="mb-1">
+                        <span data-inline-edit-target="output">{{ request.instructions|default('No instructions added.') }}</span>
+                        <a href="#" data-action="click->inline-edit#toggle"><span class="bi bi-pencil"></span></a>
+                    </div>
+                    <div data-inline-edit-target="form" class="d-none mt-2">
+                        <textarea class="form-control mb-2" data-inline-edit-target="input">{{ request.instructions }}</textarea>
+                        <button class="btn btn-sm btn-success" data-action="click->inline-edit#save">Save</button>
+                        <button class="btn btn-sm btn-link" data-action="click->inline-edit#toggle">Cancel</button>
+                    </div>
+                </div>
             </td>
             <td>
                 {{ request.createdAt|date('M d, Y') }}

@@ -11,6 +11,7 @@ use App\Repository\DropRequestRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -157,6 +158,22 @@ class DropRequestController extends AbstractController
         $this->addFlash('success', 'The secure request link has been permanently deleted.');
 
         return $this->redirectToRoute('internal_requests_list');
+    }
+
+
+    #[Route(path: '/update-instructions/{id}', name: 'update_instructions', methods: ['POST'])]
+    public function updateInstructions(DropRequest $dropRequest, Request $request): JsonResponse
+    {
+        if ($dropRequest->tenant !== $this->getUser()->tenant) {
+            return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $dropRequest->instructions = $data['instructions'] ?? '';
+
+        $this->dropRequestRepository->save($dropRequest, true);
+
+        return new JsonResponse(['success' => true, 'instructions' => $dropRequest->instructions]);
     }
 
     private function dispatchRequestEmail(DropRequest $dropRequest): bool

@@ -33,11 +33,9 @@
             </td>
             <td>{{ client.createdBy?.name }}</td>
             <td>
-                {{ client.createdAt|date('M d, Y') }}
-                <br />
-                {{ client.createdAt|date('h:i a') }}
+                {{ client.createdAt|date('M d, Y h:i a') }}
             </td>
-            <td style="text-align: center;">{{ client.documents|length }}</td>
+            <td>{{ client.documents|length }}</td>
             <td>
                 {% if client.documents|length === 0 %}
                     <button type="button" class="btn btn-sm btn-danger"
