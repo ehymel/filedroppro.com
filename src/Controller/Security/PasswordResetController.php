@@ -63,11 +63,7 @@ class PasswordResetController extends AbstractController
                     'expires_at' => new \DateTimeImmutable('+1 hour')->getTimestamp()
                 ]);
 
-                $resetUrl = $this->generateUrl(
-                    'user_password_reset',
-                    ['token' => $resetToken],
-                    UrlGeneratorInterface::ABSOLUTE_URL
-                );
+                $resetUrl = $this->generateUrl('user_password_reset', ['token' => $resetToken],UrlGeneratorInterface::ABSOLUTE_URL);
 
                 // Send the reset notification email
                 $email = new TemplatedEmail()
