@@ -33,7 +33,7 @@ class Client extends MappedSuperclassBase
     #[ORM\JoinColumn(nullable: false)]
     public ?Tenant $tenant = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column]
     #[Assert\NotBlank]
     public ?string $clientName = null;
 

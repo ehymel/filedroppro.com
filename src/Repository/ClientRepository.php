@@ -68,9 +68,10 @@ class ClientRepository extends ServiceEntityRepository
         // Runs outside any ORM transaction, so it commits immediately and is visible
         // to concurrent finalizers. On conflict the row already exists — we re-fetch it below.
         $conn->executeStatement(
-            'INSERT IGNORE INTO client (tenant_id, client_name, created_at)
-             VALUES (UNHEX(REPLACE(:tenant_uuid, "-", "")), :name, :createdAt)',
+            'INSERT IGNORE INTO client (id, tenant_id, client_name, created_at)
+             VALUES (UNHEX(REPLACE(:id, "-", "")), UNHEX(REPLACE(:tenant_uuid, "-", "")), :name, :createdAt)',
             [
+                'id' => Uuid::v4()->toString(),
                 'tenant_uuid' => $tenant->id->toString(),
                 'name' => $clientName,
                 'createdAt' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
