@@ -47,7 +47,7 @@ class ClientRepository extends ServiceEntityRepository
      *
      * Safe against concurrent callers (e.g. a client dropping several files at once,
      * each finalizing in a separate parallel request): the insert is a single atomic
-     * `INSERT ... ON CONFLICT DO NOTHING` guarded by the uniq_client_tenant_name
+     * `INSERT IGNORE` guarded by the uniq_client_tenant_name
      * constraint, so a lost race becomes a no-op rather than a duplicate row or a
      * UniqueConstraintViolationException that would poison the ORM unit of work.
      *
@@ -68,9 +68,8 @@ class ClientRepository extends ServiceEntityRepository
         // Runs outside any ORM transaction, so it commits immediately and is visible
         // to concurrent finalizers. On conflict the row already exists — we re-fetch it below.
         $conn->executeStatement(
-            'INSERT INTO client (id, tenant_id, client_name, created_at)
-             VALUES (:id, :tenant, :name, :createdAt)
-             ON CONFLICT (tenant_id, client_name) DO NOTHING',
+            'INSERT IGNORE INTO client (id, tenant_id, client_name, created_at)
+             VALUES (:id, :tenant, :name, :createdAt)',
             [
                 'id' => (string) Uuid::v4(),
                 'tenant' => (string) $tenant->id,
