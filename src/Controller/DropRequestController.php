@@ -173,20 +173,20 @@ class DropRequestController extends AbstractController
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        $emailPayload = new TemplatedEmail()
-//            ->from($sender->email)
+        $email = new TemplatedEmail()
             ->to($dropRequest->clientEmail)
             ->subject(sprintf('Secure file request from %s', $tenant->firmName))
-            ->html($this->renderView('emails/file_request.html.twig', [
+            ->htmlTemplate('emails/file_request.html.twig')
+            ->context([
                 'clientName' => $dropRequest->clientName,
                 'firmName' => $tenant->firmName,
                 'senderName' => $sender->name.' ('.$sender->email.')',
                 'instructions' => $dropRequest->instructions,
                 'dropUrl' => $dropUrl
-            ]));
+            ]);
 
         try {
-            $this->mailer->send($emailPayload);
+            $this->mailer->send($email);
             return true;
         } catch (\Exception $e) {
 //            $this->addFlash('danger', $e->getCode() . ': ' . $e->getMessage());

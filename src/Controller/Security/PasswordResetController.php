@@ -5,13 +5,13 @@ namespace App\Controller\Security;
 use App\Entity\User;
 use App\Entity\UserKey;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -70,17 +70,18 @@ class PasswordResetController extends AbstractController
                 );
 
                 // Send the reset notification email
-                $emailMessage = new Email()
+                $email = new TemplatedEmail()
                     ->from(new Address('info@filedroppro.com', 'FileDrop Pro'))
                     ->to($user->email)
                     ->subject('Reset Your Security Workspace Credentials')
-                    ->html($this->renderView('emails/user_reset_password.html.twig', [
+                    ->htmlTemplate('emails/user_reset_password.html.twig')
+                    ->context([
                         'resetUrl' => $resetUrl,
                         'firmName' => $user->tenant->firmName
-                    ]));
+                    ]);
 
                 try {
-                    $mailer->send($emailMessage);
+                    $mailer->send($email);
                 } catch (TransportExceptionInterface $e) {
                     $this->addFlash('error', 'An error occurred while sending the password reset email. Please try again later.');
                 } catch (\Exception $e) {

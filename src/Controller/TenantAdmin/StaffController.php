@@ -202,12 +202,12 @@ class StaffController extends AbstractController
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        $templatedEmail = new TemplatedEmail()
+        $email = new TemplatedEmail()
             ->to($invitation->email)
             ->subject('FileDrop Pro Portal Invitation')
             ->htmlTemplate('emails/user_invitation.html.twig')
             ->context(['registrationUrl' => $registrationUrl]);
-        $this->mailer->send($templatedEmail);
+        $this->mailer->send($email);
 
         $this->addFlash('success', sprintf('Invitation successfully mailed to %s.', $invitation->email));
 
