@@ -4,13 +4,13 @@
     <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
             <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+                <a class="nav-link active" aria-current="page" href="{{ path('security_login') }}">Dashboard</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">My Files</a>
+                <a class="nav-link" href="{{ path('drop_explainer') }}">Upload Files</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Pricing</a>
+                <a class="nav-link" href="#pricing">Pricing</a>
             </li>
         </ul>
 
@@ -41,41 +41,30 @@
         <div class="col-12 col-md-10 col-xl-8">
             <h2>Features</h2>
             <ul class="larger">
-                <li><span class="bold larger">Security:</span> FileDrop Pro features two-factor and passkey authentication,
+                <li><strong class="larger">Security:</strong> FileDrop Pro features two-factor and passkey authentication,
                     and data encryption. All data is encrypted in transit and at rest.</li>
 
-                <li><span class="bold larger">Availability:</span> FileDrop Pro is hosted on AWS with uptime monitoring, disaster recovery plans,
+                <li><strong class="larger">Availability:</strong> FileDrop Pro is hosted on AWS with uptime monitoring, disaster recovery plans,
                     and regular backup.</li>
 
-                <li><span class="bold larger">Confidentiality:</span> Is access to data strictly restricted to personnel that you specify. Since data
+                <li><strong class="larger">Confidentiality:</strong> Access to data is highly restricted to personnel that you specify. Since data
                     is stored in an encrypted state, it is not accessible by any other party.
 
-                <li><span class="bold larger">Privacy:</span> No personal information is shared with third parties.</li>
-            </ul>
-        </div>
-        <div class="col-12 col-md-2 col-xl-4 mt-2 border-1">
-            <h3>What would you like to do?</h3>
-            <ul class="larger">
-                <li>Respond to a request to upload files</li>
-                <li>Sign up for a free trial</li>
-                <li>Log in to your account</li>
+                <li><strong class="larger">Privacy:</strong> No personal information is shared with third parties.</li>
             </ul>
         </div>
     </div>
-    <div class="row mt-4">
+    <div class="row mt-4" id="pricing">
         <div class="col-8">
             <h2>Pricing</h2>
-            <ul class="larger">
-                <li><span class="bold larger">Free Trial:</span> Up to 100 files or 1 GB. No credit card required.</li>
-                <li><span class="bold larger">Pro:</span> $29/month for up to 50 GB</li>
-                <li><span class="bold larger">Enterprise:</span> $49/month for up to 500 GB</li>
-            </ul>
+            {{ include('main/_price_table.html.twig') }}
+            *Discount given when paid annually
         </div>
     </div>
-    <div class="row mt-4">
+    <div class="row mt-5">
         <div class="col-8">
             <h2>
-                Try it for free
+                Try it for free! No credit card required.
                 <a href="{{ path('register') }}" class="btn btn-primary ms-4">Sign up</a>
             </h2>
         </div>

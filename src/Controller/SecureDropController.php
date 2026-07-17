@@ -29,9 +29,12 @@ class SecureDropController extends AbstractController
                                 private readonly S3Client $s3Client,
                                 #[Autowire(param: 'env(AWS_S3_BUCKET)')] private readonly string $s3BucketName) {}
 
-    /**
-     * Renders the public file drop interface for a specific Tenant.
-     */
+    #[Route(path: '/', name: 'explainer')]
+    public function explainer(): Response
+    {
+        return $this->render('main/explainer.html.twig');
+    }
+
     #[Route(path: '/{joinCode}', name: 'portal')]
     public function portal(string $joinCode, Request $request): Response
     {
