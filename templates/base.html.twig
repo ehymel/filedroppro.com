@@ -108,6 +108,21 @@
             {% endblock %}
         </div>
     </nav>
+    <nav class="navbar-status" aria-label="Subscription status">
+        {% set plan = app.user.tenant?.subscriptionPlan %}
+        <div class="container-xl">
+            <p class="mt-1">
+                <strong>Current Subscription Plan:</strong> {{ plan|capitalize }}
+                {% if plan === 'trial' %}
+                    {% set startDate = app.user.tenant.createdAt %}
+                    {% set leftDays = 90 - date("now").diff(startDate).days %}
+                    <span class="ms-3 badge rounded-pill {{ leftDays > 10 ? 'text-bg-info' : 'text-bg-danger' }}">Time remaining in trial: {{ leftDays}} days</span>
+                {% else %}
+                    <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
+                {% endif %}
+            </p>
+        </div>
+    </nav>
 </header>
 
 <main class="py-5">

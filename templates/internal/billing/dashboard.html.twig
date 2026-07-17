@@ -6,7 +6,6 @@
     <div class="container" id="billing-dashboard-container">
         <div class="row flex-xl-nowrap">
             <div class="col-12 col-md-10 col-xl-8">
-                <span>Administrative Portal</span>
                 <h1>Billing & Subscription</h1>
                 <p>Manage your organization's subscription plan, payment methods, and historical invoices.</p>
             </div>
@@ -20,45 +19,26 @@
 
                     {# Current Status Summary Card #}
                     <section class="summary-card">
-                        <div class="summary-header">
-                            <div class="summary-title-group">
-                                <h2>Subscription Status</h2>
-                                <p>Below is the billing state of your organization's secure vault workspace.</p>
-                            </div>
-                            <div class="summary-badge-group">
-                                {% if tenant.status == 'active' %}
-                                    <span class="status-badge status-active">
-                                    <span class="status-dot"></span>
-                                    Active / Fully Paid
-                                </span>
-                                {% elseif tenant.status == 'past_due' %}
-                                    <span class="status-badge status-past-due">
-                                    <span class="status-dot pulsing"></span>
-                                    Past Due (Payment Retrying)
-                                </span>
-                                {% else %}
-                                    <span class="status-badge status-suspended">
-                                    <span class="status-dot"></span>
-                                    Suspended / Unpaid
-                                </span>
-                                {% endif %}
-                            </div>
+                        <div>
+                            <span class="bold">Subscription Status:</span>
+                            <span class="badge text-bg-{{ tenant.status === 'past-due' ? 'danger' : 'success' }}">
+                                {{ tenant.status|capitalize }}
+                            </span>
                         </div>
 
                         <div class="summary-details">
                             <div class="detail-block">
-                                <span class="detail-label">Organization</span>
-                                <span class="detail-value">{{ tenant.firmName }}</span>
+                                <span class="bold">Organization:</span>
+                                <span>{{ tenant.firmName }}</span>
                             </div>
                             <div class="detail-block">
-                                <span class="detail-label">Plan Type</span>
-                                <span class="detail-value">
-                                {% if tenant.stripeSubscriptionId %}
-                                    {{ tenant.subscriptionPlan|default('Standard SaaS Plan')|capitalize }}
-                                {% else %}
-                                    No Subscription Registered
-                                {% endif %}
-                            </span>
+                                <span class="bold">Subscription Plan:</span>
+                                <span>{{ tenant.subscriptionPlan|capitalize }}</span>
+{#                                    {% if tenant.stripeSubscriptionId %}#}
+{#                                        {{ tenant.subscriptionPlan|default('Standard SaaS Plan')|capitalize }}#}
+{#                                    {% else %}#}
+{#                                        No Subscription Registered#}
+{#                                    {% endif %}#}
                             </div>
                         </div>
                     </section>
