@@ -4,27 +4,6 @@
     {{ parent() }}
     {# Optional minimal baseline styles for the FAQ layout. You can completely replace or modify this in your global CSS. #}
     <style>
-        .faq-page-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-        }
-        .faq-header {
-            margin-bottom: 3rem;
-            text-align: center;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 2rem;
-        }
-        .faq-header h1 {
-            font-size: 2.25rem;
-            margin-bottom: 0.5rem;
-            color: #0f172a;
-        }
-        .faq-header p {
-            font-size: 1.125rem;
-            color: #475569;
-            margin: 0;
-        }
         .faq-category-section {
             margin-bottom: 3rem;
         }
@@ -99,15 +78,15 @@
 {% endblock %}
 
 {% block body %}
-    <div class="faq-page-container">
+    <div class="container">
+        <header class="border-bottom pb-4 mb-5">
+            <div class="row align-items-center">
+                <h1 class="mb-2">Frequently Asked Questions</h1>
+                <p class="lead text-muted mb-0">Learn how our zero-knowledge end-to-end encryption, secure file drops, and billing systems operate.</p>
+            </div>
+        </header>
 
-    <header class="faq-header">
-        <h1>Frequently Asked Questions</h1>
-        <p>Learn how our zero-knowledge end-to-end encryption, secure file drops, and billing systems operate.</p>
-    </header>
-
-    <main class="faq-accordion-group">
-
+    <main>
         {# Section 1: End-to-End Encryption #}
         <section class="faq-category-section">
             <h2 class="faq-category-title">Cryptographic Privacy & E2EE</h2>
