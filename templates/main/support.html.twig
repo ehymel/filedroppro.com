@@ -34,13 +34,13 @@
                         <p class="mb-0">It means your files are fully encrypted directly in your web browser before they ever leave your computer. By the time the files are sent to our servers and routed to AWS S3, they are already completely scrambled. Because we never receive your decryption keys, we cannot read your files, view your metadata, or inspect your documents. This is a "zero-knowledge" security architecture.</p>
                     </div>
 
-                    <div class="list-group-item bg-transparent px-0 py-4">
-                        <h3 class="h5 fw-semibold mb-3">What is my Master Password, and can you reset it if I lose it?</h3>
-                        <p>Your Master Password is the cornerstone of your security. When you register, your browser uses PBKDF2 with $100,000$ hashing iterations to derive a local master key ($K_{master}$) from your password. This master key is used to lock and unlock your private cryptographic credentials directly in your browser's memory.</p>
-                        <div class="bg-success-subtle text-success-emphasis border-start border-success border-4 rounded-end p-3 mb-0">
-                            <strong>CRITICAL WARNING:</strong> Because we operate on a strict zero-knowledge model, your Master Password never travels to our servers. Consequently, <strong>we cannot reset your password</strong>. If you lose your Master Password, you will permanently lose access to your private key ($K_{priv}$) and all encrypted historical files associated with it.
-                        </div>
-                    </div>
+{#                    <div class="list-group-item bg-transparent px-0 py-4">#}
+{#                        <h3 class="h5 fw-semibold mb-3">What is my Master Password, and can you reset it if I lose it?</h3>#}
+{#                        <p>Your Master Password is the cornerstone of your security. When you register, your browser uses PBKDF2 with $100,000$ hashing iterations to derive a local master key ($K_{master}$) from your password. This master key is used to lock and unlock your private cryptographic credentials directly in your browser's memory.</p>#}
+{#                        <div class="bg-success-subtle text-success-emphasis border-start border-success border-4 rounded-end p-3 mb-0">#}
+{#                            <strong>CRITICAL WARNING:</strong> Because we operate on a strict zero-knowledge model, your Master Password never travels to our servers. Consequently, <strong>we cannot reset your password</strong>. If you lose your Master Password, you will permanently lose access to your private key ($K_{priv}$) and all encrypted historical files associated with it.#}
+{#                        </div>#}
+{#                    </div>#}
 
                     <div class="list-group-item bg-transparent px-0 py-4">
                         <h3 class="h5 fw-semibold mb-3">How can multiple staff members access the same encrypted document?</h3>
