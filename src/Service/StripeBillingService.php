@@ -26,7 +26,7 @@ class StripeBillingService
      * Spawns a pre-configured Checkout Session for subscribing a Tenant.
      * @throws ApiErrorException
      */
-    public function createCheckoutSession(User $admin, string $priceId): string
+    public function createCheckoutSession(User $admin, string $priceId, ?int $trialDays = null): string
     {
         $tenant = $admin->tenant;
 
@@ -36,6 +36,14 @@ class StripeBillingService
             $customerParams['customer'] = $tenant->stripeCustomerId;
         } else {
             $customerParams['customer_email'] = $admin->email;
+        }
+
+        // Configure optional dynamic trial parameters
+        $subscriptionData = [];
+        if ($trialDays !== null && $trialDays > 0) {
+            $subscriptionData['subscription_data'] = [
+                'trial_period_days' => $trialDays
+            ];
         }
 
         $session = $this->stripe->checkout->sessions->create([
@@ -50,6 +58,7 @@ class StripeBillingService
             'metadata' => [
                 'tenant_id' => $tenant->id->toString() // Crucial for mapping webhooks back to database rows!
             ],
+            ...$subscriptionData,
             ...$customerParams
         ]);
 
