@@ -1,15 +1,15 @@
 {{ include('flash_messages.html.twig') }}
 
 {% for client in clients %}
-    <div class="row mb-5 border-left">
-        <div class="col ms-4">
+    <section class="card shadow-sm border mb-5 rounded-3">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-4">
             <h2>Documents uploaded from <span style="text-decoration: underline">{{ client.clientName }}</span></h2>
 
             {% set activeDocuments = client.documents|filter(doc => doc.deletedAt === null) %}
             {% set deletedDocuments = client.documents|filter(doc => doc.deletedAt !== null) %}
 
             {% if client.documents|length > 0 %}
-                <p>Total Storage Space for this client: <span style="text-decoration: underline;">{{ format_bytes(storageBytesByClient[client.id.toString]) }}</span></p>
+                <p>Total Storage Space for this client: <span class="bold">{{ format_bytes(storageBytesByClient[client.id.toString]) }}</span></p>
             {% endif %}
 
             {% if activeDocuments|length > 0 %}
@@ -154,7 +154,7 @@
             </div>
             {% endif %}
         </div>
-    </div>
+    </section>
 {% else %}
     <p>
         No documents have been uploaded for this tenant yet.

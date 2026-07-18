@@ -62,16 +62,6 @@
                                        href="{{ path('internal_billing_dashboard') }}">Billing</a>
                                 </li>
                             {% endif %}
-                            {% if is_granted('ROLE_SUPERUSER') %}
-                                <li class="nav-item">
-                                    <a class="nav-link{{ currentRoute matches '{^admin_tenant*}' ? ' active'}}"
-                                       href="{{ path('admin_tenant_list') }}">Tenant Admin</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link{{ currentRoute matches '{^admin_user*}' ? ' active'}}"
-                                       href="{{ path('admin_user_list') }}">Users</a>
-                                </li>
-                            {% endif %}
                         </ul>
 
                         <div class="d-flex align-items-center gap-3">
@@ -97,6 +87,11 @@
                                     <a class="dropdown-item" href="{{ path('2fa_manage') }}" data-turbo-prefetch="false">Manage 2fa</a>
                                     <a class="dropdown-item" href="{{ path('passkey_manage') }}" data-turbo-prefetch="false">Manage Passkeys</a>
                                     <a class="dropdown-item" href="{{ path('user_edit') }}">My Account</a>
+                                    {% if is_granted('ROLE_SUPERUSER') %}
+                                        <a class="dropdown-item" href="{{ path('admin_tenant_list') }}">Tenant Admin</a>
+                                        <a class="dropdown-item" href="{{ path('admin_user_list') }}">User Admin</a>
+                                    {% endif %}
+
                                 </div>
                                 {% if is_granted('IS_IMPERSONATOR') %}
                                     <a href="{{ impersonation_exit_path(path('homepage')) }}">Exit impersonation</a>
@@ -109,17 +104,16 @@
         </div>
     </nav>
     {% set plan = app.user?.tenant?.subscriptionPlan %}
-    {% if plan %}
+    {% if plan === 'trial' %}
         <nav class="navbar navbar-status" aria-label="Subscription status">
             <div class="container-xl">
                 <p class="mt-1">
                     <strong>Current Subscription Plan:</strong> {{ plan|capitalize }}
-                    {% if plan === 'trial' and app.user.tenant?.currentPeriodEnd %}
+                    {% if app.user.tenant?.currentPeriodEnd %}
                         {% set remainingDays = max(0, app.user.tenant.currentPeriodEnd.diff(date()).days) %}
                         <span class="ms-3 badge rounded-pill {{ remainingDays > 5 ? 'text-bg-info' : 'text-bg-danger' }}">Time remaining in trial: {{ remainingDays }} days</span>
-                    {% else %}
-                        <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
                     {% endif %}
+                    <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
                 </p>
             </div>
         </nav>
@@ -134,7 +128,7 @@
     </div>
 </main>
 
-<footer class="footer py-4 mt-auto">
+<footer class="footer py-3 mt-4">
     <div class="container-xl">
         <div class="row align-items-center justify-content-between flex-column flex-sm-row gap-3">
             <div class="col-auto">

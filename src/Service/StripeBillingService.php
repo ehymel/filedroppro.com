@@ -96,11 +96,7 @@ class StripeBillingService
      */
     public function syncSubscriptionStatus(Tenant $tenant): void
     {
-        if (!$tenant->stripeCustomerId) {
-            return;
-        }
-
-        // --- Self-Healing Fallback for Local Cardless Trials ---
+        // 1. Process Local Card-Free Free Trial Expirations
         if (!$tenant->stripeCustomerId) {
             if ($tenant->subscriptionPlan === 'trial') {
                 $currentPeriodEnd = $tenant->currentPeriodEnd;
@@ -116,7 +112,12 @@ class StripeBillingService
         }
 
         try {
-            // Check if we have an explicit subscription ID to verify
+            $subscription = null;
+            $stripeStatus = 'none';
+            $planId = null;
+            $isDirty = false;
+
+            // 2. Fetch Active Subscription Metadata from Stripe
             if ($tenant->stripeSubscriptionId) {
                 $subscription = $this->stripe->subscriptions->retrieve($tenant->stripeSubscriptionId);
                 $stripeStatus = $subscription->status;
@@ -135,27 +136,38 @@ class StripeBillingService
 
                     // Auto-heal: Bind the missing subscription details locally
                     $tenant->stripeSubscriptionId = $subscription->id;
-                } else {
-                    $stripeStatus = 'none';
-                    $planId = null;
+                    $isDirty = true;
                 }
             }
 
-            if (isset($subscription) && $subscription) {
+            // 3. Extract and Check Cancellation States
+            if ($subscription) {
                 $cancelAtPeriodEnd = $subscription->cancel_at_period_end ?? false;
                 $currentPeriodEnd = $subscription->current_period_end
-                    ? new \DateTimeImmutable()->setTimestamp($subscription->current_period_end)
+                    ? (new \DateTimeImmutable())->setTimestamp($subscription->current_period_end)
                     : null;
 
-                $tenant->cancelAtPeriodEnd = $cancelAtPeriodEnd;
-                $tenant->currentPeriodEnd = $currentPeriodEnd;
+                if ($tenant->cancelAtPeriodEnd !== $cancelAtPeriodEnd) {
+                    $tenant->cancelAtPeriodEnd = $cancelAtPeriodEnd;
+                    $isDirty = true;
+                }
+
+                if ($tenant->currentPeriodEnd != $currentPeriodEnd) {
+                    $tenant->currentPeriodEnd = $currentPeriodEnd;
+                    $isDirty = true;
+                }
             } else {
-                $tenant->cancelAtPeriodEnd = false;
-                $tenant->currentPeriodEnd = null;
+                if ($tenant->cancelAtPeriodEnd !== false) {
+                    $tenant->cancelAtPeriodEnd = false;
+                    $isDirty = true;
+                }
+                if ($tenant->currentPeriodEnd !== null) {
+                    $tenant->currentPeriodEnd = null;
+                    $isDirty = true;
+                }
             }
 
-            // Map Stripe status (active, trialing, past_due, canceled, unpaid) to Tenant status
-            $localStatus = $tenant->status;
+            // 4. Map Stripe status (active, trialing, past_due, canceled, unpaid) to local states
             $newStatus = 'suspended';
 
             if (in_array($stripeStatus, ['active', 'trialing'])) {
@@ -164,14 +176,19 @@ class StripeBillingService
                 $newStatus = 'past_due';
             }
 
-            // Update plan context if mapped
-            if ($planId) {
-                $tenant->subscriptionPlan = $planId;
+            if ($tenant->status !== $newStatus) {
+                $tenant->status = $newStatus;
+                $isDirty = true;
             }
 
-            // Only issue a database flush if properties have actually changed to conserve resources
-            if ($localStatus !== $newStatus) {
-                $tenant->status = $newStatus;
+            // 5. Update and Sync Pricing Plan IDs
+            if ($planId && $tenant->subscriptionPlan !== $planId) {
+                $tenant->subscriptionPlan = $planId;
+                $isDirty = true;
+            }
+
+            // 6. Securely Flush Only If Active Properties Shifted
+            if ($isDirty) {
                 $this->tenantRepository->save($tenant, true);
             }
 

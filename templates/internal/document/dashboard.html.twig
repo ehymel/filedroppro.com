@@ -8,18 +8,18 @@
          data-document-viewer-encrypted-private-key-value="{{ encryptedPrivateKey }}"
          data-document-viewer-user-status-value="{{ userStatus }}"
     >
-        <div class="row">
-            <div class="col">
-                <span>Internal Secure Vault</span>
-                <h1>Document Management</h1>
+        <header class="border-bottom pb-4 mb-5">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-8">
+                    <h1 class="mb-2">Document Management</h1>
+                    <p class="lead text-muted mb-0">Access and unseal end-to-end encrypted items submitted by external clients.</p>
+                </div>
             </div>
-        </div>
+        </header>
 
         {% if clients|length > 0 %}
             <div class="row">
                 <div class="col mb-4 larger">
-                    <p>Access and unseal end-to-end encrypted items submitted by external clients.</p>
-
                     <p>
                         The consolidated size of all encrypted client document payloads registered inside your firm's partition:
                         <strong>{{ format_bytes(storageBytesByClient|sum) }}</strong>

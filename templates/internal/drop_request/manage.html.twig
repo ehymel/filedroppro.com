@@ -10,12 +10,14 @@
             {{ stimulus_controller('reload-content', { url: currentUrl }) }}
             data-action="modal-form:success->reload-content#refreshContent"
     >
-        <div class="row flex-xl-nowrap">
-            <div class="col-12 col-md-10 col-xl-8">
-                <h1>Drop Request Management</h1>
-                <p>Generate secure drop links, track pending client uploads, and manage active requests.</p>
+        <header class="border-bottom pb-4 mb-5">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-8">
+                    <h1 class="mb-2">Drop Request Management</h1>
+                    <p class="lead text-muted mb-0">Generate secure drop links, track pending client uploads, and manage active requests.</p>
+                </div>
             </div>
-        </div>
+        </header>
 
         <div {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
             <button class="btn btn-primary btn-sm"
