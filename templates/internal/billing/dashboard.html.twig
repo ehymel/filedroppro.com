@@ -40,6 +40,19 @@
 
         {{ include('flash_messages.html.twig') }}
 
+        {# Cancellation Pending Notice Banner #}
+        {% if tenant.cancelAtPeriodEnd and tenant.currentPeriodEnd %}
+            <div class="alert alert-warning border-warning-subtle d-flex align-items-center mb-4 p-4 rounded-3 shadow-sm" role="alert">
+                <div class="me-3">
+                    <span class="fs-3">📅</span>
+                </div>
+                <div>
+                    <h4 class="alert-heading h6 fw-bold mb-1 text-warning-emphasis">Subscription Cancellation Pending</h4>
+                    <p class="mb-0 text-muted small">Your subscription has been canceled but remains active for the remainder of your billing cycle. You will retain full access to E2EE downloads until <strong>{{ tenant.currentPeriodEnd|date('F j, Y') }}</strong>, after which your account will automatically be suspended.</p>
+                </div>
+            </div>
+        {% endif %}
+
         {# Plan Status Box #}
         <section class="card shadow-sm border mb-5 rounded-3">
             <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-4">

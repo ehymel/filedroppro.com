@@ -119,6 +119,19 @@ class StripeBillingService
                 }
             }
 
+            if (isset($subscription) && $subscription) {
+                $cancelAtPeriodEnd = $subscription->cancel_at_period_end ?? false;
+                $currentPeriodEnd = $subscription->current_period_end
+                    ? new \DateTimeImmutable()->setTimestamp($subscription->current_period_end)
+                    : null;
+
+                $tenant->cancelAtPeriodEnd = $cancelAtPeriodEnd;
+                $tenant->currentPeriodEnd = $currentPeriodEnd;
+            } else {
+                $tenant->cancelAtPeriodEnd = false;
+                $tenant->currentPeriodEnd = null;
+            }
+
             // Map Stripe status (active, trialing, past_due, canceled, unpaid) to Tenant status
             $localStatus = $tenant->status;
             $newStatus = 'suspended';

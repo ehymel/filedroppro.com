@@ -57,6 +57,12 @@ class Tenant extends MappedSuperclassBase
     #[Assert\Choice(choices: ['trial', 'basic', 'pro', 'enterprise'])]
     public ?string $subscriptionPlan = 'trial';
 
+    #[ORM\Column]
+    public bool $cancelAtPeriodEnd = false;
+
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $currentPeriodEnd = null;
+
     #[ORM\Column(type: 'text', nullable: true)]
     public ?string $tenantPublicKey = null;
 
