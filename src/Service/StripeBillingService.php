@@ -69,16 +69,23 @@ class StripeBillingService
      * Spawns a hosted self-service Customer Portal session.
      * @throws ApiErrorException
      */
-    public function createPortalSession(Tenant $tenant): string
+    public function createPortalSession(Tenant $tenant, ?array $flowData = null): string
     {
         if (!$tenant->stripeCustomerId) {
             throw new \LogicException('Tenant is not associated with a Stripe customer account yet.');
         }
 
-        $session = $this->stripe->billingPortal->sessions->create([
+        $params = [
             'customer' => $tenant->stripeCustomerId,
             'return_url' => $this->router->generate('internal_billing_dashboard', [], UrlGeneratorInterface::ABSOLUTE_URL),
-        ]);
+        ];
+
+        // Inject deep-linked action flow parameters (such as subscription_update) if supplied
+        if ($flowData !== null) {
+            $params['flow_data'] = $flowData;
+        }
+
+        $session = $this->stripe->billingPortal->sessions->create($params);
 
         return $session->url;
     }

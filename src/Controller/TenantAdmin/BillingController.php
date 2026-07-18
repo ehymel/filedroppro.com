@@ -83,7 +83,7 @@ class BillingController extends AbstractController
             return $this->redirectToRoute('internal_billing_dashboard');
         }
 
-        // --- EXEMPTION: Process Cardless Local Trial ---
+        // --- EXEMPTION 1: Process Cardless Local Trial ---
         if ($plan === 'trial') {
             $tenant->subscriptionPlan = 'trial';
             $tenant->currentPeriodEnd = new \DateTimeImmutable('+14 days');
@@ -99,6 +99,24 @@ class BillingController extends AbstractController
             return $this->redirectToRoute('internal_billing_dashboard');
         }
 
+        // --- EXEMPTION 2: Handle Active Subscribers Plan Switching (Upgrades/Downgrades) ---
+        if ($tenant->stripeSubscriptionId && $tenant->stripeCustomerId) {
+            try {
+                $flowData = [
+                    'type' => 'subscription_update',
+                    'subscription_update' => [
+                        'subscription' => $tenant->stripeSubscriptionId
+                    ]
+                ];
+                $portalUrl = $this->billingService->createPortalSession($tenant, $flowData);
+                return new RedirectResponse($portalUrl);
+            } catch (\Exception $e) {
+                $this->addFlash('danger', 'Failed to initialize subscription upgrade interface: ' . $e->getMessage());
+                return $this->redirectToRoute('internal_billing_dashboard');
+            }
+        }
+
+        // --- STANDARD PATH: Create checkout session for first-time subscriptions ---
         try {
             $priceId = $this->stripePlanPrices[$plan] ?? null;
 
