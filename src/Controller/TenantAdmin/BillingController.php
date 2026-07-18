@@ -26,6 +26,7 @@ class BillingController extends AbstractController
         #[Autowire(param: 'env(STRIPE_PRICE_ENTERPRISE)')] string $stripePlanEnterprise, private readonly TenantRepository $tenantRepository,
     ) {
         $this->stripePlanPrices = [
+            'trial' => 'trial',
             'basic' => $stripePlanBasic,
             'pro' => $stripePlanPro,
             'enterprise' => $stripePlanEnterprise,
