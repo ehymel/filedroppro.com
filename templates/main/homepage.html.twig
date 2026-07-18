@@ -25,11 +25,11 @@
 <div class="container">
     <div class="row">
         <div class="col-auto">
-            <img src="{{ asset('images/FDP_logo_250.png') }}" alt="logo">
+            <img src="{{ asset('images/FDP_logo_100.png') }}" alt="logo">
         </div>
     </div>
     <div class="row">
-        <div class="col-12 col-md-10 col-xl-8">
+        <div class="col-12 col-md-10 col-xl-8 ms-4">
             The ultra-simple, HIPAA/SOC2-compliant document drop.
             <br />
             Send a secure, encrypted upload link to your clients in one click.
@@ -54,20 +54,15 @@
             </ul>
         </div>
     </div>
-    <div class="row mt-4" id="pricing">
-        <div class="col-8">
-            <h2>Pricing</h2>
-            {{ include('main/_price_table.html.twig') }}
-            *Discount given when paid annually
-        </div>
+    <div class="row mt-5" id="pricing">
+        <h2>Subscription Options</h2>
+        {{ include('internal/billing/_plan_matrix.html.twig') }}
     </div>
     <div class="row mt-5">
-        <div class="col-8">
-            <h2>
-                Try it for free! No credit card required.
-                <a href="{{ path('register') }}" class="btn btn-primary ms-4">Sign up</a>
-            </h2>
-        </div>
+        <h2>
+            Try it for free! No credit card required.
+            <a href="{{ path('register') }}" class="btn btn-primary ms-4">Sign up</a>
+        </h2>
     </div>
 </div>
 {% endblock %}

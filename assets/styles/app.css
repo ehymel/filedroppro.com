@@ -53,3 +53,19 @@ main {
     transition: all 0.2s ease-in-out;
 }
 
+/* Small visual polish additions to augment standard Bootstrap */
+.premium-card-border {
+    border: 2px solid var(--bs-primary) !important;
+}
+.pricing-feature-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--bs-box-shadow) !important;
+}

@@ -108,20 +108,22 @@
             {% endblock %}
         </div>
     </nav>
-    <nav class="navbar navbar-status" aria-label="Subscription status">
-        {% set plan = app.user.tenant?.subscriptionPlan %}
-        <div class="container-xl">
-            <p class="mt-1">
-                <strong>Current Subscription Plan:</strong> {{ plan|capitalize }}
-                {% if plan === 'trial' and app.user.tenant?.currentPeriodEnd %}
-                    {% set remainingDays = max(0, app.user.tenant.currentPeriodEnd.diff(date()).days) %}
-                    <span class="ms-3 badge rounded-pill {{ remainingDays > 5 ? 'text-bg-info' : 'text-bg-danger' }}">Time remaining in trial: {{ remainingDays }} days</span>
-                {% else %}
-                    <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
-                {% endif %}
-            </p>
-        </div>
-    </nav>
+    {% set plan = app.user?.tenant?.subscriptionPlan %}
+    {% if plan %}
+        <nav class="navbar navbar-status" aria-label="Subscription status">
+            <div class="container-xl">
+                <p class="mt-1">
+                    <strong>Current Subscription Plan:</strong> {{ plan|capitalize }}
+                    {% if plan === 'trial' and app.user.tenant?.currentPeriodEnd %}
+                        {% set remainingDays = max(0, app.user.tenant.currentPeriodEnd.diff(date()).days) %}
+                        <span class="ms-3 badge rounded-pill {{ remainingDays > 5 ? 'text-bg-info' : 'text-bg-danger' }}">Time remaining in trial: {{ remainingDays }} days</span>
+                    {% else %}
+                        <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
+                    {% endif %}
+                </p>
+            </div>
+        </nav>
+    {% endif %}
 </header>
 
 <main class="py-2">
