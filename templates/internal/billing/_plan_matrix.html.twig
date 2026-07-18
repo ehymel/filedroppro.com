@@ -3,8 +3,7 @@
 {% endif %}
 
 <section class="pricing-matrix">
-    {# Added 'pt-5' here to provide elegant vertical padding above the cards so the badges never clip #}
-    <div class="row g-4 justify-content-center pt-2">
+    <div class="row g-4 justify-content-center pt-5">
 
         {# Plan 1: Trial #}
         <article class="col-12 col-md-6 col-lg-3">
@@ -22,14 +21,14 @@
                     <ul class="list-unstyled mb-4 flex-grow-1">
                         <li class="d-flex align-items-start mb-2 small text-dark">
                             <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span>14-day fully-featured Basic trial</span>
+                            <span>14-day fully-featured Pro trial</span>
                         </li>
                     </ul>
                     {% if activePlanName !== '' %}
                         <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                             <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                             <input type="hidden" name="plan" value="trial">
-                            <button type="submit" class="btn btn-outline-primary w-100 fw-semibold py-2" {% if activePlanName == 'trial' %}disabled{% endif %}>
+                            <button type="submit" class="btn btn-outline-primary w-100 fw-semibold py-2" {% if activePlanName == 'trial' or tenant.stripeSubscriptionId %}disabled{% endif %}>
                                 {% if activePlanName == 'trial' %}Active Plan{% else %}Start 14-Day Trial{% endif %}
                             </button>
                         </form>
@@ -77,8 +76,8 @@
                         <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                             <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                             <input type="hidden" name="plan" value="basic">
-                            <button type="submit" class="btn btn-secondary w-100 fw-semibold py-2" {% if activePlanName == 'basic' %}disabled{% endif %}>
-                                {% if activePlanName == 'basic' %}Active Plan{% else %}Select Basic{% endif %}
+                            <button type="submit" class="btn {% if activePlanName == 'basic' %}btn-secondary{% else %}btn-primary{% endif %} w-100 fw-semibold py-2" {% if activePlanName == 'basic' %}disabled{% endif %}>
+                                {% if activePlanName == 'basic' %}Active Plan{% elseif tenant.stripeSubscriptionId %}Switch to Basic{% else %}Select Basic{% endif %}
                             </button>
                         </form>
                     {% endif %}
@@ -98,7 +97,7 @@
                     <h3 class="h5 fw-bold text-dark mb-1">Pro Plan</h3>
                     <p class="text-muted small mb-4" style="min-height: 48px;">Advanced security and robust multi-user workspace management parameters for growing firms.</p>
                     <div class="d-flex align-items-baseline mb-4">
-                        <span class="display-6 fw-bold text-dark">$29</span>
+                        <span class="display-6 fw-bold text-dark">$19</span>
                         <span class="text-muted ms-1 small">/month</span>
                     </div>
                     <ul class="list-unstyled mb-4 flex-grow-1">
@@ -119,8 +118,8 @@
                         <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                             <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                             <input type="hidden" name="plan" value="pro">
-                            <button type="submit" class="btn btn-primary w-100 fw-semibold py-2 shadow-sm" {% if activePlanName == 'pro' %}disabled{% endif %}>
-                                {% if activePlanName == 'pro' %}Active Plan{% else %}Select Pro{% endif %}
+                            <button type="submit" class="btn {% if activePlanName == 'pro' %}btn-secondary{% else %}btn-primary{% endif %} w-100 fw-semibold py-2 shadow-sm" {% if activePlanName == 'pro' %}disabled{% endif %}>
+                                {% if activePlanName == 'pro' %}Active Plan{% elseif tenant.stripeSubscriptionId %}Switch to Pro{% else %}Select Pro{% endif %}
                             </button>
                         </form>
                     {% endif %}
@@ -135,10 +134,10 @@
                     <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-success px-3 py-2 fw-semibold">Current Plan</span>
                 {% endif %}
                 <div class="card-body d-flex flex-column mt-2">
-                    <h3 class="h5 fw-bold text-dark mb-1">Enterprise Plan</h3>
+                    <h3 class="h5 fw-bold text-dark mb-1">Enterprise</h3>
                     <p class="text-muted small mb-4" style="min-height: 48px;">Dedicated high-volume infrastructure with custom retention rules and administrative logs.</p>
                     <div class="d-flex align-items-baseline mb-4">
-                        <span class="display-6 fw-bold text-dark">$49</span>
+                        <span class="display-6 fw-bold text-dark">$29</span>
                         <span class="text-muted ms-1 small">/month</span>
                     </div>
                     <ul class="list-unstyled mb-4 flex-grow-1">
@@ -163,14 +162,13 @@
                         <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                             <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                             <input type="hidden" name="plan" value="enterprise">
-                            <button type="submit" class="btn btn-secondary w-100 fw-semibold py-2" {% if activePlanName == 'enterprise' %}disabled{% endif %}>
-                                {% if activePlanName == 'enterprise' %}Active Plan{% else %}Select Enterprise{% endif %}
+                            <button type="submit" class="btn {% if activePlanName == 'enterprise' %}btn-secondary{% else %}btn-primary{% endif %} w-100 fw-semibold py-2" {% if activePlanName == 'enterprise' %}disabled{% endif %}>
+                                {% if activePlanName == 'enterprise' %}Active Plan{% elseif tenant.stripeSubscriptionId %}Switch to Enterprise{% else %}Select Enterprise{% endif %}
                             </button>
                         </form>
                     {% endif %}
                 </div>
             </div>
         </article>
-
     </div>
 </section>
