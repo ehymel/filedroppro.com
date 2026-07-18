@@ -17,7 +17,7 @@ class BillingController extends AbstractController
 {
     public function __construct(
         private StripeBillingService $billingService,
-        #[Autowire(param: 'env(STRIPE_WEBHOOK_SECRET)')] private string $stripePriceId
+        #[Autowire(param: 'env(STRIPE_PRICE_ID)')] private readonly string $stripePriceId
     ) {}
 
     #[Route('/', name: 'dashboard', methods: ['GET'])]

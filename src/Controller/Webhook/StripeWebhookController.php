@@ -17,7 +17,7 @@ class StripeWebhookController extends AbstractController
 {
     public function __construct(
         private readonly TenantRepository $tenantRepository,
-        #[Autowire(param: 'env(STRIPE_PRICE_ID)')] private readonly string $stripeWebhookSecret
+        #[Autowire(param: 'env(STRIPE_WEBHOOK_SECRET)')] private readonly string $stripeWebhookSecret
     ) {}
 
     #[Route('/webhook/stripe', name: 'webhook_stripe', methods: ['POST'])]
