@@ -58,7 +58,7 @@
                                     Update your credit card on file, retrieve payment invoices, download historical receipts, or cancel your renewal plan via Stripe's official self-service interface.
                                 </p>
 
-                                <form action="{{ path('internal_billing_portal') }}" method="POST">
+                                <form action="{{ path('internal_billing_portal') }}" method="POST" data-turbo="false">
                                     <input type="hidden" name="_token" value="{{ csrf_token('billing_portal') }}">
                                     <button type="submit" class="btn btn-primary">
                                         Open Customer Billing Portal
@@ -108,7 +108,7 @@
                                         {{ include('main/_price_table.html.twig') }}
                                     </div>
 
-                                    <form action="{{ path('internal_billing_subscribe') }}" method="POST">
+                                    <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                                         <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                                         <button type="submit" class="btn btn-primary">
                                             Subscribe with Credit Card
