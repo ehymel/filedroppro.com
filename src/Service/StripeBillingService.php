@@ -93,6 +93,21 @@ class StripeBillingService
             return;
         }
 
+        // --- Self-Healing Fallback for Local Cardless Trials ---
+        if (!$tenant->stripeCustomerId) {
+            if ($tenant->subscriptionPlan === 'trial') {
+                $currentPeriodEnd = $tenant->currentPeriodEnd;
+                // If the local card-free 14-day trial has passed, suspend workspace access
+                if ($currentPeriodEnd && $currentPeriodEnd < new \DateTimeImmutable()) {
+                    if ($tenant->status !== 'suspended') {
+                        $tenant->status = 'suspended';
+                        $this->tenantRepository->save($tenant, true);
+                    }
+                }
+            }
+            return;
+        }
+
         try {
             // Check if we have an explicit subscription ID to verify
             if ($tenant->stripeSubscriptionId) {

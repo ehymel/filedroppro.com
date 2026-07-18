@@ -3,6 +3,7 @@
 namespace App\Controller\TenantAdmin;
 
 use App\Entity\User;
+use App\Repository\TenantRepository;
 use App\Service\StripeBillingService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -19,10 +20,10 @@ class BillingController extends AbstractController
     private array $stripePlanPrices = [];
 
     public function __construct(
-        private readonly StripeBillingService $billingService,
-        #[Autowire(param: 'env(STRIPE_PRICE_BASIC)')] string $stripePlanBasic,
-        #[Autowire(param: 'env(STRIPE_PRICE_PRO)')] string $stripePlanPro,
-        #[Autowire(param: 'env(STRIPE_PRICE_ENTERPRISE)')] string $stripePlanEnterprise,
+        private readonly StripeBillingService                     $billingService,
+        #[Autowire(param: 'env(STRIPE_PRICE_BASIC)')] string      $stripePlanBasic,
+        #[Autowire(param: 'env(STRIPE_PRICE_PRO)')] string        $stripePlanPro,
+        #[Autowire(param: 'env(STRIPE_PRICE_ENTERPRISE)')] string $stripePlanEnterprise, private readonly TenantRepository $tenantRepository,
     ) {
         $this->stripePlanPrices = [
             'basic' => $stripePlanBasic,
@@ -66,6 +67,7 @@ class BillingController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+        $tenant = $user->tenant;
 
         if (!$this->isCsrfTokenValid('billing_subscribe', $request->request->get('_token'))) {
             $this->addFlash('danger', 'Invalid security token.');
@@ -80,22 +82,31 @@ class BillingController extends AbstractController
             return $this->redirectToRoute('internal_billing_dashboard');
         }
 
+        // --- EXEMPTION: Process Cardless Local Trial ---
+        if ($plan === 'trial') {
+            $tenant->subscriptionPlan = 'trial';
+            $tenant->currentPeriodEnd = new \DateTimeImmutable('+14 days');
+            $tenant->cancelAtPeriodEnd = false;
+            $tenant->status = 'active';
+
+            // Bypass Stripe completely (no customer/subscription ID yet)
+            $tenant->stripeSubscriptionId = null;
+
+            $this->tenantRepository->save($tenant, true);
+
+            $this->addFlash('success', 'Your 14-day free trial on the Pro Plan has been successfully activated! No credit card is required.');
+            return $this->redirectToRoute('internal_billing_dashboard');
+        }
+
         try {
-            $trialDays = null;
-            if ($plan === 'trial') {
-                // Trial starts on the Pro plan with a 14-day free trial period
-                $priceId = $this->stripePlanPrices['pro'];
-                $trialDays = 14;
-            } else {
-                $priceId = $this->stripePlanPrices[$plan] ?? null;
-            }
+            $priceId = $this->stripePlanPrices[$plan] ?? null;
 
             if (!$priceId || str_contains($priceId, 'placeholder')) {
                 $this->addFlash('danger', sprintf('The selected plan "%s" is not configured in this server\'s services.yaml configuration.', $plan));
                 return $this->redirectToRoute('internal_billing_dashboard');
             }
 
-            $checkoutUrl = $this->billingService->createCheckoutSession($user, $priceId, $trialDays);
+            $checkoutUrl = $this->billingService->createCheckoutSession($user, $priceId, null);
             return new RedirectResponse($checkoutUrl);
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Failed to initialize payment gateway: ' . $e->getMessage());

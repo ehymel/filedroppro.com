@@ -59,16 +59,29 @@
                 <div>
                     <h2 class="h5 fw-bold mb-1 text-dark">Current Status: {{ tenant.firmName }}</h2>
                     <p class="text-muted mb-0">
-                        {% if tenant.stripeSubscriptionId %}
+                        {% if tenant.subscriptionPlan == 'trial' %}
+                            {% if tenant.currentPeriodEnd and tenant.currentPeriodEnd > date() %}
+                                {% set remainingDays = tenant.currentPeriodEnd.diff(date()).days %}
+                                Your organization is currently registered under a card-free <strong>Free Trial</strong>. You have <strong>{{ remainingDays }} days remaining</strong> (expires on {{ tenant.currentPeriodEnd|date('F j, Y') }}).
+                            {% else %}
+                                Your trial period has expired. Please select a premium plan below to restore vault access.
+                            {% endif %}
+                        {% elseif tenant.stripeSubscriptionId %}
                             Your organization is currently registered under the <strong>{{ activePlanName|capitalize }}</strong> plan.
                         {% else %}
-                            You have not registered an active paid plan. Access to vault document downloads may be restricted.
+                            You have not registered an active paid plan. Access to vault document downloads is currently restricted.
                         {% endif %}
                     </p>
                 </div>
                 <div>
                     {% if tenant.status == 'active' %}
-                        <span class="badge rounded-pill bg-success-subtle text-success px-4 py-2 border border-success-subtle fw-semibold fs-7">Active / Paid</span>
+                        {% if tenant.subscriptionPlan == 'trial' %}
+                            <span class="badge rounded-pill bg-info-subtle text-info px-4 py-2 border border-info-subtle fw-semibold fs-7">Active Free Trial</span>
+                        {% elseif tenant.cancelAtPeriodEnd %}
+                            <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-4 py-2 border border-warning-subtle fw-semibold fs-7">Cancels Soon / Paid</span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-success-subtle text-success px-4 py-2 border border-success-subtle fw-semibold fs-7">Active / Paid</span>
+                        {% endif %}
                     {% elseif tenant.status == 'past_due' %}
                         <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-4 py-2 border border-warning-subtle fw-semibold fs-7">Payment Failed (Retrying)</span>
                     {% else %}
@@ -102,8 +115,11 @@
 
                     {# Plan 1: Trial #}
                     <article class="col-12 col-md-6 col-lg-3">
-                        <div class="card h-100 shadow-sm hover-lift border rounded-3 p-3">
-                            <div class="card-body d-flex flex-column">
+                        <div class="card h-100 shadow-sm hover-lift rounded-3 p-3 position-relative {% if activePlanName == 'trial' %}border-success border-2 shadow{% else %}border{% endif %}">
+                            {% if activePlanName == 'trial' %}
+                                <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-success px-3 py-2 fw-semibold">Current Plan</span>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column {% if activePlanName == 'trial' %}mt-2{% endif %}">
                                 <h3 class="h5 fw-bold text-dark mb-1">Free Trial</h3>
                                 <p class="text-muted small mb-4" style="min-height: 48px;">Test drive our top-tier features with zero initial risk or upfront commitments.</p>
                                 <div class="d-flex align-items-baseline mb-4">
@@ -115,19 +131,13 @@
                                         <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                         <span>14-day fully-featured Pro trial</span>
                                     </li>
-                                    <li class="d-flex align-items-start mb-2 small text-dark">
-                                        <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Browser-side E2EE drops</span>
-                                    </li>
-                                    <li class="d-flex align-items-start mb-2 small text-dark">
-                                        <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Up to 3 active personnel slots</span>
-                                    </li>
                                 </ul>
                                 <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                                     <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                                     <input type="hidden" name="plan" value="trial">
-                                    <button type="submit" class="btn btn-outline-primary w-100 fw-semibold py-2">Start 14-Day Trial</button>
+                                    <button type="submit" class="btn btn-outline-primary w-100 fw-semibold py-2" {% if activePlanName == 'trial' %}disabled{% endif %}>
+                                        {% if activePlanName == 'trial' %}Active Plan{% else %}Start 14-Day Trial{% endif %}
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -135,8 +145,11 @@
 
                     {# Plan 2: Basic #}
                     <article class="col-12 col-md-6 col-lg-3">
-                        <div class="card h-100 shadow-sm hover-lift border rounded-3 p-3">
-                            <div class="card-body d-flex flex-column">
+                        <div class="card h-100 shadow-sm hover-lift rounded-3 p-3 position-relative {% if activePlanName == 'basic' %}border-success border-2 shadow{% else %}border{% endif %}">
+                            {% if activePlanName == 'basic' %}
+                                <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-success px-3 py-2 fw-semibold">Current Plan</span>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column {% if activePlanName == 'basic' %}mt-2{% endif %}">
                                 <h3 class="h5 fw-bold text-dark mb-1">Basic Plan</h3>
                                 <p class="text-muted small mb-4" style="min-height: 48px;">Essential document security for boutique clinics, independent practitioners, and sole attorneys.</p>
                                 <div class="d-flex align-items-baseline mb-4">
@@ -154,13 +167,23 @@
                                     </li>
                                     <li class="d-flex align-items-start mb-2 small text-dark">
                                         <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span>Full Escrow Key Sync capability</span>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2 small text-dark">
+                                        <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span>Up to 3 active personnel slots</span>
+                                    </li>
+                                    <li class="d-flex align-items-start mb-2 small text-dark">
+                                        <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                         <span>5 GB total storage limit</span>
                                     </li>
                                 </ul>
                                 <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                                     <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                                     <input type="hidden" name="plan" value="basic">
-                                    <button type="submit" class="btn btn-secondary w-100 fw-semibold py-2">Select Basic</button>
+                                    <button type="submit" class="btn btn-secondary w-100 fw-semibold py-2" {% if activePlanName == 'basic' %}disabled{% endif %}>
+                                        {% if activePlanName == 'basic' %}Active Plan{% else %}Select Basic{% endif %}
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -168,8 +191,12 @@
 
                     {# Plan 3: Pro (Highlighted Card) #}
                     <article class="col-12 col-md-6 col-lg-3">
-                        <div class="card h-100 shadow hover-lift border premium-card-border rounded-3 p-3 position-relative">
-                            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-primary px-3 py-2 fw-semibold">Recommended</span>
+                        <div class="card h-100 shadow hover-lift rounded-3 p-3 position-relative {% if activePlanName == 'pro' %}border-success border-2{% else %}premium-card-border{% endif %}">
+                            {% if activePlanName == 'pro' %}
+                                <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-success px-3 py-2 fw-semibold">Current Plan</span>
+                            {% else %}
+                                <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-primary px-3 py-2 fw-semibold">Recommended</span>
+                            {% endif %}
                             <div class="card-body d-flex flex-column mt-2">
                                 <h3 class="h5 fw-bold text-dark mb-1">Pro Plan</h3>
                                 <p class="text-muted small mb-4" style="min-height: 48px;">Advanced security and robust multi-user workspace management parameters for growing firms.</p>
@@ -180,25 +207,23 @@
                                 <ul class="list-unstyled mb-4 flex-grow-1">
                                     <li class="d-flex align-items-start mb-2 small text-dark">
                                         <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Unlimited E2EE Client Drops</span>
+                                        <span>Everything in Basic Plan</span>
                                     </li>
                                     <li class="d-flex align-items-start mb-2 small text-dark">
                                         <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Full Escrow Key Sync capability</span>
+                                        <span>Unlimited E2EE Client Drops</span>
                                     </li>
                                     <li class="d-flex align-items-start mb-2 small text-dark">
                                         <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                         <span>50 GB total storage limit</span>
                                     </li>
-                                    <li class="d-flex align-items-start mb-2 small text-dark">
-                                        <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Priority support queue response</span>
-                                    </li>
                                 </ul>
                                 <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                                     <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                                     <input type="hidden" name="plan" value="pro">
-                                    <button type="submit" class="btn btn-primary w-100 fw-semibold py-2 shadow-sm">Select Pro</button>
+                                    <button type="submit" class="btn btn-primary w-100 fw-semibold py-2 shadow-sm" {% if activePlanName == 'pro' %}disabled{% endif %}>
+                                        {% if activePlanName == 'pro' %}Active Plan{% else %}Select Pro{% endif %}
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -206,8 +231,11 @@
 
                     {# Plan 4: Enterprise #}
                     <article class="col-12 col-md-6 col-lg-3">
-                        <div class="card h-100 shadow-sm hover-lift border rounded-3 p-3">
-                            <div class="card-body d-flex flex-column">
+                        <div class="card h-100 shadow-sm hover-lift rounded-3 p-3 position-relative {% if activePlanName == 'enterprise' %}border-success border-2 shadow{% else %}border{% endif %}">
+                            {% if activePlanName == 'enterprise' %}
+                                <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-success px-3 py-2 fw-semibold">Current Plan</span>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column {% if activePlanName == 'enterprise' %}mt-2{% endif %}">
                                 <h3 class="h5 fw-bold text-dark mb-1">Enterprise</h3>
                                 <p class="text-muted small mb-4" style="min-height: 48px;">Dedicated high-volume infrastructure with custom retention rules and administrative logs.</p>
                                 <div class="d-flex align-items-baseline mb-4">
@@ -225,17 +253,15 @@
                                     </li>
                                     <li class="d-flex align-items-start mb-2 small text-dark">
                                         <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Private AWS S3 bucket option</span>
-                                    </li>
-                                    <li class="d-flex align-items-start mb-2 small text-dark">
-                                        <svg class="pricing-feature-icon text-success me-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        <span>Custom HIPAA & SOC 2 audit logs</span>
+                                        <span>Priority support queue response</span>
                                     </li>
                                 </ul>
                                 <form action="{{ path('internal_billing_subscribe') }}" method="POST" data-turbo="false">
                                     <input type="hidden" name="_token" value="{{ csrf_token('billing_subscribe') }}">
                                     <input type="hidden" name="plan" value="enterprise">
-                                    <button type="submit" class="btn btn-secondary w-100 fw-semibold py-2">Select Enterprise</button>
+                                    <button type="submit" class="btn btn-secondary w-100 fw-semibold py-2" {% if activePlanName == 'enterprise' %}disabled{% endif %}>
+                                        {% if activePlanName == 'enterprise' %}Active Plan{% else %}Select Enterprise{% endif %}
+                                    </button>
                                 </form>
                             </div>
                         </div>
