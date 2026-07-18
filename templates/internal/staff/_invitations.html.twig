@@ -3,7 +3,7 @@
         <h3>Internal Staff Invitations</h3>
 
         <div class="ms-4" {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
-            <button class="btn btn-primary btn-sm mb-3"
+            <button class="btn btn-primary btn-sm fw-semibold py-2 mb-3"
                     data-action="modal-form#open"
                     data-form-url="{{ path('internal_staff_invite') }}"
                     data-modal-title="Invite Staff Member"

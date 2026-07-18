@@ -20,7 +20,7 @@
         </header>
 
         <div {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
-            <button class="btn btn-primary btn-sm"
+            <button class="btn btn-primary fw-semibold py-2"
                     data-action="modal-form#open"
                     data-form-url="{{ path('internal_requests_new') }}"
                     data-modal-title="Invite External Client"
