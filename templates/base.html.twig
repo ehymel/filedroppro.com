@@ -115,7 +115,7 @@
                 <strong>Current Subscription Plan:</strong> {{ plan|capitalize }}
                 {% if plan === 'trial' %}
                     {% set startDate = app.user.tenant.createdAt %}
-                    {% set leftDays = 90 - date("now").diff(startDate).days %}
+                    {% set leftDays = max(0, 90 - date("now").diff(startDate).days) %}
                     <span class="ms-3 badge rounded-pill {{ leftDays > 10 ? 'text-bg-info' : 'text-bg-danger' }}">Time remaining in trial: {{ leftDays}} days</span>
                 {% else %}
                     <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
@@ -125,7 +125,7 @@
     </nav>
 </header>
 
-<main class="py-5">
+<main class="py-2">
     <div class="container-xl">
         {{ include('flash_messages.html.twig') }}
 

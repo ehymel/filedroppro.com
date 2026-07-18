@@ -21,8 +21,6 @@
 .border-1, .border-2 {
   border: 1px solid #81B9BA;
   border-radius: 5px;
-  /*margin: 5px;*/
-  margin-top: 5px;
   padding: 4px;
   overflow: hidden;
 }
