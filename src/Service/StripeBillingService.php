@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Tenant;
 use App\Entity\User;
+use App\Repository\TenantRepository;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -15,7 +16,8 @@ class StripeBillingService
 
     public function __construct(
         #[Autowire(param: 'env(STRIPE_SECRET_KEY)')] string $stripeSecretKey,
-        private readonly UrlGeneratorInterface $router
+        private readonly UrlGeneratorInterface $router,
+        private readonly TenantRepository $tenantRepository
     ) {
         $this->stripe = new StripeClient($stripeSecretKey);
     }
@@ -70,5 +72,73 @@ class StripeBillingService
         ]);
 
         return $session->url;
+    }
+
+    /**
+     * Performs a background, real-time lazy synchronization of the Tenant's subscription status.
+     * This acts as an automated "self-healing" fallback if webhooks are delayed or dropped.
+     */
+    public function syncSubscriptionStatus(Tenant $tenant): void
+    {
+        if (!$tenant->stripeCustomerId) {
+            return;
+        }
+
+        try {
+            // Check if we have an explicit subscription ID to verify
+            if ($tenant->stripeSubscriptionId) {
+                $subscription = $this->stripe->subscriptions->retrieve($tenant->stripeSubscriptionId);
+                $stripeStatus = $subscription->status;
+                $planId = $subscription->items->data[0]->price->id ?? null;
+            } else {
+                // If there's no stored subscription ID, perform a lazy recovery check on their customer account
+                $subscriptions = $this->stripe->subscriptions->all([
+                    'customer' => $tenant->stripeCustomerId,
+                    'limit' => 1
+                ]);
+
+                if (count($subscriptions->data) > 0) {
+                    $subscription = $subscriptions->data[0];
+                    $stripeStatus = $subscription->status;
+                    $planId = $subscription->items->data[0]->price->id ?? null;
+
+                    // Auto-heal: Bind the missing subscription details locally
+                    $tenant->stripeSubscriptionId = $subscription->id;
+                } else {
+                    $stripeStatus = 'none';
+                    $planId = null;
+                }
+            }
+
+            // Map Stripe status (active, trialing, past_due, canceled, unpaid) to Tenant status
+            $localStatus = $tenant->status;
+            $newStatus = 'suspended';
+
+            if (in_array($stripeStatus, ['active', 'trialing'])) {
+                $newStatus = 'active';
+            } elseif ($stripeStatus === 'past_due') {
+                $newStatus = 'past_due';
+            }
+
+            // Update plan context if mapped
+            if ($planId) {
+                $tenant->subscriptionPlan = $planId;
+            }
+
+            // Only issue a database flush if properties have actually changed to conserve resources
+            if ($localStatus !== $newStatus) {
+                $tenant->status = $newStatus;
+                $this->tenantRepository->save($tenant, true);
+            }
+
+        } catch (\Exception $e) {
+            // Log error internally. Fail silently so the user dashboard still loads safely
+            // If the subscription was explicitly deleted in Stripe, update the database status
+            if (str_contains($e->getMessage(), 'No such subscription')) {
+                $tenant->status = 'suspended';
+                $tenant->stripeSubscriptionId = null;
+                $this->tenantRepository->save($tenant, true);
+            }
+        }
     }
 }

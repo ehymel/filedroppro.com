@@ -41,7 +41,7 @@ class StripeWebhookController extends AbstractController
         switch ($event->type) {
             case 'checkout.session.completed':
                 $session = $event->data->object;
-                $tenantId = $session->metadata->tenant_id ?? null;
+                $tenantId = $session->metadata->tenant_id ?? null;  // set by my StripeBillingService
 
                 if ($tenantId) {
                     /** @var Tenant $tenant */
@@ -63,6 +63,7 @@ class StripeWebhookController extends AbstractController
 
                 if ($tenant) {
                     // Stripe status mapping (active, trialing, past_due, canceled, unpaid)
+                    // Per Stripe docs, possible values are incomplete, incomplete_expired, trialing, active, past_due, canceled, unpaid, or paused
                     $stripeStatus = $subscription->status;
 
                     if ($stripeStatus === 'active' || $stripeStatus === 'trialing') {

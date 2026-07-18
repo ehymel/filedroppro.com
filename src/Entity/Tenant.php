@@ -36,7 +36,7 @@ class Tenant extends MappedSuperclassBase
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank]
-    public ?string $status = 'active'; // active, suspended, trial, etc.
+    public ?string $status = 'active'; // Per Stripe docs, possible values are incomplete, incomplete_expired, trialing, active, past_due, canceled, unpaid, or paused
 
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'tenant', cascade: ['persist', 'remove'])]
     public Collection $users;
