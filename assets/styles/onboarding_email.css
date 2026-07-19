@@ -48,16 +48,17 @@ p {
 }
 
 /* Callouts & Alert Cards */
-.trial-callout {
-    background-color: #eff6ff;
-    border-left: 4px solid #1d4ed8;
+.trial-callout, .warning-callout {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
     padding: 16px;
     border-radius: 0 8px 8px 0;
-    color: #1e3a8a;
+    color: #78350f;
     font-size: 15px;
     font-weight: 500;
     margin-bottom: 24px;
 }
+
 .step-block {
     background-color: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -106,6 +107,21 @@ p {
     padding: 14px 28px;
     text-decoration: none;
 }
+.btn-secondary-cta table {
+    margin: 0 auto !important;
+}
+.btn-secondary-cta td {
+    background-color: #1e293b !important;
+    border-color: #1e293b !important;
+    border-radius: 6px;
+}
+.btn-secondary-cta a {
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 14px 28px;
+    text-decoration: none;
+}
 
 /* Footer parameters */
 .footer {
@@ -127,3 +143,98 @@ p {
 .footer p:last-child {
     margin-bottom: 0;
 }
+
+/* Suspended Status Block */
+.status-block {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+.status-block h3 {
+    margin-top: 0;
+    color: #991b1b;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+.status-block ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14px;
+    color: #7f1d1d;
+}
+.status-block li {
+    margin-bottom: 10px;
+}
+.status-block li:last-child {
+    margin-bottom: 0;
+}
+
+/* Math Block Container */
+.math-block {
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: bold;
+    color: #0f172a;
+    word-break: break-all;
+}
+.math-text {
+    font-family: "Courier New", Courier, monospace;
+    font-weight: bold;
+    font-size: 18px;
+    color: #0b1528;
+    display: inline-block;
+}
+.math-legend {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Compliance Alert Card */
+.compliance-callout {
+    background-color: #ecfdf5;
+    border-left: 4px solid #10b981;
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    color: #065f46;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    margin-top: 24px;
+}
+
+/* Plan Selection Table */
+.plans-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+.plans-table th {
+    text-align: left;
+    background-color: #f8fafc;
+    color: #0b1528;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    border-bottom: 2px solid #e2e8f0;
+}
+.plans-table td {
+    padding: 12px 10px;
+    font-size: 13px;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+.plans-table tr:last-child td {
+    border-bottom: none;
+}
+

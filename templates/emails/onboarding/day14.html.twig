@@ -1,5 +1,68 @@
-{% extends 'emails/email_base.html.twig' %}
+{% extends 'emails/onboarding/onboarding_email_base.html.twig' %}
+
+{% block preheader %}
+    Your files are safe. Reactivate your workspace inside to restore client drop links.
+{% endblock %}
 
 {% block content %}
+    <row class="content-body">
+        <columns>
+            <h2>Trial Expired: Your secure drop link is offline.</h2>
 
+            <p>Dear {{ recipient_name }},</p>
+
+            <p>Your 14-day free trial on the Pro Plan has officially expired, and your workspace, <strong>{{ firm_name }}</strong>, has been placed into suspended status.</p>
+
+            <!-- Current Status Tracker -->
+            <div class="status-block">
+                <h3>Current Status:</h3>
+                <ul>
+                    <li><strong>Secure Client Drop Links:</strong> 🔴 Offline (Clients trying to access your links will see a secure offline warning).</li>
+                    <li><strong>Historical Vault Archives:</strong> 🔒 Safe and encrypted, but currently locked from active download/decryption.</li>
+                    <li><strong>Personnel Key Sync:</strong> ⏸️ Suspended.</li>
+                </ul>
+            </div>
+
+            <p>Reactivating your portal takes less than 60 seconds. All of your custom drop links, settings, and encrypted historical files will be restored instantly the moment your billing profile is updated.</p>
+
+            <!-- Service Plans Matrix table -->
+            <table class="plans-table">
+                <thead>
+                <tr>
+                    <th>Plan Level</th>
+                    <th>Cost</th>
+                    <th>Best For</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><strong>Basic Plan</strong></td>
+                    <td>$19/mo</td>
+                    <td>Sole practitioners, independent CPAs, and boutique clinics.</td>
+                </tr>
+                <tr>
+                    <td><strong>Pro Plan</strong></td>
+                    <td>$49/mo</td>
+                    <td>Recommended. Includes multi-user workspace credentials and higher storage limits.</td>
+                </tr>
+                <tr>
+                    <td><strong>Enterprise Plan</strong></td>
+                    <td>$199/mo</td>
+                    <td>Custom data retention rules, priority engineering queues, unlimited storage.</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <spacer size="16"></spacer>
+
+            <!-- Reactivate CTA -->
+            <button href="{{ billing_url }}" class="btn-cta">
+                Reactivate Your Secure Workspace Now
+            </button>
+
+            <spacer size="24"></spacer>
+
+            <p>Thank you for testing FileDrop Pro. We look forward to helping you provide a secure, friction-free client experience.</p>
+        </columns>
+    </row>
 {% endblock %}

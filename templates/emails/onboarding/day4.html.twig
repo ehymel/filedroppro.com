@@ -1,5 +1,59 @@
-{% extends 'emails/email_base.html.twig' %}
+{% extends 'emails/onboarding/onboarding_email_base.html.twig' %}
+
+{% block preheader %}
+    How much administrative overhead is "standard secure file sharing" costing you?
+{% endblock %}
 
 {% block content %}
+    <row class="content-body">
+        <columns>
+            <h2>Are portal password resets draining your billable hours?</h2>
 
+            <p>Dear {{ recipient_name }},</p>
+
+            <p>Take a quick look at your firm’s calendar this past week. How many hours did your administrative staff or intake coordinators spend:</p>
+
+            <div class="step-block">
+                <ul>
+                    <li>Explaining to clients how to register for your "secure client portal"?</li>
+                    <li>Resetting forgotten portal passwords for frustrated clients?</li>
+                    <li>Manually chasing clients for missing files that they couldn't figure out how to upload?</li>
+                </ul>
+            </div>
+
+            <p>Traditional secure file portals protect your compliance, but they kill your operational efficiency.</p>
+
+            <p>We calculated the mathematical impact of this administrative friction. If your practice onboards <strong>P</strong> new clients per month, wasting an average of <strong>T<sub>friction</sub></strong> minutes per client on administrative technical support at an effective staff/attorney hourly rate of <strong>R<sub>billable</sub></strong>, your annual lost revenue (<strong>L<sub>annual</sub></strong>) is modeled by:</p>
+
+            <!-- Responsive CSS Math Block -->
+            <div class="math-block">
+                <span class="math-text">L<sub>annual</sub> = P &times; 12 &times; ( T<sub>friction</sub> / 60 ) &times; R<sub>billable</sub></span>
+                <div class="math-legend">
+                    P = Monthly Onboarding Volume &nbsp;|&nbsp; T = Friction Minutes Per Client &nbsp;|&nbsp; R = Billable Staff Rate
+                </div>
+            </div>
+
+            <p>For an average boutique firm onboarding <strong>80</strong> clients a month, losing just <strong>15</strong> minutes per client at a staff cost of <strong>$35/hr</strong>, that is over <strong>160 lost hours</strong> and <strong>$5,600 in unnecessary administrative overhead</strong> every single year.</p>
+
+            <p>With FileDrop Pro, that friction drops to zero. Your clients simply open your custom link, drag-and-drop their files, and they are securely delivered instantly.</p>
+
+            <spacer size="16"></spacer>
+
+            <!-- Main CTA -->
+{#            <button href="{{ calculator_url }}" class="btn-cta">#}
+{#                Calculate Your Custom Friction Losses#}
+{#            </button>#}
+
+            <spacer size="24"></spacer>
+
+            <p>If you are ready to reclaim your billable hours and eliminate portal technical support calls forever, you can lock in your premium workspace subscription at any point during your trial.</p>
+
+            <spacer size="16"></spacer>
+
+            <!-- Secondary Upgrade CTA -->
+            <button href="{{ billing_url }}" class="btn-secondary-cta">
+                Upgrade Your Workspace Today
+            </button>
+        </columns>
+    </row>
 {% endblock %}

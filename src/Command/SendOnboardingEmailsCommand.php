@@ -87,7 +87,7 @@ class SendOnboardingEmailsCommand extends Command
                     break;
                 case 3: // Day 4: ROI of Frictionless Intake
                     $emailSubject = "Are portal password resets draining your billable hours? Let’s calculate the math.";
-                    $templateName = 'emails/onboarding/day8.html.twig';
+                    $templateName = 'emails/onboarding/day4.html.twig';
                     break;
                 case 7: // Day 8: Compliance & Security Vault Architecture
                     $emailSubject = "The Cryptographic Shield: How zero-knowledge architecture protects your practice";

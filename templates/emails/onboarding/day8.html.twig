@@ -1,5 +1,47 @@
-{% extends 'emails/email_base.html.twig' %}
+{% extends 'emails/onboarding/onboarding_email_base.html.twig' %}
+
+{% block preheader %}
+    Under HIPAA, the FTC Safeguards Rule, or ABA Ethics, compliance is your shield.
+{% endblock %}
 
 {% block content %}
+    <row class="content-body">
+        <columns>
+            <h2>Zero-Knowledge E2EE: Your Cryptographic Shield</h2>
 
+            <p>Dear {{ recipient_name }},</p>
+
+            <p>Whether your firm is subject to the <strong>HIPAA Security Rule</strong> (healthcare), the <strong>FTC Safeguards Rule & IRS Pub 4557</strong> (tax/accounting), or <strong>ABA Model Rule 1.6(c)</strong> (legal), you have a federal and ethical obligation to safeguard customer data in transit and at rest.</p>
+
+            <p>Standard cloud storage providers encrypt your files, but <em>they hold the decryption keys</em>. If their databases are breached, your clients' private documents are exposed, and your firm is liable.</p>
+
+            <p>FileDrop Pro uses a local double-envelope cryptographic system executing entirely inside the browser:</p>
+
+            <!-- Interactive Cryptographic Steps -->
+            <div class="step-block">
+                <h3>How your secure envelope works:</h3>
+                <ol>
+                    <li>When a client drops a file, their browser generates a unique, symmetric AES-256 session key (<strong>K<sub>sym</sub></strong>) to encrypt the document locally in memory.</li>
+                    <li>That key is immediately wrapped ("encrypted") using your firm's asymmetric Public Key (<strong>K<sub>pub</sub></strong>):
+                        <div class="math-block">
+                            WrappedKey = RSA-OAEP( K<sub>sym</sub> using K<sub>pub</sub> )
+                        </div>
+                    </li>
+                    <li>The encrypted file is sent directly to AWS S3, and the wrapped key is stored in our database.</li>
+                    <li><strong>Our servers never touch the raw session key.</strong> When you open the file, your browser decrypts the wrapped key locally using your private master password, keeping your data entirely secure from external threats.</li>
+                </ol>
+            </div>
+
+            <div class="compliance-callout">
+                🛡️ <strong>Need a signed BAA?</strong> We sign Business Associate Agreements (BAA) for our healthcare clients on standard Pro and Enterprise subscription tiers.
+            </div>
+
+            <spacer size="16"></spacer>
+
+            <!-- Upgrade CTA -->
+            <button href="{{ billing_url }}" class="btn-cta">
+                Secure Your Compliance Shield (Upgrade Plan)
+            </button>
+        </columns>
+    </row>
 {% endblock %}

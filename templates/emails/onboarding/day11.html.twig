@@ -1,5 +1,48 @@
-{% extends 'emails/email_base.html.twig' %}
+{% extends 'emails/onboarding/onboarding_email_base.html.twig' %}
+
+{% block preheader %}
+    Upgrade now to maintain seamless, friction-free client file collection.
+{% endblock %}
 
 {% block content %}
+        <row class="content-body">
+            <columns>
+                <h2>Your Free Trial Ends in 3 Days</h2>
 
+                <p>Dear {{ recipient_name }},</p>
+
+                <p>Your 14-day free trial of FileDrop Pro is coming to an end in exactly <strong>three days</strong>.</p>
+
+                <p>During your trial, your organization, <strong>{{ firm_name }}</strong>, has enjoyed unrestricted access to our premium Pro tier:</p>
+
+                <div class="step-block">
+                    <ul>
+                        <li>Your secure, zero-login patient/client drop-box links.</li>
+                        <li>Browser-side local end-to-end encryption.</li>
+                        <li>Zero password-reset calls and administrative friction.</li>
+                        <li>Complete compliance mapping under federal data rules.</li>
+                    </ul>
+                </div>
+
+                <div class="warning-callout">
+                    ⚠️ <strong>What happens on {{ trial_end_date }}?</strong><br>
+                    If you choose not to upgrade, your custom secure drop links will temporarily go offline, and access to download any encrypted files currently stored in your secure vault will be restricted.
+                </div>
+
+                <p><strong>Don't worry—your files and security keys are safe.</strong> We will not delete any of your records. However, your team will be redirected to the billing portal to enter a card before unsealing or downloading future client submissions.</p>
+
+                <p>To avoid any service disruptions for your active clients, we invite you to secure your subscription today. Your billing cycle will only begin once your 14-day trial period officially concludes.</p>
+
+                <spacer size="16"></spacer>
+
+                <!-- Upgrade CTA -->
+                <button href="{{ billing_url }}" class="btn-cta">
+                    Maintain Uninterrupted Client File Drops
+                </button>
+
+                <spacer size="24"></spacer>
+
+                <p>If you have questions about which plan (Basic, Pro, or Enterprise) best fits your monthly onboarding volume, simply reply directly to this email—our engineering team is here to assist.</p>
+            </columns>
+        </row>
 {% endblock %}
