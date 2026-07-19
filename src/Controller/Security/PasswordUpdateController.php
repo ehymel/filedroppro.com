@@ -85,7 +85,7 @@ class PasswordUpdateController extends AbstractController
             $submittedToken = $request->request->get('_token');
             if (!$this->isCsrfTokenValid('reset_forgotten_password', $submittedToken)) {
                 $this->addFlash('danger', 'Invalid security token.');
-                return $this->redirectToRoute('app_reset_password', ['token' => $token, 'email' => $user->getEmail()]);
+                return $this->redirectToRoute('app_reset_password', ['token' => $token, 'email' => $user->email]);
             }
 
             $newPassword = $request->request->get('new_password');
@@ -94,15 +94,15 @@ class PasswordUpdateController extends AbstractController
 
             if (empty($newPassword) || empty($newPublicKey) || empty($newEncPrivateKeyPayload)) {
                 $this->addFlash('danger', 'New cryptographic credentials could not be verified. Please try again.');
-                return $this->redirectToRoute('app_reset_password', ['token' => $token, 'email' => $user->getEmail()]);
+                return $this->redirectToRoute('app_reset_password', ['token' => $token, 'email' => $user->email]);
             }
 
             // 1. Hash the new password and update login authentication
             $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
-            $user->setPassword($hashedPassword);
+            $user->password = $hashedPassword;
 
             // 2. Overwrite the entire cryptographic identity in the database
-            $userKey = $user->getUserKey();
+            $userKey = $user->userKey;
             if (!$userKey) {
                 $userKey = new UserKey();
                 $userKey->user = $user;
@@ -114,14 +114,14 @@ class PasswordUpdateController extends AbstractController
             // 3. Crucial Security Step: Revoke active status and require Admin Key Sync approval
             // Except for single-user Tenant Creators who act as their own authority, staff users must be re-keyed.
             if (in_array('ROLE_ADMIN', $user->getRoles())) {
-                $user->setStatus('active'); // Admins remain active but must be warned they lost past files
+                $user->status = 'active'; // Admins remain active but must be warned they lost past files
             } else {
-                $user->setStatus('pending_approval'); // Lock staff account for admin key sync
+                $user->status = 'pending_approval'; // Lock staff account for admin key sync
             }
 
             $this->em->flush();
 
-            if ($user->getStatus() === 'pending_approval') {
+            if ($user->status === 'pending_approval') {
                 $this->addFlash('success', 'Your password has been reset successfully. Because your cryptographic keys were regenerated, you must wait for an administrator to approve your account and synchronize historical documents before logging in.');
             } else {
                 $this->addFlash('success', 'Password reset successfully! You can now log in, but please note that historical document keys are unrecoverable without an admin key-sync action.');
@@ -132,7 +132,7 @@ class PasswordUpdateController extends AbstractController
 
         return $this->render('user/password_reset.html.twig', [
             'token' => $token,
-            'userEmail' => $user->getEmail()
+            'userEmail' => $user->email
         ]);
     }
 }
