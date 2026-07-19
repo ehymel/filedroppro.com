@@ -13,29 +13,26 @@
          data-secure-drop-rename-url-template-value="{{ path('drop_rename', {'documentId': 'DOCUMENT_ID'}) }}"
          data-secure-drop-delete-url-template-value="{{ path('drop_delete', {'documentId': 'DOCUMENT_ID'}) }}"
     >
-        <div class="row">
-            <div class="col">
-                <h1>Securely Send Files to {{ tenant.firmName }}</h1>
-                <h3>End-to-End Encrypted Secure File Drop</h3>
-                <p>Your files are encrypted locally in your browser before being transmitted. No one, including our hosting providers, can read your documents.</p>
-
-                {# Personalized Instructions block for targeted file requests #}
-                {% if dropRequest is defined and dropRequest is not null %}
-                    <div data-secure-drop-target="instructionsContainer">
-                        <h3>Document Request for {{ dropRequest.clientName }}</h3>
-                        <p>Requested by: <strong>{{ dropRequest.createdBy.email }}</strong></p>
-                        {% if dropRequest.instructions %}
-                            <strong>Instructions:</strong>
-                            <p>"{{ dropRequest.instructions }}"</p>
-                        {% endif %}
+        <header class="border-bottom pb-4 mb-3">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-8">
+                    <h1 class="mb-2">Document Request for {{ dropRequest.clientName }}</h1>
+                    <div class="bg-success-subtle text-success-emphasis border-start border-success border-4 rounded-end p-3 mb-4">
+                    <p><strong>From:</strong> {{ dropRequest.createdBy.firstName }} {{ dropRequest.createdBy.lastName }}
+                        ({{ dropRequest.createdBy.email }}) at {{ dropRequest.tenant.firmName }}:</p>
+                    {% if dropRequest is defined and dropRequest is not null %}
+                        <strong>Instructions:</strong> {{ dropRequest.instructions }}
+                    {% endif %}
                     </div>
-                {% endif %}
+                </div>
             </div>
-        </div>
+        </header>
 
         <div class="row">
-            <div class="col-5">
+            <div class="col-12 col-md-10 col-lg-8">
                 {% include 'flash_messages.html.twig' %}
+
+                <p class="lead">Your files are encrypted locally in your browser before being transmitted. No one, including our hosting providers, can read your documents.</p>
 
                 {{ form_start(form, { 'attr': { 'data-action': 'submit->secure-drop#processUpload', 'data-secure-drop-target': 'form' } }) }}
                     {{ form_row(form.senderName, { 'attr': { 'data-secure-drop-target': 'senderName' } }) }}
