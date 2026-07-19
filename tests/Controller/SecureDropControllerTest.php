@@ -256,78 +256,107 @@ class SecureDropControllerTest extends WebTestCase
     // rename()
     // ---------------------------------------------------------------------
 
-    public function testRenameReturnsNotFoundForUnknownDocument(): void
+    public function testRenameRejectsDocumentNotUploadedInThisSession(): void
     {
+        // A document that exists but was NOT uploaded by this visitor's session.
+        $document = $this->createDocument($this->createTenant('TX-REN0'));
+
+        $this->postJson('/drop/rename/' . $document->id, ['originalFileName' => 'hijacked.pdf']);
+
+        $this->assertResponseStatusCodeSame(403);
+        $this->em->clear();
+        $this->assertSame('original.pdf', $this->em->find(Document::class, $document->id->toString())->originalFileName);
+    }
+
+    public function testRenameRejectsUnknownDocument(): void
+    {
+        // Unknown id is not owned either -> 403 (does not leak existence).
         $this->postJson('/drop/rename/' . $this->randomUuid(), ['originalFileName' => 'x.pdf']);
 
-        $this->assertResponseStatusCodeSame(404);
+        $this->assertResponseStatusCodeSame(403);
     }
 
     public function testRenameRequiresNewName(): void
     {
-        $document = $this->createDocument($this->createTenant('TX-REN1'));
+        $tenant = $this->createTenant('TX-REN1');
+        $documentId = $this->uploadOwnedDocument($tenant);
 
-        $this->postJson('/drop/rename/' . $document->id, []);
+        $this->postJson('/drop/rename/' . $documentId, []);
 
         $this->assertResponseStatusCodeSame(400);
         $this->assertSame('Missing new filename.', $this->json()['error']);
     }
 
-    public function testRenameUpdatesOriginalFileName(): void
+    public function testRenameUpdatesOriginalFileNameForOwnedDocument(): void
     {
-        $document = $this->createDocument($this->createTenant('TX-REN2'));
-        $id = $document->id->toString();
+        $tenant = $this->createTenant('TX-REN2');
+        $documentId = $this->uploadOwnedDocument($tenant);
 
-        $this->postJson('/drop/rename/' . $document->id, ['originalFileName' => 'renamed.pdf']);
+        $this->postJson('/drop/rename/' . $documentId, ['originalFileName' => 'renamed.pdf']);
 
         $this->assertResponseIsSuccessful();
         $this->assertSame('renamed.pdf', $this->json()['originalFileName']);
 
         $this->em->clear();
-        $this->assertSame('renamed.pdf', $this->em->find(Document::class, $id)->originalFileName);
+        $this->assertSame('renamed.pdf', $this->em->find(Document::class, $documentId)->originalFileName);
     }
 
     // ---------------------------------------------------------------------
     // delete()
     // ---------------------------------------------------------------------
 
-    public function testDeleteReturnsNotFoundForUnknownDocument(): void
+    public function testDeleteRejectsDocumentNotUploadedInThisSession(): void
     {
-        $this->client->request('DELETE', '/drop/delete/' . $this->randomUuid());
-
-        $this->assertResponseStatusCodeSame(404);
-    }
-
-    public function testDeleteRemovesDocumentFromS3AndDatabase(): void
-    {
-        $document = $this->createDocument($this->createTenant('TX-DEL1'));
-        $filePath = $document->filePath;
+        $document = $this->createDocument($this->createTenant('TX-DEL0'));
         $id = $document->id->toString();
 
         $this->client->request('DELETE', '/drop/delete/' . $document->id);
+
+        $this->assertResponseStatusCodeSame(403);
+        // The document must NOT be removed, and S3 must not be touched.
+        $this->assertEmpty($this->s3->deletedKeys);
+        $this->em->clear();
+        $this->assertNotNull($this->em->find(Document::class, $id));
+    }
+
+    public function testDeleteRejectsUnknownDocument(): void
+    {
+        $this->client->request('DELETE', '/drop/delete/' . $this->randomUuid());
+
+        $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testDeleteRemovesOwnedDocumentFromS3AndDatabase(): void
+    {
+        $tenant = $this->createTenant('TX-DEL1');
+        $documentId = $this->uploadOwnedDocument($tenant);
+        $this->em->clear();
+        $filePath = $this->em->find(Document::class, $documentId)->filePath;
+
+        $this->client->request('DELETE', '/drop/delete/' . $documentId);
 
         $this->assertResponseIsSuccessful();
         $this->assertTrue($this->json()['success']);
         $this->assertContains($filePath, $this->s3->deletedKeys);
 
         $this->em->clear();
-        $this->assertNull($this->em->find(Document::class, $id));
+        $this->assertNull($this->em->find(Document::class, $documentId));
     }
 
     public function testDeleteReturnsServerErrorWhenS3Fails(): void
     {
-        $document = $this->createDocument($this->createTenant('TX-DEL2'));
-        $id = $document->id->toString();
+        $tenant = $this->createTenant('TX-DEL2');
+        $documentId = $this->uploadOwnedDocument($tenant);
         $this->s3->throwOnDelete = new \RuntimeException('S3 unavailable');
 
-        $this->client->request('DELETE', '/drop/delete/' . $document->id);
+        $this->client->request('DELETE', '/drop/delete/' . $documentId);
 
         $this->assertResponseStatusCodeSame(500);
         $this->assertStringContainsString('Could not delete file', $this->json()['error']);
 
         // The record must survive a failed S3 deletion.
         $this->em->clear();
-        $this->assertNotNull($this->em->find(Document::class, $id));
+        $this->assertNotNull($this->em->find(Document::class, $documentId));
     }
 
     // ---------------------------------------------------------------------
@@ -410,6 +439,27 @@ class SecureDropControllerTest extends WebTestCase
     private function randomUuid(): string
     {
         return \Symfony\Component\Uid\Uuid::v4()->toString();
+    }
+
+    /**
+     * Finalizes a real upload for the tenant, which records the new document as
+     * owned by the test client's session (the browser that uploaded it) and
+     * returns its id — the prerequisite for rename()/delete().
+     */
+    private function uploadOwnedDocument(Tenant $tenant): string
+    {
+        $this->postJson('/drop/finalize/' . $tenant->joinCode, [
+            'senderName' => 'Owner ' . uniqid(),
+            'senderEmail' => 'owner@example.com',
+            'iv' => 'iv-hex',
+            'wrappedKeys' => ['tenant_escrow' => 'escrow-hex'],
+            's3Key' => \Symfony\Component\Uid\Uuid::v4()->toString() . '.enc',
+            'originalFileName' => 'original.pdf',
+            'fileSize' => 512,
+        ]);
+        $this->assertResponseIsSuccessful();
+
+        return $this->json()['documentId'];
     }
 
     /**

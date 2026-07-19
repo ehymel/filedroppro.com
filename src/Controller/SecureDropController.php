@@ -25,6 +25,14 @@ use Symfony\Component\Uid\Uuid;
 #[Route(path: '/drop', name: 'drop_')]
 class SecureDropController extends AbstractController
 {
+    /**
+     * Session key holding the set of document IDs this (anonymous) visitor
+     * created during their upload session. rename()/delete() are gated on it so
+     * a client can only touch the files they just uploaded on this page — not
+     * arbitrary documents belonging to other clients or tenants.
+     */
+    private const string SESSION_OWNED_DOCUMENTS = 'secure_drop_owned_documents';
+
     public function __construct(private readonly EntityManagerInterface $em,
                                 private readonly S3Client $s3Client,
                                 #[Autowire(param: 'env(AWS_S3_BUCKET)')] private readonly string $s3BucketName) {}
@@ -233,6 +241,10 @@ class SecureDropController extends AbstractController
 
         $this->em->flush();
 
+        // Record ownership so this visitor can subsequently rename/delete the
+        // file they just uploaded (see rename()/delete()).
+        $this->rememberUploadedDocument($request, $document->id->toString());
+
         return new JsonResponse([
             'success' => true,
             'documentId' => $document->id->toString(),
@@ -243,6 +255,10 @@ class SecureDropController extends AbstractController
     #[Route('/rename/{documentId}', name: 'rename', methods: ['POST'])]
     public function rename(string $documentId, Request $request): JsonResponse
     {
+        if (!$this->clientOwnsDocument($request, $documentId)) {
+            return new JsonResponse(['error' => 'You are not authorized to modify this file.'], Response::HTTP_FORBIDDEN);
+        }
+
         $document = $this->em->getRepository(Document::class)->find($documentId);
 
         if (!$document) {
@@ -266,8 +282,12 @@ class SecureDropController extends AbstractController
     }
 
     #[Route('/delete/{documentId}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $documentId): JsonResponse
+    public function delete(string $documentId, Request $request): JsonResponse
     {
+        if (!$this->clientOwnsDocument($request, $documentId)) {
+            return new JsonResponse(['error' => 'You are not authorized to delete this file.'], Response::HTTP_FORBIDDEN);
+        }
+
         $document = $this->em->getRepository(Document::class)->find($documentId);
 
         if (!$document) {
@@ -289,5 +309,26 @@ class SecureDropController extends AbstractController
         }
 
         return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * Marks a freshly-uploaded document as owned by the current visitor session.
+     */
+    private function rememberUploadedDocument(Request $request, string $documentId): void
+    {
+        $session = $request->getSession();
+        $owned = $session->get(self::SESSION_OWNED_DOCUMENTS, []);
+        $owned[$documentId] = true;
+        $session->set(self::SESSION_OWNED_DOCUMENTS, $owned);
+    }
+
+    /**
+     * True only if the given document was uploaded by this visitor's session.
+     */
+    private function clientOwnsDocument(Request $request, string $documentId): bool
+    {
+        $owned = $request->getSession()->get(self::SESSION_OWNED_DOCUMENTS, []);
+
+        return is_array($owned) && isset($owned[$documentId]);
     }
 }
