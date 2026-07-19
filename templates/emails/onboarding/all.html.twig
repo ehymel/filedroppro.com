@@ -1,0 +1,207 @@
+B2B SaaS Trial Onboarding Email Sequence: FileDrop Pro
+
+Target Audience: Law Firms, CPA/Tax Practices, and Medical Clinics on a 14-Day Cardless Free Trial.
+Core Objective: Drive product adoption (activation) in the first 7 days, educate on the cost of client-portal friction in days 4-10, and secure a paid subscription upgrade by day 14.
+
+Email 1: Welcome & Setup (Sent Day 1 - Immediately after registration)
+
+Subject: Welcome to FileDrop Pro: Let's set up your secure drop link (no passwords required)
+Preheader: Eliminate email attachments and complex client portals starting today.
+
+Dear {{ recipient_name|default('there') }},
+
+Welcome to FileDrop Pro! We are thrilled to help your firm streamline secure document collection while keeping your client data locked behind a mathematical, zero-knowledge firewall.
+
+Right now, you are on a 14-day free trial on our fully featured Pro Plan.
+
+Unlike standard cloud sync tools, FileDrop Pro was built with a single guiding principle: Security shouldn't cause client friction.
+
+Your clients don't want to register accounts, remember usernames, or handle password reset prompts just to send you a sensitive PDF. With FileDrop Pro, they don't have to.
+
+Step 1: Claim your custom secure drop link
+
+To start collecting secure files immediately, let’s configure your unique, brandable drop link:
+
+Log in to your
+
+$$Billing & Workspace Dashboard$$
+
+({{ login_url }}).
+
+Claim your organizational path (e.g., filedroppro.com/drop/{{ firm_name|default('your-firm') }}).
+
+Share this link on your email signature, your website, or send it directly to a client.
+
+Any file your clients drop onto this link is automatically encrypted locally in their web browser using AES-GCM-256 before uploading directly to your secure, compliant cloud partition.
+
+No passwords. No portal lockouts. 100% compliant.
+
+$$ 👉 Claim Your Secure Drop Link Now $$
+
+({{ login_url }})
+
+To your security,
+
+The FileDrop Pro Team
+
+Email 2: The ROI of Frictionless Intake (Sent Day 4)
+
+Subject: Are portal password resets draining your billable hours? Let’s calculate the math.
+Preheader: How much administrative overhead is "standard secure file sharing" costing you?
+
+Dear {{ recipient_name|default('there') }},
+
+Take a quick look at your firm’s calendar this past week. How many hours did your administrative staff or intake coordinators spend:
+
+Explaining to clients how to register for your "secure client portal"?
+
+Resetting forgotten portal passwords for frustrated clients?
+
+Manually chasing clients for missing files that they couldn't figure out how to upload?
+
+Traditional secure file portals protect your compliance, but they kill your operational efficiency.
+
+We calculated the mathematical impact of this administrative friction. If your practice onboards $P$ new clients per month, wasting an average of $T_{\text{friction}}$ minutes per client on follow-up emails, phone calls, and portal technical support at an effective staff/attorney hourly rate of $R_{\text{billable}}$, your annual lost revenue ($L_{\text{annual}}$) is modeled by:
+
+$$L_{\text{annual}} = P \times 12 \times \left(\frac{T_{\text{friction}}}{60}\right) \times R_{\text{billable}}$$
+
+For an average boutique firm onboarding $80$ clients a month, losing just $15$ minutes per client at a staff cost of $\$35/\text{hr}$, that is over $160$ lost hours and $\$5,600$ in unnecessary administrative overhead every single year. For attorneys billing at $\$300/\text{hr}$, the loss quickly balloons to tens of thousands.
+
+With FileDrop Pro, that friction drops to zero.
+
+Your client receives your custom link.
+
+They drag-and-drop their files.
+
+The files are securely delivered.
+
+$$ 👉 Calculate Your Firm's Custom Friction Losses $$
+
+({{ calculator_url }})
+
+If you are ready to reclaim your billable hours and eliminate portal technical support calls forever, you can lock in your premium workspace subscription at any point during your trial.
+
+$$Upgrade Your Workspace Today$$
+
+({{ billing_url }})
+
+Best regards,
+
+The FileDrop Pro Team
+
+Email 3: Compliance & Zero-Knowledge Security (Sent Day 8)
+
+Subject: The Cryptographic Shield: How zero-knowledge architecture protects your practice
+Preheader: Under HIPAA, the FTC Safeguards Rule, or ABA Ethics, compliance is your shield.
+
+Dear {{ recipient_name|default('there') }},
+
+Whether your firm is subject to the HIPAA Security Rule (healthcare), the FTC Safeguards Rule & IRS Pub 4557 (tax/accounting), or ABA Model Rule 1.6(c) (legal), you have a federal and ethical obligation to safeguard customer data in transit and at rest.
+
+Standard email is not secure. But what makes FileDrop Pro different from standard cloud storage?
+
+It comes down to Zero-Knowledge, End-to-End Encryption (E2EE).
+
+How your secure envelope works:
+
+Most cloud providers encrypt your files, but they hold the decryption keys. If their databases are breached, your clients' private tax records, medical charts, or legal evidence are exposed, and your firm is liable.
+
+FileDrop Pro uses a local double-envelope cryptographic system:
+
+When a client drops a file, their browser generates a unique, symmetric AES-256 session key ($K_{sym}$) to encrypt the document locally in memory.
+
+That key is immediately wrapped ("encrypted") using your firm's asymmetric Public Key ($K_{pub}$):
+
+$$WrappedKey = \text{RSA-OAEP}(K_{sym} \text{ using } K_{pub})$$
+
+The encrypted file is sent directly to AWS S3, and the wrapped key is stored in our database.
+
+Our servers never touch the raw session key. When you open the file, your browser decrypts the wrapped key locally using your private master password, keeping your data entirely secure from external threats.
+
+Business Associate Agreements (BAA)
+
+Need a signed BAA for HIPAA compliance? We sign BAAs for our healthcare clients on standard Pro and Enterprise subscription tiers.
+
+Protect your clients, protect your firm, and secure your cryptographic liability shield today.
+
+$$ 👉 Secure Your Compliance Shield (Upgrade Plan) $$
+
+({{ billing_url }})
+
+Best,
+
+The FileDrop Pro Team
+
+Email 4: Soft-Close Upgrade Warning (Sent Day 11)
+
+Subject: Your FileDrop Pro free trial is ending in 3 days. Here is what happens next.
+Preheader: Upgrade now to maintain seamless, friction-free client file collection.
+
+Dear {{ recipient_name|default('there') }},
+
+Your 14-day free trial of FileDrop Pro is coming to an end in exactly three days.
+
+During your trial, your organization, {{ firm_name }}, has enjoyed unrestricted access to our premium Pro tier:
+
+Your secure, zero-login patient/client drop-box links.
+
+Browser-side local end-to-end encryption.
+
+Zero password-reset calls and administrative friction.
+
+Complete compliance mapping under federal data rules.
+
+What happens on {{ trial_end_date }}?
+
+If you choose not to upgrade, your custom secure drop links will temporarily go offline, and access to download any encrypted files currently stored in your secure vault will be restricted.
+
+Don't worry—your files and security keys are safe. We will not delete any of your records. However, your team will be redirected to the billing portal to enter a card before unsealing or downloading future client submissions.
+
+To avoid any service disruptions for your active clients, we invite you to secure your subscription today. Your billing cycle will only begin once your 14-day trial period officially concludes.
+
+$$ 👉 Maintain Uninterrupted Client File Drops $$
+
+({{ billing_url }})
+
+If you have questions about which plan (Basic, Pro, or Enterprise) best fits your monthly onboarding volume, simply reply directly to this email—our engineering team is here to assist.
+
+Thank you,
+
+The FileDrop Pro Team
+
+Email 5: Hard-Close Trial Expired (Sent Day 14)
+
+Subject: Trial Expired: Your secure drop link is offline. Here is how to restore access.
+Preheader: Your files are safe. Reactivate your workspace inside to restore client drop links.
+
+Dear {{ recipient_name|default('there') }},
+
+Your 14-day free trial on the Pro Plan has officially expired, and your workspace, {{ firm_name }}, has been placed into suspended status.
+
+Current Status:
+
+Secure Client Drop Links: 🔴 Offline (Clients trying to access your links will see a secure offline warning).
+
+Historical Vault Archives: 🔒 Safe and encrypted, but currently locked from active download/decryption.
+
+Personnel Key Sync: ⏸️ Suspended.
+
+Reactivating your portal takes less than 60 seconds. All of your custom drop links, settings, and encrypted historical files will be restored instantly the moment your billing profile is updated.
+
+Select the subscription plan that fits your growth targets:
+
+Basic Plan ($19/mo): Perfect for sole practitioners, independent CPAs, and boutique clinics.
+
+Pro Plan ($49/mo - Recommended): Includes advanced multi-user workspace credentials and higher storage limits for growing firms.
+
+Enterprise Plan ($199/mo): Includes custom data retention rules, priority engineering support queues, and unlimited storage capacity.
+
+$$ 👉 Reactivate Your Secure Workspace Now $$
+
+({{ billing_url }})
+
+Thank you for testing FileDrop Pro. We look forward to helping you provide a secure, friction-free client experience.
+
+Sincerely,
+
+The FileDrop Pro Team

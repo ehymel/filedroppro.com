@@ -1,0 +1,44 @@
+{% block preheader %}
+Eliminate email attachments and complex client portals starting today.
+{% endblock %}
+
+{% block content %}
+        <!-- Body Section -->
+        <row class="content-body">
+            <columns>
+                <h2>Welcome to FileDrop Pro!</h2>
+
+                <p>Dear {{ recipient_name }},</p>
+
+                <p>We are thrilled to help your firm streamline secure document collection while keeping your client data locked behind a mathematical, zero-knowledge firewall.</p>
+
+                <div class="trial-callout">
+                    🚀 You are currently running on a <strong>14-day free trial of our fully featured Pro Plan</strong> (expires on {{ trial_end_date }}).
+                </div>
+
+                <p>Unlike standard cloud sync tools, FileDrop Pro was built with a single guiding principle: <strong>Security shouldn't cause client friction.</strong></p>
+
+                <p>Your clients don't want to register accounts, remember usernames, or handle password reset prompts just to send you a sensitive PDF. With FileDrop Pro, they don't have to.</p>
+
+                <!-- Setup Card -->
+                <div class="step-block">
+                    <h3>Step 1: Claim your custom secure drop link</h3>
+                    <p>To start collecting secure files immediately, let's configure your unique, brandable drop link:</p>
+                    <ol>
+                        <li>Log in to your <strong>Billing & Workspace Dashboard</strong>.</li>
+                        <li>Claim your organizational path (e.g., <code>filedroppro.com/drop/{{ firm_name|default('your-firm') }}</code>).</li>
+                        <li>Share this link in your email signature, on your website, or send it directly to a client.</li>
+                    </ol>
+                </div>
+
+                <p>Any file your clients drop onto this link is automatically encrypted <strong>locally in their web browser</strong> using AES-GCM-256 before uploading directly to your secure, compliant cloud partition.</p>
+
+                <spacer size="16"></spacer>
+
+                <!-- Bulletproof Inky Button -->
+                <button href="{{ login_url }}" class="btn-cta">
+                    Claim Your Secure Drop Link Now
+                </button>
+            </columns>
+        </row>
+{% endblock %}

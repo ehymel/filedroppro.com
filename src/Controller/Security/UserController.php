@@ -4,19 +4,12 @@ namespace App\Controller\Security;
 
 use App\Entity\User;
 use App\Form\User\UserEditForm;
-use App\Form\User\UserPasswordResetForm;
-use App\Form\User\UserPasswordResetRequestForm;
-use App\Form\User\UserPasswordSetForm;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('user', name: 'user_')]
@@ -73,7 +66,7 @@ class UserController extends AbstractController
 
             $this->addFlash('success', 'Your account has been activated.');
 
-            return $this->redirectToRoute('user_set_password', [
+            return $this->redirectToRoute('user_password_reset', [
                 'id' => $user->id,
                 'hash' => $hash,
             ]);
