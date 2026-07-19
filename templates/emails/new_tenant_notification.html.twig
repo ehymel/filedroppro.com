@@ -1,0 +1,28 @@
+{% extends 'emails/email_base.html.twig' %}
+
+{% block content %}
+    <h2>New Organization Created</h2>
+
+    <p>A new tenant (organization) has been successfully registered on FileDrop Pro.</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px;">
+        <tr>
+            <td style="padding: 8px; font-weight: bold; width: 150px;">Firm Name:</td>
+            <td style="padding: 8px;">{{ tenant.firmName }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Security Join Code:</td>
+            <td style="padding: 8px;"><code>{{ tenant.joinCode }}</code></td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Registered Admin:</td>
+            <td style="padding: 8px;">{{ creator.name }} ({{ creator.email }})</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Registration Date:</td>
+            <td style="padding: 8px;">{{ "now"|date("F j, Y, g:i a") }}</td>
+        </tr>
+    </table>
+
+    <p>Please log in to the superuser admin dashboard to review or manage this tenant if necessary.</p>
+{% endblock %}

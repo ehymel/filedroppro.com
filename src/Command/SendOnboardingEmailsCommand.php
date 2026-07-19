@@ -11,6 +11,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -102,55 +103,50 @@ class SendOnboardingEmailsCommand extends Command
 
             if ($emailSubject && $templateName) {
                 // Locate the primary Administrator of this workspace
-                /** @var User[] $admins */
-                $admins = $this->em->getRepository(User::class)->findBy([
-                    'tenant' => $tenant,
-                    'status' => 'active'
-                ]);
+                /** @var User[] $tenantUsers */
+                $tenantUsers = $this->em->getRepository(User::class)->findActiveForTenant($tenant);
 
-                // Filter to find the Administrator possessing ROLE_ADMIN
-                $targetAdmin = null;
-                foreach ($admins as $admin) {
-                    if (in_array('ROLE_ADMIN', $admin->getRoles()) || in_array('ROLE_SUPERUSER', $admin->getRoles())) {
-                        $targetAdmin = $admin;
-                        break;
-                    }
-                }
+                // Filter to find the Administrator(s) possessing ROLE_ADMIN
+                $targetAdmins = array_filter($tenantUsers, function (User $user) {
+                    $adminRoles = ['ROLE_ADMIN', 'ROLE_SUPERUSER'];
+                    return !empty(array_intersect($adminRoles, $user->getRoles()));
+                });
 
-                if (!$targetAdmin) {
+                if (count($targetAdmins) < 1) {
                     $io->warning(sprintf('Unable to find an active Administrator for workspace "%s". Skipping.', $tenant->firmName));
                     continue;
                 }
 
+                // Generate system action route endpoints dynamically inside console commands
+                $context = $this->router->getContext();
+                $context->setHost('filedroppro.com');
+                $context->setScheme('https');
+
+                $loginUrl = $this->router->generate('security_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
+                $billingUrl = $this->router->generate('internal_billing_dashboard', [], UrlGeneratorInterface::ABSOLUTE_URL);
+
                 try {
-                    // Generate system action route endpoints dynamically inside console commands
-                    $context = $this->router->getContext();
-                    $context->setHost('filedroppro.com');
-                    $context->setScheme('https');
+                    foreach($targetAdmins as $targetAdmin) {
+                        $message = new TemplatedEmail()
+                            ->from(new Address('onboarding@filedroppro.com', 'FileDrop Pro Onboarding'))
+                            ->to($targetAdmin->email)
+                            ->subject($emailSubject)
+                            ->htmlTemplate($templateName)
+                            ->context([
+                                'recipient_name' => $targetAdmin->firstName.' '.$targetAdmin->lastName,
+                                'trial_end_date' => $tenant->currentPeriodEnd->format('Y-m-d'),
+                                'firm_name' => $tenant->firmName,
+                                'login_url' => $loginUrl,
+                                'billing_url' => $billingUrl,
+                            ]);
 
-                    $loginUrl = $this->router->generate('security_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
-                    $billingUrl = $this->router->generate('internal_billing_dashboard', [], UrlGeneratorInterface::ABSOLUTE_URL);
+                        $this->mailer->send($message);
+                        $emailsSent++;
 
-                    $message = new TemplatedEmail()
-                        ->from(new Address('onboarding@filedroppro.com', 'FileDrop Pro Onboarding'))
-                        ->to($targetAdmin->email)
-                        ->subject($emailSubject)
-                        ->htmlTemplate($templateName)
-                        ->context([
-                            'recipient_name' => $targetAdmin->firstName.' '.$targetAdmin->lastName,
-                            'trial_end_date' => $tenant->currentPeriodEnd->format('Y-m-d'),
-                            'firm_name' => $tenant->firmName,
-                            'login_url' => $loginUrl,
-                            'billing_url' => $billingUrl,
-                        ])
-                    ;
+                        $io->success(sprintf('Sent Day %d email to %s (%s)', $daysElapsed + 1, $targetAdmin->email, $tenant->firmName));
+                    }
 
-                    $this->mailer->send($message);
-                    $emailsSent++;
-
-                    $io->success(sprintf('Sent Day %d email to %s (%s)', $daysElapsed + 1, $targetAdmin->email, $tenant->firmName));
-
-                } catch (\Exception $e) {
+                } catch (\Exception|TransportExceptionInterface $e) {
                     $io->error(sprintf('Failed to send Day %d email to %s: %s', $daysElapsed + 1, $targetAdmin->email, $e->getMessage()));
                 }
             }

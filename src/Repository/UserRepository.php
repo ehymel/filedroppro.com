@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Tenant;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -98,5 +99,32 @@ class UserRepository extends ServiceEntityRepository implements PublicKeyCredent
     public function findAllPending(): array
     {
         return $this->findBy(['status' => User::STATUS_PENDING], ['lastName' => 'ASC', 'firstName' => 'ASC', 'email' => 'ASC']);
+    }
+
+    /**
+     * @return User[]
+     */
+    public function findActiveForTenant(Tenant $tenant): array
+    {
+        return $this->findBy(
+            ['tenant' => $tenant, 'status' => User::STATUS_ACTIVE],
+            ['lastName' => 'ASC', 'firstName' => 'ASC', 'email' => 'ASC']
+        );
+    }
+
+    /**
+     * @return User[]
+     */
+    public function findSuperusers(): array
+    {
+        $candidates = $this->createQueryBuilder('u')
+            ->andWhere('u.roles LIKE :role')
+            ->setParameter('role', '%' . chr(34) . 'ROLE_SUPERUSER' . chr(34) . '%')
+            ->getQuery()
+            ->getResult();
+
+        return array_filter($candidates, function (User $user) {
+            return in_array('ROLE_SUPERUSER', $user->getRoles(), true);
+        });
     }
 }

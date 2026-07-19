@@ -9,6 +9,7 @@ use App\Entity\Invitation;
 use App\Form\User\RegistrationFormType;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\TenantNotificationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormError;
@@ -23,8 +24,10 @@ class RegistrationController extends AbstractController
     public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        TenantNotificationService $tenantNotificationService
     ): Response {
+        $isNewTenant = false;
         $token = $request->query->get('token');
         $hasInvitation = false;
         $tenantName = '';
@@ -92,6 +95,7 @@ class RegistrationController extends AbstractController
                 $mode = $form->get('registrationMode')->getData();
 
                 if ($mode === 'new') {
+                    $isNewTenant = true;
                     $tenant = new Tenant();
                     $tenant->firmName = $form->get('firmName')->getData();
                     $tenant->status = 'active';
@@ -166,6 +170,10 @@ class RegistrationController extends AbstractController
 
             $entityManager->persist($user);
             $entityManager->flush();
+
+            if ($isNewTenant) {
+                $tenantNotificationService->notifySuperusersOfNewTenant($tenant, $user);
+            }
 
             if ($user->status === User::STATUS_PENDING) {
                 $this->addFlash('success', 'Account registered! For security, an administrator must now synchronize your cryptographic keys before you can access documents.');
