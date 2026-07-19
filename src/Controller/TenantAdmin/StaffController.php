@@ -234,14 +234,30 @@ class StaffController extends AbstractController
             return new JsonResponse(['error' => 'The target user has not generated a new public identity key.'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Fetch all documents belonging to this tenant that contain a Master Escrow Envelope
-        $documents = $this->documentRepository->createQueryBuilder('d')
-            ->join('d.client', 'c')
-            ->where('c.tenant = :tenant')
-            ->andWhere('d.wrappedEscrowKeyHex IS NOT NULL')
-            ->setParameter('tenant', $tenant)
-            ->getQuery()
-            ->getResult();
+        // Fetch all documents belonging to this tenant that contain a Master
+        // Escrow Envelope. Disable the tenant_filter and pin the tenant here:
+        // its CAST(... AS UUID) comparison conflicts with an explicit binary
+        // uuid parameter (no row satisfies both). The tenant uuid must be bound
+        // with an explicit type, or Doctrine won't match the association id.
+        $filters = $this->documentRepository->getEntityManager()->getFilters();
+        $tenantFilterWasEnabled = $filters->isEnabled('tenant_filter');
+        if ($tenantFilterWasEnabled) {
+            $filters->disable('tenant_filter');
+        }
+
+        try {
+            $documents = $this->documentRepository->createQueryBuilder('d')
+                ->join('d.client', 'c')
+                ->where('c.tenant = :tenant')
+                ->andWhere('d.wrappedEscrowKeyHex IS NOT NULL')
+                ->setParameter('tenant', $tenant->id->toString(), 'uuid')
+                ->getQuery()
+                ->getResult();
+        } finally {
+            if ($tenantFilterWasEnabled) {
+                $filters->enable('tenant_filter');
+            }
+        }
 
         $escrowEnvelopes = [];
         /** @var Document $doc */
@@ -280,32 +296,50 @@ class StaffController extends AbstractController
             return new JsonResponse(['error' => 'Invalid or missing cryptographic key alignment map.'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Fetch each document record without relying on standard find() to bypass potential tenant filter state issues
-        foreach ($reKeyedMap as $docId => $wrappedKeyHex) {
-            $document = $this->documentRepository->createQueryBuilder('d')
-                ->join('d.client', 'c')
-                ->where('d.id = :id')
-                ->andWhere('c.tenant = :tenant')
-                ->setParameter('id', $docId)
-                ->setParameter('tenant', $tenant)
-                ->getQuery()
-                ->getOneOrNullResult();
+        // Scope documents explicitly by tenant. The active tenant_filter's
+        // CAST(... AS UUID) comparison conflicts with an explicit binary uuid
+        // parameter (no row satisfies both), so we disable it here and pin the
+        // tenant ourselves — the same pattern this controller uses in invite().
+        // uuid params must also be bound with an explicit type: Doctrine does not
+        // infer it for the JSON string id nor the tenant association id, and
+        // without it the row never matches and the re-key loop silently no-ops.
+        $filters = $this->documentRepository->getEntityManager()->getFilters();
+        $tenantFilterWasEnabled = $filters->isEnabled('tenant_filter');
+        if ($tenantFilterWasEnabled) {
+            $filters->disable('tenant_filter');
+        }
 
-            if ($document) {
-                // Remove any stale/old wrapped keys for this specific document/user combination
-                $staleKey = $documentKeyRepository->findOneBy([
-                    'document' => $document,
-                    'user' => $pendingUser
-                ]);
-                if ($staleKey) {
-                    $documentKeyRepository->remove($staleKey, true);
+        try {
+            foreach ($reKeyedMap as $docId => $wrappedKeyHex) {
+                $document = $this->documentRepository->createQueryBuilder('d')
+                    ->join('d.client', 'c')
+                    ->where('d.id = :id')
+                    ->andWhere('c.tenant = :tenant')
+                    ->setParameter('id', $docId, 'uuid')
+                    ->setParameter('tenant', $tenant->id->toString(), 'uuid')
+                    ->getQuery()
+                    ->getOneOrNullResult();
+
+                if ($document) {
+                    // Remove any stale/old wrapped keys for this specific document/user combination
+                    $staleKey = $documentKeyRepository->findOneBy([
+                        'document' => $document,
+                        'user' => $pendingUser
+                    ]);
+                    if ($staleKey) {
+                        $documentKeyRepository->remove($staleKey, true);
+                    }
+
+                    $newKey = new DocumentKey();
+                    $newKey->document = $document;
+                    $newKey->user = $pendingUser;
+                    $newKey->wrappedKeyHex = $wrappedKeyHex;
+                    $documentKeyRepository->save($newKey, true);
                 }
-
-                $newKey = new DocumentKey();
-                $newKey->document = $document;
-                $newKey->user = $pendingUser;
-                $newKey->wrappedKeyHex = $wrappedKeyHex;
-                $documentKeyRepository->save($newKey, true);
+            }
+        } finally {
+            if ($tenantFilterWasEnabled) {
+                $filters->enable('tenant_filter');
             }
         }
 
