@@ -2,6 +2,8 @@
 
 namespace App\Controller\Security;
 
+use App\Entity\Document;
+use App\Entity\DocumentKey;
 use App\Entity\User;
 use App\Entity\UserKey;
 use Doctrine\ORM\EntityManagerInterface;
@@ -157,12 +159,54 @@ class PasswordResetController extends AbstractController
                 $user->status = 'pending_approval';
             }
 
+            // 4. Escrow recovery (admins only): if the admin supplied their
+            //    recovery code, the browser used it to re-wrap the tenant escrow
+            //    key under the new admin key and re-wrap the admin's own document
+            //    keys. Persist both so escrow + document access are restored.
+            $recovered = false;
+            if (in_array('ROLE_ADMIN', $user->getRoles()) && $user->tenant) {
+                $newWrappedTenantKey = $request->request->get('new_wrapped_tenant_private_key');
+                if ($newWrappedTenantKey) {
+                    $user->tenant->wrappedTenantPrivateKey = $newWrappedTenantKey;
+                    $recovered = true;
+                }
+
+                $reKeyedMapRaw = $request->request->get('re_keyed_map');
+                $reKeyedMap = $reKeyedMapRaw ? json_decode($reKeyedMapRaw, true) : null;
+                if (is_array($reKeyedMap)) {
+                    $documentRepository = $this->em->getRepository(Document::class);
+                    $documentKeyRepository = $this->em->getRepository(DocumentKey::class);
+                    foreach ($reKeyedMap as $documentId => $wrappedKeyHex) {
+                        // find() applies the uuid type correctly (unlike an untyped
+                        // QB param); scope by tenant in PHP. No tenant_filter is
+                        // active here since the reset request is unauthenticated.
+                        $document = $documentRepository->find($documentId);
+                        if (!$document || $document->client->tenant !== $user->tenant) {
+                            continue;
+                        }
+                        // Update the existing wrapped key in place if present (a
+                        // remove+insert in one flush would trip the uniq_doc_user
+                        // constraint), otherwise create it.
+                        $documentKey = $documentKeyRepository->findOneBy(['document' => $document, 'user' => $user]);
+                        if (!$documentKey) {
+                            $documentKey = new DocumentKey();
+                            $documentKey->document = $document;
+                            $documentKey->user = $user;
+                            $this->em->persist($documentKey);
+                        }
+                        $documentKey->wrappedKeyHex = $wrappedKeyHex;
+                    }
+                }
+            }
+
             // Burn the temporary reset session token
             $session->remove('pwd_reset_token_' . $token);
             $this->em->flush();
 
             if ($user->status === 'pending_approval') {
                 $this->addFlash('success', 'Your password has been successfully reset! Because your security keys were regenerated, you must wait for an administrator to approve your account and synchronize historical vault documents before you can log in.');
+            } elseif ($recovered) {
+                $this->addFlash('success', 'Your administrator password has been reset and your recovery code restored access to your firm\'s encrypted documents.');
             } else {
                 $this->addFlash('success', 'Your administrator password has been successfully reset! You can now log in, but historical documents will remain unreadable until escrow recovery is performed.');
             }
@@ -170,9 +214,33 @@ class PasswordResetController extends AbstractController
             return $this->redirectToRoute('security_login');
         }
 
+        // For admins, expose the escrow material the browser needs to recover
+        // with a recovery code: the recovery envelope and every document's escrow
+        // envelope. These are E2EE-wrapped and useless without the recovery code.
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
+        $escrowEnvelopes = [];
+        if ($isAdmin && $user->tenant) {
+            $documents = $this->em->getRepository(Document::class)->createQueryBuilder('d')
+                ->join('d.client', 'c')
+                ->where('c.tenant = :tenant')
+                ->andWhere('d.wrappedEscrowKeyHex IS NOT NULL')
+                ->setParameter('tenant', $user->tenant->id->toString(), 'uuid')
+                ->getQuery()
+                ->getResult();
+            foreach ($documents as $document) {
+                $escrowEnvelopes[] = [
+                    'documentId' => $document->id->toString(),
+                    'wrappedEscrowKeyHex' => $document->wrappedEscrowKeyHex,
+                ];
+            }
+        }
+
         return $this->render('security/reset_forgotten_password.html.twig', [
             'token' => $token,
-            'userEmail' => $user->email
+            'userEmail' => $user->email,
+            'isAdmin' => $isAdmin,
+            'recoveryWrappedPrivateKey' => $isAdmin && $user->tenant ? $user->tenant->recoveryWrappedPrivateKey : null,
+            'escrowEnvelopes' => $escrowEnvelopes,
         ]);
     }
 }

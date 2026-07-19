@@ -103,10 +103,14 @@ class RegistrationController extends AbstractController
                     // Enforce Institutional Escrow Properties on the new Tenant
                     $tenantPublicKey = $form->get('tenantPublicKey')->getData();
                     $wrappedTenantPrivateKey = $form->get('wrappedTenantPrivateKey')->getData();
+                    // Second custody path: escrow key wrapped under the admin's
+                    // one-time recovery code (lets a locked-out admin recover).
+                    $recoveryWrappedPrivateKey = $form->get('recoveryWrappedPrivateKey')->getData();
 
-                    if ($tenantPublicKey && $wrappedTenantPrivateKey) {
+                    if ($tenantPublicKey && $wrappedTenantPrivateKey && $recoveryWrappedPrivateKey) {
                         $tenant->tenantPublicKey = $tenantPublicKey;
                         $tenant->wrappedTenantPrivateKey = $wrappedTenantPrivateKey;
+                        $tenant->recoveryWrappedPrivateKey = $recoveryWrappedPrivateKey;
                     } else {
                         $this->addFlash('danger', 'Escrow Key pair generation was interrupted. Tenant configuration aborted.');
                         return $this->redirectToRoute('register');

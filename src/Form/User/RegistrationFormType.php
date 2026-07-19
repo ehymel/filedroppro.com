@@ -102,6 +102,14 @@ class RegistrationFormType extends AbstractType
                 'constraints' => $options['has_invitation'] ? [] : [
                     new NotBlank(message: 'E2EE Encrypted Private Key envelope generation failed. Please refresh and try again.'),
                 ],
+            ])
+            // Second (recovery-code) custody envelope for the tenant escrow key.
+            // Only produced when registering a NEW firm, so presence is enforced
+            // in RegistrationController's new-firm branch rather than here (join
+            // and invite registrations legitimately have no tenant recovery key).
+            ->add('recoveryWrappedPrivateKey', HiddenType::class, [
+                'mapped' => false,
+                'required' => false,
             ]);
 
         // If the registering user does NOT have an invitation, render tenant creation/joining controls

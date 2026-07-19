@@ -77,4 +77,13 @@ class Tenant extends MappedSuperclassBase
 
     #[ORM\Column(type: 'text', nullable: true)]
     public ?string $wrappedTenantPrivateKey = null;
+
+    /**
+     * A second, password-independent custody envelope for the tenant escrow
+     * private key: the same private key encrypted (AES-GCM) under a key derived
+     * from the admin's one-time recovery code. Lets an admin who forgot their
+     * password re-establish escrow access without the (now lost) old admin key.
+     */
+    #[ORM\Column(type: 'text', nullable: true)]
+    public ?string $recoveryWrappedPrivateKey = null;
 }

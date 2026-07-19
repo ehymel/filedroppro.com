@@ -80,5 +80,40 @@
                 {{ form_end(registrationForm) }}
             </div>
         </div>
+
+        {# One-time recovery code — shown once, client-side, before submit. Never sent to the server. #}
+        <div data-registration-target="recoveryModal" class="d-none"
+             style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1080; display:flex; align-items:center; justify-content:center;">
+            <div class="card shadow-lg" style="max-width:560px; width:92%;">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-2">Save your recovery code</h4>
+                    <p class="text-muted">
+                        This one-time recovery code is the <strong>only way</strong> to regain access to your
+                        firm's encrypted documents if you ever forget your password. We cannot recover it for you.
+                        Store it somewhere safe (a password manager) before continuing.
+                    </p>
+                    <div class="d-flex align-items-center gap-2 my-3">
+                        <code data-registration-target="recoveryCodeOutput"
+                              class="fs-5 fw-bold p-3 bg-light border rounded flex-grow-1 text-center"
+                              style="letter-spacing:1px; word-break:break-all;"></code>
+                        <button type="button" class="btn btn-outline-secondary"
+                                data-action="click->registration#copyRecoveryCode">Copy</button>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="recovery-confirm"
+                               data-registration-target="recoveryConfirm"
+                               data-action="change->registration#toggleRecoveryConfirm">
+                        <label class="form-check-label" for="recovery-confirm">
+                            I have saved my recovery code in a safe place.
+                        </label>
+                    </div>
+                    <button type="button" class="btn btn-primary w-100"
+                            data-registration-target="recoveryContinue"
+                            data-action="click->registration#confirmRecoverySave" disabled>
+                        Continue & Create Account
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}

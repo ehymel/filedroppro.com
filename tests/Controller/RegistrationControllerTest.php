@@ -82,6 +82,7 @@ class RegistrationControllerTest extends WebTestCase
         $this->assertSame('active', $user->tenant->status);
         $this->assertStringStartsWith('TX-', (string) $user->tenant->joinCode);
         $this->assertSame('tenant-public-key', $user->tenant->tenantPublicKey);
+        $this->assertSame('recovery-wrapped-tenant-private-key', $user->tenant->recoveryWrappedPrivateKey);
 
         // The E2EE key material was persisted for the user.
         $this->assertNotNull($user->userKey);
@@ -306,6 +307,7 @@ class RegistrationControllerTest extends WebTestCase
             'registration_form[firmName]' => $firmName,
             'registration_form[tenantPublicKey]' => 'tenant-public-key',
             'registration_form[wrappedTenantPrivateKey]' => 'wrapped-tenant-private-key',
+            'registration_form[recoveryWrappedPrivateKey]' => 'recovery-wrapped-tenant-private-key',
         ];
     }
 
