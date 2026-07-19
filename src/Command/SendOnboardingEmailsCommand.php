@@ -114,7 +114,7 @@ class SendOnboardingEmailsCommand extends Command
                 // Filter to find the Administrator possessing ROLE_ADMIN
                 $targetAdmin = null;
                 foreach ($admins as $admin) {
-                    if (in_array('ROLE_ADMIN', $admin->getRoles())) {
+                    if (in_array('ROLE_ADMIN', $admin->getRoles()) || in_array('ROLE_SUPERUSER', $admin->getRoles())) {
                         $targetAdmin = $admin;
                         break;
                     }
@@ -128,7 +128,7 @@ class SendOnboardingEmailsCommand extends Command
                 try {
                     // Generate system action route endpoints dynamically inside console commands
                     $context = $this->router->getContext();
-                    $context->setHost('yoursecureportal.com'); // Configure with production host
+                    $context->setHost('filedroppro.com');
                     $context->setScheme('https');
 
                     $loginUrl = $this->router->generate('security_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
@@ -141,7 +141,7 @@ class SendOnboardingEmailsCommand extends Command
                         ->htmlTemplate($templateName)
                         ->context([
                             'recipient_name' => $targetAdmin->firstName.' '.$targetAdmin->lastName,
-                            'trial_end_date' => $tenant->currentPeriodEnd,
+                            'trial_end_date' => $tenant->currentPeriodEnd->format('Y-m-d'),
                             'firm_name' => $tenant->firmName,
                             'login_url' => $loginUrl,
                             'billing_url' => $billingUrl,

@@ -1,5 +1,4 @@
 {% apply inky_to_html|inline_css(source('@styles/onboarding_email.css')) %}
-{% apply inky_to_html %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
@@ -8,46 +7,39 @@
     <title>Welcome to FileDrop Pro</title>
 </head>
 <body>
+    <!-- HIDDEN PREHEADER SECTION: Invisible in email, visible in client preview panes -->
+    <div style="display: none; max-height: 0; overflow: hidden; font-size: 0; color: transparent; line-height: 0; mso-hide: all;">
+        {% block preheader %}{% endblock %}
+    </div>
+    <!-- Anti-bleed padding hack to prevent email client from pulling body text into preview -->
+    <div style="display: none; max-height: 0; overflow: hidden; font-size: 0; color: transparent; line-height: 0; mso-hide: all;">
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    </div>
 
-<!-- HIDDEN PREHEADER SECTION: Invisible in email, visible in client preview panes -->
-<div style="display: none; max-height: 0; overflow: hidden; font-size: 0; color: transparent; line-height: 0; mso-hide: all;">
-    {% block preheader %}{% endblock %}
-</div>
-<!-- Anti-bleed padding hack to prevent email client from pulling body text into preview -->
-<div style="display: none; max-height: 0; overflow: hidden; font-size: 0; color: transparent; line-height: 0; mso-hide: all;">
-    &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
-</div>
+    <!-- Main Inky Grid Layout -->
+    <container class="main-container">
+        <!-- Header Section -->
+        <row class="header">
+            <columns>
+                <img src="{{ email.image('@images/FDP_logo_100.png') }}" alt="FileDrop Pro">
+            </columns>
+        </row>
 
-<!-- Main Inky Grid Layout -->
-<container class="main-container">
+        <row class="content">
+            <columns>
+                {% block content %}{% endblock %}
+            </columns>
+        </row>
 
-    <!-- Header Section -->
-    <row class="header">
-        <columns>
-            <h1 class="brand-text">FileDrop <span class="brand-accent">Pro</span></h1>
-        </columns>
-    </row>
-    <row class="header">
-        <columns>
-            <img src="{{ email.image('@images/FDP_logo_100.png') }}" alt="FileDrop Pro">
-        </columns>
-    </row>
-
-    <row class="content">
-        <columns>
-            {% block content %}{% endblock %}
-        </columns>
-    </row>
-
-    <!-- Footer Section -->
-    <row class="footer">
-        <columns>
-            <p class="brand-tagline">FileDrop Pro</p>
-            <p>Zero-Knowledge, Zero-Login Secure File Dropboxes. Conforms strictly to the AES-GCM 256 and RSA-OAEP envelope cryptographic standards.</p>
-            <p>You are receiving this onboarding notification because you registered your workspace, {{ firm_name }}, for a free 14-day trial of FileDrop Pro.</p>
-        </columns>
-    </row>
-</container>
+        <!-- Footer Section -->
+        <row class="footer">
+            <columns>
+                <p class="brand-tagline">FileDrop Pro</p>
+                <p>Zero-Knowledge, Zero-Login Secure File Dropboxes. Conforms strictly to the AES-GCM 256 and RSA-OAEP envelope cryptographic standards.</p>
+                <p>You are receiving this onboarding notification because you registered your workspace, {{ firm_name }}, for a free 14-day trial of FileDrop Pro.</p>
+            </columns>
+        </row>
+    </container>
 </body>
 </html>
 {% endapply %}
