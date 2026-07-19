@@ -81,6 +81,12 @@ class RegistrationControllerTest extends WebTestCase
         $this->assertSame($firmName, $user->tenant->firmName);
         $this->assertSame('active', $user->tenant->status);
         $this->assertStringStartsWith('TX-', (string) $user->tenant->joinCode);
+
+        // The 14-day card-free trial window is established at registration.
+        $this->assertSame('trial', $user->tenant->subscriptionPlan);
+        $this->assertNotNull($user->tenant->currentPeriodEnd, 'The trial must have an end date.');
+        $this->assertGreaterThan(new \DateTimeImmutable('+13 days'), $user->tenant->currentPeriodEnd);
+        $this->assertLessThan(new \DateTimeImmutable('+15 days'), $user->tenant->currentPeriodEnd);
         $this->assertSame('tenant-public-key', $user->tenant->tenantPublicKey);
         $this->assertSame('recovery-wrapped-tenant-private-key', $user->tenant->recoveryWrappedPrivateKey);
 

@@ -100,6 +100,15 @@ class RegistrationController extends AbstractController
                     $tenant->firmName = $form->get('firmName')->getData();
                     $tenant->status = 'active';
 
+                    // Start the card-free 14-day trial at creation so the
+                    // subscription window is defined from day one (matches
+                    // BillingController::subscribe's trial path). Without this the
+                    // trial has no end date and the billing dashboard renders it
+                    // as already expired.
+                    $tenant->subscriptionPlan = 'trial';
+                    $tenant->currentPeriodEnd = new \DateTimeImmutable('+14 days');
+                    $tenant->cancelAtPeriodEnd = false;
+
                     // Enforce Institutional Escrow Properties on the new Tenant
                     $tenantPublicKey = $form->get('tenantPublicKey')->getData();
                     $wrappedTenantPrivateKey = $form->get('wrappedTenantPrivateKey')->getData();
