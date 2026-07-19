@@ -10,13 +10,17 @@ use App\Form\User\RegistrationFormType;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\TenantNotificationService;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RegistrationController extends AbstractController
 {
@@ -25,7 +29,8 @@ class RegistrationController extends AbstractController
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
         EntityManagerInterface $entityManager,
-        TenantNotificationService $tenantNotificationService
+        TenantNotificationService $tenantNotificationService,
+        MailerInterface $mailer
     ): Response {
         $isNewTenant = false;
         $token = $request->query->get('token');
@@ -186,6 +191,32 @@ class RegistrationController extends AbstractController
 
             if ($isNewTenant) {
                 $tenantNotificationService->notifySuperusersOfNewTenant($tenant, $user);
+            }
+
+            // Dispatch the Day 1 Welcome Onboarding Email if a new organization/tenant is initialized
+            if (isset($mode) && $mode === 'new') {
+                try {
+                    $loginUrl = $this->generateUrl('security_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
+                    $billingUrl = $this->generateUrl('internal_billing_dashboard', [], UrlGeneratorInterface::ABSOLUTE_URL);
+                    $trialEnd = $tenant->getCurrentPeriodEnd();
+
+                    $message = new TemplatedEmail()
+                        ->from(new Address('onboarding@filedroppro.com', 'FileDrop Pro Onboarding'))
+                        ->to($user->email)
+                        ->subject("Welcome to FileDrop Pro: Let's set up your secure drop link (no passwords required)")
+                        ->htmlTemplate('emails/onboarding/day1.html.twig')
+                        ->context([
+                            'recipient_name' => $user->firstName.' '.$user->lastName,
+                            'trial_end_date' => $tenant->currentPeriodEnd->format('Y-m-d'),
+                            'firm_name' => $tenant->firmName,
+                            'login_url' => $loginUrl,
+                            'billing_url' => $billingUrl,
+                        ]);
+
+                    $mailer->send($message);
+                } catch (\Exception $e) {
+                    // Fail silently or log error internally so that registration UX is never interrupted by SMTP issues
+                }
             }
 
             if ($user->status === User::STATUS_PENDING) {

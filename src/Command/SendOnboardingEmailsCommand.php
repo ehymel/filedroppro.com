@@ -79,10 +79,6 @@ class SendOnboardingEmailsCommand extends Command
             $templateName = null;
 
             switch ($daysElapsed) {
-                case 0: // Day 1: Send Immediately
-                    $emailSubject = "Welcome to FileDrop Pro: Let's set up your secure drop link (no passwords required)";
-                    $templateName = 'emails/onboarding/day1.html.twig';
-                    break;
                 case 3: // Day 4: ROI of Frictionless Intake
                     $emailSubject = "Are portal password resets draining your billable hours? Let’s calculate the math.";
                     $templateName = 'emails/onboarding/day4.html.twig';
