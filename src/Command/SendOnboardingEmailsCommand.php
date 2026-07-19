@@ -56,16 +56,13 @@ class SendOnboardingEmailsCommand extends Command
                 continue;
             }
 
-            // Strip the time component to ensure safe date-diff calculations
-            $trialEndDay = \DateTimeImmutable::createFromFormat('Y-m-d', $trialEnd->format('Y-m-d'))->setTime(0, 0);
-
             // Standard trials last 14 days. Calculate days elapsed:
             // If there are 14 days remaining, elapsed = 0 (Day 1)
             // If there are 11 days remaining, elapsed = 3 (Day 4)
             // If there are 7 days remaining, elapsed = 7 (Day 8)
             // If there are 4 days remaining, elapsed = 10 (Day 11)
             // If there are 1 day remaining, elapsed = 13 (Day 14)
-            $daysRemaining = $now->diff($trialEndDay)->days;
+            $daysRemaining = $now->diff($trialEnd)->days;
             $daysElapsed = 14 - $daysRemaining;
 
             $io->text(sprintf(
@@ -97,9 +94,9 @@ class SendOnboardingEmailsCommand extends Command
                     $emailSubject = "Your FileDrop Pro free trial is ending in 3 days. Here is what happens next.";
                     $templateName = 'emails/onboarding/day11.html.twig';
                     break;
-                case 13: // Day 14: Hard-Close Trial Expired
+                case 14: // Day 15: Hard-Close Trial Expired
                     $emailSubject = "Trial Expired: Your secure drop link is offline. Here is how to restore access.";
-                    $templateName = 'emails/onboarding/day14.html.twig';
+                    $templateName = 'emails/onboarding/day15.html.twig';
                     break;
             }
 

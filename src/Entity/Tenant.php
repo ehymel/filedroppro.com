@@ -61,7 +61,16 @@ class Tenant extends MappedSuperclassBase
     public bool $cancelAtPeriodEnd = false;
 
     #[ORM\Column(nullable: true)]
-    public ?\DateTimeImmutable $currentPeriodEnd = null;
+    public ?\DateTimeImmutable $currentPeriodEnd = null {
+        set(?\DateTimeImmutable $endDate) {
+            if ($endDate === null) {
+                $this->currentPeriodEnd = null;
+                return;
+            }
+            // periods end at midnight, so set the time to 23:59:59
+            $this->currentPeriodEnd = $endDate->setTime(23, 59, 59);
+        }
+    }
 
     #[ORM\Column(type: 'text', nullable: true)]
     public ?string $tenantPublicKey = null;
