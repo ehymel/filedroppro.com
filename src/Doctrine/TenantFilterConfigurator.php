@@ -43,7 +43,7 @@ readonly class TenantFilterConfigurator
             // Exclude the Billing dashboard route from the blockade
             // so the Admin can still access the Stripe customer portal to update their card!
             $currentRoute = $event->getRequest()->attributes->get('_route');
-            if (!in_array($currentRoute, ['internal_billing_dashboard', 'internal_billing_portal', 'security_logout'])) {
+            if (!in_array($currentRoute, ['internal_billing_dashboard', 'internal_billing_portal', 'internal_billing_subscribe', 'security_logout'])) {
 
                 // Redirect them gracefully to the Billing subscription warning screen
                 $response = new RedirectResponse(

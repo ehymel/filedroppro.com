@@ -140,6 +140,31 @@ class BillingControllerTest extends WebTestCase
         $this->assertGreaterThan(new \DateTimeImmutable('+13 days'), $fresh->currentPeriodEnd);
     }
 
+    public function testSuspendedTenantCanReachSubscribeToReactivate(): void
+    {
+        // Regression: TenantFilterConfigurator redirects suspended tenants away
+        // from most routes, but its allow-list must include the subscribe route
+        // so a lapsed tenant can re-activate. Before the fix the configurator
+        // bounced this POST to the dashboard and the tenant stayed suspended.
+        $tenant = $this->createTenant('suspended', 'trial');
+        $admin = $this->createUser($tenant, ['ROLE_ADMIN']);
+        $tenantId = $tenant->id->toString();
+
+        $this->client->loginUser($admin);
+        $token = $this->tokenForForm('/subscribe');
+        $this->client->request('POST', '/internal/billing/subscribe', [
+            '_token' => $token,
+            'plan' => 'trial',
+        ]);
+
+        $this->assertResponseRedirects('/internal/billing/');
+
+        $this->em->clear();
+        $fresh = $this->em->getRepository(Tenant::class)->find($tenantId);
+        $this->assertSame('active', $fresh->status, 'A suspended tenant must be able to re-activate via subscribe.');
+        $this->assertSame('trial', $fresh->subscriptionPlan);
+    }
+
     public function testSubscribeFirstTimeRedirectsToStripeCheckout(): void
     {
         // No existing Stripe subscription -> standard checkout path.
