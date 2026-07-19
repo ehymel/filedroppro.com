@@ -87,15 +87,21 @@
                     <span class="bi bi-shield-slash-fill" style="color: red;"></span> Keys Out of Sync
                 </td>
                 <td>
-                    <button type="button"
-                            class="btn btn-sm btn-primary"
-                            data-user-id="{{ pending.id.toString() }}"
-                            data-sync-data-url="{{ path('internal_staff_approval_sync', {'id': pending.id.toString()}) }}"
-                            data-submit-url="{{ path('internal_staff_approval_submit', {'id': pending.id.toString()}) }}"
-                            data-action="click->escrow-sync#startSync"
-                            data-escrow-sync-target="submitButton">
-                        Sync Keys & Approve
-                    </button>
+                    {% if is_granted('RESYNC_KEYS') %}
+                        <button type="button"
+                                class="btn btn-sm btn-primary"
+                                data-user-id="{{ pending.id.toString() }}"
+                                data-sync-data-url="{{ path('internal_staff_approval_sync', {'id': pending.id.toString()}) }}"
+                                data-submit-url="{{ path('internal_staff_approval_submit', {'id': pending.id.toString()}) }}"
+                                data-action="click->escrow-sync#startSync"
+                                data-escrow-sync-target="submitButton">
+                            Sync Keys & Approve
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-sm btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Subscription inactive or past due">
+                            Subscription Locked
+                        </button>
+                    {% endif %}
                 </td>
             </tr>
         {% else %}

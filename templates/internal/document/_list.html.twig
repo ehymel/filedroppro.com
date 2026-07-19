@@ -52,23 +52,29 @@
                         <td class="nowrap">{{ format_bytes(doc.fileSize) }}</td>
                         <td class="nowrap"><span class="bi bi-lock-fill" style="color: green;"></span> Encrypted</td>
                         <td>
-                            <button class="btn btn-sm btn-primary" type="button"
-                                    data-action="click->document-viewer#decryptAndDownload"
-                                    data-document-id="{{ doc.id.toString() }}"
-                                    data-download-url="{{ path('internal_documents_payload', {'id': doc.id.toString()}) }}"
-                                    data-metadata-url="{{ path('internal_documents_metadata', {'id': doc.id.toString()}) }}">
-                                Decrypt & Download
-                            </button>
+                            {% if is_granted('DOWNLOAD_DECRYPT_DOCUMENT') %}
+                                <button class="btn btn-sm btn-primary" type="button"
+                                        data-action="click->document-viewer#decryptAndDownload"
+                                        data-document-id="{{ doc.id.toString() }}"
+                                        data-download-url="{{ path('internal_documents_payload', {'id': doc.id.toString()}) }}"
+                                        data-metadata-url="{{ path('internal_documents_metadata', {'id': doc.id.toString()}) }}">
+                                    Decrypt & Download
+                                </button>
+                                <button class="btn btn-sm btn-danger" type="button"
+                                        data-controller="sweetalert"
+                                        data-action="click->sweetalert#remove"
+                                        data-sweetalert-title-value="Delete document?"
+                                        data-sweetalert-text-value="This action will mark the file for deletion in 10 days. Are you sure you want to continue?"
+                                        data-sweetalert-delete-url-value="{{ path('internal_documents_soft_delete', {'id': doc.id.toString()}) }}"
+                                        data-sweetalert-csrf-token-value="{{ csrf_token('delete_document_' ~ doc.id.toString()) }}">
+                                    Delete
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-sm btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Subscription inactive or past due">
+                                    Subscription Locked
+                                </button>
+                            {% endif %}
 
-                            <button class="btn btn-sm btn-danger" type="button"
-                                    data-controller="sweetalert"
-                                    data-action="click->sweetalert#remove"
-                                    data-sweetalert-title-value="Delete document?"
-                                    data-sweetalert-text-value="This action will mark the file for deletion in 10 days. Are you sure you want to continue?"
-                                    data-sweetalert-delete-url-value="{{ path('internal_documents_soft_delete', {'id': doc.id.toString()}) }}"
-                                    data-sweetalert-csrf-token-value="{{ csrf_token('delete_document_' ~ doc.id.toString()) }}">
-                                Delete
-                            </button>
                         </td>
                     </tr>
                 {% endfor %}

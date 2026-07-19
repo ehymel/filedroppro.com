@@ -144,7 +144,7 @@ class StripeBillingService
             if ($subscription) {
                 $cancelAtPeriodEnd = $subscription->cancel_at_period_end ?? false;
                 $currentPeriodEnd = $subscription->current_period_end
-                    ? (new \DateTimeImmutable())->setTimestamp($subscription->current_period_end)
+                    ? new \DateTimeImmutable()->setTimestamp($subscription->current_period_end)
                     : null;
 
                 if ($tenant->cancelAtPeriodEnd !== $cancelAtPeriodEnd) {

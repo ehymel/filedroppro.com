@@ -59,6 +59,7 @@ class DocumentViewerController extends AbstractController
      * Securely streams the raw, encrypted .enc binary block from AWS S3 directly to the browser.
      */
     #[Route(path: '/download-payload/{id}', name: 'payload', methods: ['GET'])]
+    #[IsGranted('DOWNLOAD_DECRYPT_DOCUMENT')]
     public function downloadPayload(Document $document): Response
     {
         // Security Check: Verify that this document belongs to the active user's tenant

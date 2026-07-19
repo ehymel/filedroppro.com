@@ -44,6 +44,7 @@ class DropRequestController extends AbstractController
     }
 
     #[Route(path: '/new', name: 'new', methods: ['GET', 'POST'])]
+    #[IsGranted('CREATE_FILE_REQUEST')]
     public function new(Request $request, ClientRepository $clientRepository): Response
     {
         $tenant = $this->getUser()->tenant;
@@ -90,6 +91,7 @@ class DropRequestController extends AbstractController
     }
 
     #[Route('/resend/{id}', name: 'resend', methods: ['POST'])]
+    #[IsGranted('CREATE_FILE_REQUEST')]
     public function resend(DropRequest $dropRequest, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('resend_request_' . $dropRequest->id->toString(), $request->request->get('_token'))) {

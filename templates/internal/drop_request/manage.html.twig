@@ -20,6 +20,7 @@
         </header>
 
         <div {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
+            {% if is_granted('CREATE_FILE_REQUEST') %}
             <button class="btn btn-primary fw-semibold py-2"
                     data-action="modal-form#open"
                     data-form-url="{{ path('internal_requests_new') }}"
@@ -29,6 +30,11 @@
             </button>
 
             {{ include('_modal.html.twig', { modalTitle: 'Invite External Client' }) }}
+            {% else %}
+                <button type="button" class="btn btn-sm btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Subscription inactive or past due">
+                    Subscription Locked
+                </button>
+            {% endif %}
         </div>
 
         <div class="row flex-xl-nowrap mt-5">

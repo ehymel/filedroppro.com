@@ -56,32 +56,38 @@
                 <span>{{ request.status|capitalize }}</span>
             </td>
             <td>
-                {% if request.status == 'pending' %}
-                    <form action="{{ path('internal_requests_resend', {'id': request.id.toString()}) }}" method="POST" style="display:inline;">
-                        <input type="hidden" name="_token" value="{{ csrf_token('resend_request_' ~ request.id.toString()) }}">
-                        <button type="submit" class="btn btn-sm btn-info">Resend Email</button>
-                    </form>
+                {% if is_granted('CREATE_FILE_REQUEST') %}
+                    {% if request.status == 'pending' %}
+                        <form action="{{ path('internal_requests_resend', {'id': request.id.toString()}) }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('resend_request_' ~ request.id.toString()) }}">
+                            <button type="submit" class="btn btn-sm btn-info">Resend Email</button>
+                        </form>
 
-                    <button type="button" class="btn btn-sm btn-danger"
-                            data-controller="sweetalert"
-                            data-action="click->sweetalert#remove"
-                            data-sweetalert-title-value="Revoke this request?"
-                            data-sweetalert-text-value="The client will no longer be able to use it."
-                            data-sweetalert-confirm-button-text-value="Yes, revoke it!"
-                            data-sweetalert-delete-url-value="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}"
-                            data-sweetalert-csrf-token-value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
-                        Revoke
-                    </button>
+                        <button type="button" class="btn btn-sm btn-danger"
+                                data-controller="sweetalert"
+                                data-action="click->sweetalert#remove"
+                                data-sweetalert-title-value="Revoke this request?"
+                                data-sweetalert-text-value="The client will no longer be able to use it."
+                                data-sweetalert-confirm-button-text-value="Yes, revoke it!"
+                                data-sweetalert-delete-url-value="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}"
+                                data-sweetalert-csrf-token-value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
+                            Revoke
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-sm btn-danger"
+                                data-controller="sweetalert"
+                                data-action="click->sweetalert#remove"
+                                data-sweetalert-title-value="Hide this request?"
+                                data-sweetalert-text-value="The request will be removed from this list. You will have the option to show it again later."
+                                data-sweetalert-confirm-button-text-value="Yes, hide it!"
+                                data-sweetalert-delete-url-value="{{ path('internal_requests_soft_delete', {'id': request.id.toString()}) }}"
+                                data-sweetalert-csrf-token-value="{{ csrf_token('delete_request_' ~ request.id.toString()) }}">
+                            Hide
+                        </button>
+                    {% endif %}
                 {% else %}
-                    <button type="button" class="btn btn-sm btn-danger"
-                            data-controller="sweetalert"
-                            data-action="click->sweetalert#remove"
-                            data-sweetalert-title-value="Hide this request?"
-                            data-sweetalert-text-value="The request will be removed from this list. You will have the option to show it again later."
-                            data-sweetalert-confirm-button-text-value="Yes, hide it!"
-                            data-sweetalert-delete-url-value="{{ path('internal_requests_soft_delete', {'id': request.id.toString()}) }}"
-                            data-sweetalert-csrf-token-value="{{ csrf_token('delete_request_' ~ request.id.toString()) }}">
-                        Hide
+                    <button type="button" class="btn btn-sm btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Subscription inactive or past due">
+                        Subscription Locked
                     </button>
                 {% endif %}
             </td>

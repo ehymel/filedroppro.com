@@ -3,19 +3,25 @@
         <h3>Internal Staff Invitations</h3>
 
         <div class="ms-4" {{ stimulus_controller('modal-form', {hideFullPageOpenButton: true}) }}>
-            <button class="btn btn-primary btn-sm fw-semibold py-2 mb-3"
-                    data-action="modal-form#open"
-                    data-form-url="{{ path('internal_staff_invite') }}"
-                    data-modal-title="Invite Staff Member"
-            >
-                <span class="bi bi-person-plus me-2"></span> Send New Invitation to an Internal Staff Member
-            </button>
+            {% if is_granted('SEND_SECURE_INVITATION') %}
+                <button class="btn btn-primary btn-sm fw-semibold py-2 mb-3"
+                        data-action="modal-form#open"
+                        data-form-url="{{ path('internal_staff_invite') }}"
+                        data-modal-title="Invite Staff Member"
+                >
+                    <span class="bi bi-person-plus me-2"></span> Send New Invitation to an Internal Staff Member
+                </button>
 
-            {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
+                {{ include('_modal.html.twig', { modalTitle: 'Invite Internal Staff Member' }) }}
+            {% else %}
+                <button type="button" class="btn btn-sm btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Subscription inactive or past due">
+                    Subscription Locked
+                </button>
+            {% endif %}
         </div>
     </div>
     <div class="row">
-        <div class="col-12 col-md-10 col-xl-8" data-reload-content-target="content">
+        <div data-reload-content-target="content">
             {{ include('internal/staff/_invitation_list.html.twig') }}
         </div>
     </div>
