@@ -219,6 +219,13 @@ class RegistrationController extends AbstractController
                 }
             }
 
+            if ($isNewTenant) {
+                // Signal the client to fire the Google Ads trial-conversion event
+                // on the next page load. Consumed once in base.html.twig so it only
+                // tracks genuine new-firm trial signups (not invites or join-code users).
+                $this->addFlash('google_trial_conversion', '1');
+            }
+
             if ($user->status === User::STATUS_PENDING) {
                 $this->addFlash('success', 'Account registered! For security, an administrator must now synchronize your cryptographic keys before you can access documents.');
                 return $this->redirectToRoute('security_login');
