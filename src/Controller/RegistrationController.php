@@ -140,6 +140,7 @@ class RegistrationController extends AbstractController
                     $user->roles = ['ROLE_ADMIN'];
                 } else {
                     $joinCode = strtoupper(trim((string)$form->get('joinCode')->getData()));
+                    /** @var Tenant $tenant */
                     $tenant = $entityManager->getRepository(Tenant::class)->findOneBy([
                         'joinCode' => $joinCode
                     ]);
@@ -198,7 +199,6 @@ class RegistrationController extends AbstractController
                 try {
                     $loginUrl = $this->generateUrl('security_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
                     $billingUrl = $this->generateUrl('internal_billing_dashboard', [], UrlGeneratorInterface::ABSOLUTE_URL);
-                    $trialEnd = $tenant->getCurrentPeriodEnd();
 
                     $message = new TemplatedEmail()
                         ->from(new Address('onboarding@filedroppro.com', 'FileDrop Pro Onboarding'))
