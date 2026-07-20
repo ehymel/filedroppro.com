@@ -35,9 +35,9 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
+            {% set currentRoute = app.request.attributes.get('_route') %}
             {% block header_navigation %}
                 {% if is_granted('ROLE_USER') %}
-                    {% set currentRoute = app.request.attributes.get('_route') %}
                     <div class="collapse navbar-collapse" id="mainNavbar">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                             <li class="nav-item">
@@ -113,7 +113,9 @@
                         {% set remainingDays = max(0, app.user.tenant.currentPeriodEnd.diff(date()).days) %}
                         <span class="ms-3 badge rounded-pill {{ remainingDays > 5 ? 'text-bg-info' : 'text-bg-danger' }}">Time remaining in trial: {{ remainingDays }} days</span>
                     {% endif %}
-                    <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
+                    {% if not (currentRoute matches '{^internal_billing*}') %}
+                        <a href="{{ path('internal_billing_dashboard') }}" class="ms-3 btn btn-sm btn-outline-primary">Manage Subscription</a>
+                    {% endif %}
                 </p>
             </div>
         </nav>
