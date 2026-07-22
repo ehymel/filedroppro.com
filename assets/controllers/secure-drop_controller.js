@@ -59,11 +59,13 @@ export default class extends Controller {
         this.uppy.use(Dashboard, {
             target: this.uppyContainerTarget,
             inline: true,
-            height: 250,
+            height: 350,
+            // width: 600,
             showProgressDetails: true,
-            hideUploadButton: true, // We want the main HTML form button to trigger the upload
+            hideUploadButton: false, // We want the main HTML form button to trigger the upload
             // theme: 'dark', // Matches your slate-900 background beautifully
-            proudlyDisplayPoweredByUppy: true
+            proudlyDisplayPoweredByUppy: false,
+            // showRemoveButtonAfterComplete: true
         });
 
         // Use Uppy's pre-processor step to intercept and locally encrypt file buffers

@@ -13,13 +13,16 @@
          data-secure-drop-rename-url-template-value="{{ path('drop_rename', {'documentId': 'DOCUMENT_ID'}) }}"
          data-secure-drop-delete-url-template-value="{{ path('drop_delete', {'documentId': 'DOCUMENT_ID'}) }}"
     >
-        <header class="border-bottom pb-4 mb-3">
+        <header class="border-bottom pb-2 mb-3">
             <div class="row align-items-center">
-                <div class="col-12 col-md-8">
-                    <h1 class="mb-2">Document Request for {{ dropRequest.clientName }}</h1>
+                <div class="col-12 col-lg-8 col-md-10">
+                    <h1 class="mb-2">Document Request</h1>
                     <div class="bg-success-subtle text-success-emphasis border-start border-success border-4 rounded-end p-3 mb-4">
-                    <p><strong>From:</strong> {{ dropRequest.createdBy.firstName }} {{ dropRequest.createdBy.lastName }}
-                        ({{ dropRequest.createdBy.email }}) at {{ dropRequest.tenant.firmName }}:</p>
+                    <p><strong>From:</strong>
+                        {{ dropRequest.createdBy.firstName }} {{ dropRequest.createdBy.lastName }}
+                        ({{ dropRequest.createdBy.email }}) at {{ dropRequest.tenant.firmName }}</p>
+                    <p><strong>To:</strong>
+                        {{ dropRequest.clientName }} ({{ dropRequest.clientEmail }})</p>
                     {% if dropRequest is defined and dropRequest is not null %}
                         <strong>Instructions:</strong> {{ dropRequest.instructions }}
                     {% endif %}
@@ -29,21 +32,22 @@
         </header>
 
         <div class="row">
-            <div class="col">
+            <div class="col-6">
                 {% include 'flash_messages.html.twig' %}
 
-                <p class="lead">
-                    Your files are encrypted before being uploaded.
-                    No one, including our hosting providers, can read your documents.
-                </p>
-
                 {{ form_start(form, { 'attr': { 'data-action': 'submit->secure-drop#processUpload', 'data-secure-drop-target': 'form' } }) }}
-                    {{ form_row(form.senderName, { 'attr': { 'data-secure-drop-target': 'senderName' } }) }}
-                    {{ form_row(form.senderEmail, { 'attr': { 'data-secure-drop-target': 'senderEmail' } }) }}
+                    {# Sender identity comes from the drop request; keep it as hidden inputs so the
+                       Stimulus controller can still read the values, but display it read-only. #}
+                    {{ form_widget(form.senderName, { 'attr': { 'data-secure-drop-target': 'senderName' } }) }}
+                    {{ form_widget(form.senderEmail, { 'attr': { 'data-secure-drop-target': 'senderEmail' } }) }}
 
                     <div id="upload-status-alert" class="d-none alert alert-danger" data-secure-drop-target="uploadStatusAlert" role="alert"></div>
                     <fieldset>
-                        <legend>Select Files</legend>
+                        <legend>Select Files to Upload</legend>
+                        <p class="lead">
+                            Your files are encrypted before being uploaded.
+                            No one, including our hosting providers, can read your documents.
+                        </p>
 
                         {# Uppy Dashboard Mounting Container #}
                         <div id="uppy-dashboard-container" data-secure-drop-target="uppyContainer"></div>
@@ -66,15 +70,15 @@
                         <input type="hidden" data-secure-drop-target="reqToken" value="{{ dropRequest.token }}">
                     {% endif %}
 
-                    <button type="submit" class="btn btn-primary ms-3 mt-2" data-secure-drop-target="submitBtn">
-                        Click Here To Upload Files
-                    </button>
+{#                    <button type="submit" class="btn btn-primary ms-4 mt-2" data-secure-drop-target="submitBtn">#}
+{#                        Click Here To Upload Files#}
+{#                    </button>#}
                 {{ form_end(form) }}
             </div>
             <div class="col-5">
                 <div id="uploaded-files-container" class="mt-4 d-none" data-secure-drop-target="uploadedFilesContainer">
                     <h4>Files Uploaded in this Session</h4>
-                    <p>Click on the file to edit the file name.</p>
+                    <p>Click on the file to edit the file name, or to delete the file from our server click 'Delete'.</p>
                     <ul class="list-group" data-secure-drop-target="uploadedFilesList"></ul>
                 </div>
             </div>
