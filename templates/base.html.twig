@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18337607403"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'AW-18337607403');
-    </script>
-
-    {# Fire the Google Ads conversion once, only after a new trial tenant registers.
-       The 'google_trial_conversion' flash is set by RegistrationController and
-       consumed here (in <head>, before flash_messages renders) so it fires exactly
-       once and never shows up as a visible alert. #}
-    {% for _ in app.flashes('google_trial_conversion') %}
+    {% if not app.user %}
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18337607403"></script>
         <script>
-            gtag('event', 'conversion', {
-                'send_to': 'AW-18337607403/du3mCMe52tMcEOvdhqhE',
-                'value': 1.0,
-                'currency': 'USD'
-            });
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-18337607403');
         </script>
-    {% endfor %}
+
+        {# Fire the Google Ads conversion once, only after a new trial tenant registers.
+           The 'google_trial_conversion' flash is set by RegistrationController and
+           consumed here (in <head>, before flash_messages renders) so it fires exactly
+           once and never shows up as a visible alert. #}
+        {% for _ in app.flashes('google_trial_conversion') %}
+            <script>
+                gtag('event', 'conversion', {
+                    'send_to': 'AW-18337607403/du3mCMe52tMcEOvdhqhE',
+                    'value': 1.0,
+                    'currency': 'USD'
+                });
+            </script>
+        {% endfor %}
+    {% endif %}
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
