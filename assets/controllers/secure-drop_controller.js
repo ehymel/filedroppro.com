@@ -59,7 +59,7 @@ export default class extends Controller {
         this.uppy.use(Dashboard, {
             target: this.uppyContainerTarget,
             inline: true,
-            height: 350,
+            height: 250,
             showProgressDetails: true,
             hideUploadButton: true, // We want the main HTML form button to trigger the upload
             // theme: 'dark', // Matches your slate-900 background beautifully
@@ -438,7 +438,7 @@ export default class extends Controller {
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-success rounded-pill me-2">Uploaded</span>
+<!--                            <span class="badge bg-success rounded-pill me-2">Uploaded</span>-->
                             <button class="badge bg-danger rounded-pill me-2" style="border: none;"
                                     data-action="click->secure-drop#deleteFile"
                                     data-document-id="${file.documentId}"

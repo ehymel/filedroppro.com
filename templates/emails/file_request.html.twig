@@ -4,19 +4,20 @@
     <h2>Secure Document Request</h2>
     <p>Dear {{ clientName }},</p>
 
-    <p><strong>{{ senderName }}</strong> at <strong>{{ firmName }}</strong> has requested that you securely upload files to their document vault.</p>
+    <p><strong>{{ senderName }}</strong> at <strong>{{ firmName }}</strong>
+        has requested that you upload files to their secure document vault.
+    </p>
 
     {% if instructions is not empty %}
         <blockquote style="margin: 20px 0; padding-left: 15px; border-left: 3px solid #666; font-style: italic;">
-            "{{ instructions }}"
+            {{ instructions }}
         </blockquote>
     {% endif %}
 
-    <p>Please click the secure, direct link below to access our privacy-compliant drop zone. Files uploaded through this portal are fully encrypted directly within your web browser before transmission:</p>
-
-    <button href="{{ dropUrl }}" class="button">Access Secure File Drop Portal</button>
+    <button href="{{ dropUrl }}" class="button">Click Here To Upload Files</button>
 
     <p class="secondary-text">
-        Security Notice: This document transfer system utilizes Client-Side End-to-End Encryption (E2EE). Only your designated providers possess the private cryptographic credentials required to access or unseal your data components.
+        This document transfer system uses Client-Side End-to-End Encryption (E2EE).
+        Only {{ senderName }} and their designated team members will be able to access your files.
     </p>
 {% endblock %}

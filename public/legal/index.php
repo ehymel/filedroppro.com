@@ -175,7 +175,9 @@
                     <span class="text-accent-gold gold-glow">Client Case Files</span>
                 </h1>
                 <p class="lead text-slate-300 mb-4">
-                    Standard email attachments violate strict attorney-client privilege. FileDrop Pro allows clients to securely drop sensitive legal records straight to your encrypted vault—with <strong>zero login friction and absolute cryptographic certainty.</strong>
+                    Standard email attachments violate strict attorney-client privilege. FileDrop Pro allows clients to
+                    easily and securely drop sensitive legal records straight to your encrypted vault—with
+                    <strong>zero login friction and absolute cryptographic certainty.</strong>
                 </p>
                 <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3 mb-4">
                     <a href="/register" class="btn btn-accent-gold btn-lg px-4 py-3 shadow">
@@ -210,7 +212,7 @@
                         <div class="drop-zone-sim my-4" id="sim-drop-zone" onclick="triggerSimulateEncryption()">
                             <i class="bi bi-cloud-arrow-up text-accent-gold display-5 mb-2 d-block"></i>
                             <span class="fw-semibold d-block text-white mb-1">Click to Simulate Secure Client Upload</span>
-                            <span class="text-slate-400 small">Drag and drop tax returns, evidence PDFs, or IDs here</span>
+                            <span class="text-slate-400 small">Drag and drop tax returns, evidence files, or IDs here</span>
                         </div>
 
                         <!-- Live Cryptographic Animation Panel -->
@@ -274,21 +276,24 @@
                 <div class="card h-100 border border-secondary-subtle p-4 rounded-3 shadow-sm hover-lift">
                     <div class="step-pill mb-3">1</div>
                     <h3 class="h5 fw-bold text-slate-900">Zero Onboarding Friction</h3>
-                    <p class="text-muted">Clients never register an account or remember passwords. They drop evidence PDF attachments straight onto your secure web link in 3 seconds. Zero support calls, zero password reset requests.</p>
+                    <p class="text-muted">Clients never register an account or remember passwords. They drop files via
+                        your secure web link in 3 seconds. Zero support calls, zero password reset requests.</p>
                 </div>
             </div>
             <div class="col-12 col-md-4">
                 <div class="card h-100 border border-secondary-subtle p-4 rounded-3 shadow-sm hover-lift">
                     <div class="step-pill mb-3">2</div>
                     <h3 class="h5 fw-bold text-slate-900">Total Liability Shield</h3>
-                    <p class="text-muted">Unlike standard cloud sync drives, our server cannot read files—even under subpoena. By encrypting locally in the browser, your firm possesses a complete cryptographic firewall.</p>
+                    <p class="text-muted">Unlike standard cloud sync drives, our server cannot read files—even under subpoena.
+                        By encrypting locally in the browser, your firm possesses a complete cryptographic firewall.</p>
                 </div>
             </div>
             <div class="col-12 col-md-4">
                 <div class="card h-100 border border-secondary-subtle p-4 rounded-3 shadow-sm hover-lift">
                     <div class="step-pill mb-3">3</div>
                     <h3 class="h5 fw-bold text-slate-900">Institutional Escrow</h3>
-                    <p class="text-muted">Lost staff passwords will not lock your archives. Secure escrow ceremonies allow managing partners to recover historical client case files internally without surrendering cryptographic privacy.</p>
+                    <p class="text-muted">Lost staff passwords will not lock your archives. Secure escrow ceremonies allow
+                        managing partners to recover client case files internally without surrendering cryptographic privacy.</p>
                 </div>
             </div>
         </div>
@@ -301,7 +306,8 @@
             <div class="col-12 col-lg-5">
                 <h2 class="display-6 fw-bold text-slate-900 mb-3">Calculate Your Wasted Revenue</h2>
                 <p class="text-muted">
-                    Chasing client PDF paperwork and talking them through traditional portal reset passwords isn't just annoying—it is consuming high-value billable hours every month.
+                    Chasing client paperwork and talking them through traditional portal reset passwords isn't just
+                    annoying—it is consuming high-value billable hours every month.
                 </p>
                 <p class="text-muted">
                     Enter your billable parameters to calculate your recovered hours and cash loss from workflow friction using our calculator.
@@ -321,7 +327,7 @@
                         <div class="col-12 col-md-6">
                             <label for="calc-hourly" class="form-label fw-semibold text-slate-700">Average Hourly Rate ($)</label>
                             <input type="number" id="calc-hourly" class="form-control" value="300" oninput="calculateROI()">
-                            <div class="form-text">Your target billable fee.</div>
+                            <div class="form-text">Your billable fee.</div>
                         </div>
                     </div>
 
@@ -367,7 +373,10 @@
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body text-muted">
-                                Yes. Standard ABA Model Rule 1.6(c) dictates that a lawyer must make "reasonable efforts to prevent the inadvertent or unauthorized disclosure of client information." By using client-side AES-256 and RSA-2048 encryption, documents are protected mathematically from the moment they are uploaded. This satisfies both state privilege protections and regulatory criteria.
+                                Yes. Standard ABA Model Rule 1.6(c) dictates that a lawyer must make "reasonable efforts
+                                to prevent the inadvertent or unauthorized disclosure of client information." By using
+                                client-side AES-256 and RSA-2048 encryption, documents are protected mathematically from
+                                the moment they are uploaded. This satisfies both state privilege protections and regulatory criteria.
                             </div>
                         </div>
                     </div>
@@ -380,7 +389,9 @@
                         </h2>
                         <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body text-muted">
-                                That is where our system excels. There is **no signup required** for clients. You send them a secure, simple link, and they drag-and-drop their documents directly inside their browser—no onboarding, zero passwords, and zero account setup.
+                                That is where our system excels. There is <strong>no signup required</strong> for clients. You send
+                                them a secure link, and they drag-and-drop their documents directly inside their
+                                browser—no onboarding, zero passwords, and zero account setup.
                             </div>
                         </div>
                     </div>
@@ -393,7 +404,9 @@
                         </h2>
                         <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body text-muted">
-                                All documents are stored as fully encrypted blobs inside dedicated AWS S3 storage partitions. Even in the highly unlikely event of a full server database breach, our hosting provider holds only ciphertext—the actual decryption keys never touch our servers.
+                                All documents are stored as fully encrypted blobs inside dedicated AWS S3 storage
+                                partitions. Even in the highly unlikely event of a full server database breach, our
+                                hosting provider holds only ciphertext—the actual decryption keys never touch our servers.
                             </div>
                         </div>
                     </div>
@@ -407,7 +420,8 @@
     <div class="container text-center">
         <span class="h5 fw-bold text-white d-block mb-3"><i class="bi bi-shield-lock-fill text-accent-gold"></i> VaultDrop</span>
         <p class="small text-slate-400 max-w-md mx-auto">
-            Secure Client File Drop Zones. Designed for Solo Practitioners and Boutique Law Firms seeking zero-login, ABA and HIPAA-compliant file transfers.
+            Secure Client File Drop Zones. Designed for Solo Practitioners and Boutique Law Firms seeking zero-login,
+            ABA and HIPAA-compliant file transfers.
         </p>
         <div class="d-flex justify-content-center gap-4 my-4 small">
             <a href="/register" class="text-accent-gold text-decoration-none">14-Day Free Trial</a>
