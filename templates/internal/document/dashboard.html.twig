@@ -21,8 +21,10 @@
             <div class="row">
                 <div class="col mb-4 larger">
                     <p>
-                        The consolidated size of all encrypted client document payloads registered inside your firm's partition:
+                        The total size of all encrypted documents registered to your firm's account:
                         <strong>{{ format_bytes(storageBytesByClient|sum) }}</strong>
+                        out of
+                        <strong>{{ format_bytes(storageBytesLimit) }}</strong>
                     </p>
                 </div>
             </div>

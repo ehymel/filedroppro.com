@@ -32,10 +32,21 @@ class DocumentViewerController extends AbstractController
     #[Route(path: '/', name: 'dashboard', methods: ['GET'])]
     public function dashboard(ClientRepository $clientRepository): Response
     {
-        if (!$this->getUser()->tenant) {
+        /** @var User $user */
+        $user = $this->getUser();
+        $tenant = $user->tenant;
+
+        if (!$tenant) {
             $this->addFlash('danger', 'You are not authorized to access this page.');
             return $this->redirectToRoute('unauthorized');
         }
+
+        $storageLimit = match($tenant->subscriptionPlan) {
+            'trial', 'basic' => 5 * 1024 *1024 *1024,
+            'pro' => 10 * 1024 *1024 *1024,
+            'enterprise' => 'unlimited',
+            default => 'unknown',
+        };
 
         $clients = $clientRepository->findBy([], ['clientName' => 'ASC']);
         $totalBytes = [];
@@ -52,7 +63,8 @@ class DocumentViewerController extends AbstractController
             'clients' => $clients,
             'encryptedPrivateKey' => $this->getUser()->userKey?->encryptedPrivateKey,
             'storageBytesByClient' => $totalBytes,
-            'userStatus' => $this->getUser()->status
+            'userStatus' => $this->getUser()->status,
+            'storageBytesLimit' => $storageLimit,
         ]);
     }
 

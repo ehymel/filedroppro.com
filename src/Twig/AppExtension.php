@@ -14,6 +14,10 @@ class AppExtension
     {
         if (empty($bytes)) return 'None';
 
+        if (!is_int($bytes)) {
+            return $bytes;
+        }
+
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $bytes = max((int) $bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
