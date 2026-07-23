@@ -59,6 +59,13 @@
             </td>
             <td>
                 {% if is_granted('CREATE_FILE_REQUEST') %}
+                    <button type="button" class="btn btn-sm btn-primary"
+                            data-action="modal-form#open"
+                            data-form-url="{{ path('internal_requests_new', {'from': request.id.toString()}) }}"
+                            data-modal-title="Send Another Request">
+                        Send a new request to this client
+                    </button>
+
                     {% if request.status == 'pending' %}
                         <form action="{{ path('internal_requests_resend', {'id': request.id.toString()}) }}" method="POST" style="display:inline;">
                             <input type="hidden" name="_token" value="{{ csrf_token('resend_request_' ~ request.id.toString()) }}">

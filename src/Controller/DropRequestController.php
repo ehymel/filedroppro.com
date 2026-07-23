@@ -65,6 +65,16 @@ class DropRequestController extends AbstractController
             $dropRequest->clientName = $client?->clientName;
         }
 
+        // convenience to duplicate an existing request ("Send another request")
+        if ($request->isMethod('GET') && $request->query->get('from')) {
+            $original = $this->dropRequestRepository->findOneBy(['id' => $request->query->get('from')]);
+            if ($original && $original->tenant === $tenant) {
+                $dropRequest->clientName = $original->clientName;
+                $dropRequest->clientEmail = $original->clientEmail;
+                $dropRequest->instructions = $original->instructions;
+            }
+        }
+
         $form = $this->createForm(DropRequestFormType::class, $dropRequest);
         $form->handleRequest($request);
 
