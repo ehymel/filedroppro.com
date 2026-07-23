@@ -48,7 +48,7 @@ class TenantNotificationServiceTest extends TestCase
     {
         $userRepository = $this->createMock(UserRepository::class);
         $mailer = $this->createMock(MailerInterface::class);
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
 
         $superuser1 = new User();
         $superuser1->email = 'super1@example.com';

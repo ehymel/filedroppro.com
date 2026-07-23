@@ -51,7 +51,7 @@ when@prod:
             symfony_mailer:
                 type:       symfony_mailer
                 from_email: 'info@filedroppro.com'
-                to_email:   'problems@oncologysupport.com'
+                to_email:   'problems@filedroppro.com'
                 # or list of recipients
                 # to_email:   ['dev1@example.com', 'dev2@example.com', ...]
                 subject:    'An Error Occurred! filedroppro.com: %%message%%'
