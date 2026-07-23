@@ -24,7 +24,7 @@ class DropRequestFormType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please provide a name for the invitee.'),
                 ],
-                'row_attr' => ['class' => 'form-floating mb-2'],
+                'row_attr' => ['class' => 'form-floating mb-4'],
             ])
             ->add('clientEmail', EmailType::class, [
                 'label' => 'Client Email Address',
@@ -34,10 +34,11 @@ class DropRequestFormType extends AbstractType
                     new NotBlank(message:  'Please provide an email address for the invitee.'),
                     new Email(message:  'Please enter a valid business email address.'),
                 ],
-                'row_attr' => ['class' => 'form-floating mb-2'],
+                'row_attr' => ['class' => 'form-floating mb-4'],
             ])
             ->add('instructions', TextareaType::class, [
                 'label' => 'Custom Instructions (Optional)',
+                'help' => "Example: 'Please upload your most recent tax return.'",
                 'required' => false,
                 'attr' => ['placeholder' => 'Please upload your documents here'],
                 'row_attr' => ['class' => 'form-floating mb-2'],

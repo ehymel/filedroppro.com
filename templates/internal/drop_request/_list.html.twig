@@ -38,7 +38,9 @@
                      data-inline-edit-empty-value="No instructions added.">
                     <div data-inline-edit-target="display" class="mb-1">
                         <span data-inline-edit-target="output">{{ request.instructions|default('No instructions added.') }}</span>
-                        <a href="#" data-action="click->inline-edit#toggle"><span class="bi bi-pencil"></span></a>
+                        {% if request.status !== 'fulfilled' %}
+                            <a href="#" data-action="click->inline-edit#toggle"><span class="bi bi-pencil"></span></a>
+                        {% endif %}
                     </div>
                     <div data-inline-edit-target="form" class="d-none mt-2">
                         <textarea class="form-control mb-2" data-inline-edit-target="input">{{ request.instructions }}</textarea>
@@ -71,7 +73,7 @@
                                 data-sweetalert-confirm-button-text-value="Yes, revoke it!"
                                 data-sweetalert-delete-url-value="{{ path('internal_requests_revoke', {'id': request.id.toString()}) }}"
                                 data-sweetalert-csrf-token-value="{{ csrf_token('revoke_request_' ~ request.id.toString()) }}">
-                            Revoke
+                            Revoke Request
                         </button>
                     {% else %}
                         <button type="button" class="btn btn-sm btn-danger"
@@ -82,7 +84,7 @@
                                 data-sweetalert-confirm-button-text-value="Yes, hide it!"
                                 data-sweetalert-delete-url-value="{{ path('internal_requests_soft_delete', {'id': request.id.toString()}) }}"
                                 data-sweetalert-csrf-token-value="{{ csrf_token('delete_request_' ~ request.id.toString()) }}">
-                            Hide
+                            Hide Request
                         </button>
                     {% endif %}
                 {% else %}
