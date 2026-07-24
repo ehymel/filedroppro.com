@@ -19,7 +19,6 @@ export default class extends Controller {
         'senderEmail',
         'uppyContainer',
         'fileInput',
-        'submitBtn',
         'progressContainer',
         'progressBar',
         'progressPercent',
@@ -122,6 +121,17 @@ export default class extends Controller {
             }
         });
 
+        // Initialize per-batch tracking the moment an upload begins. This fires whether
+        // the upload is triggered by Uppy's own Dashboard button or programmatically via
+        // processUpload(), so the counters are always set before upload-success handlers run.
+        this.uppy.on('upload', (uploadID, files) => {
+            this.batchTotal = files.length;
+            this.batchSucceeded = 0;
+            this.batchFailed = 0;
+            this.uploadActive = true;
+            this.showElement(this.progressContainerTarget);
+        });
+
         // Wire Uppy's aggregate progress (across all files) into our UI tracker.
         // Ignored once the batch is finalized, so the reset that uppy.clear() triggers
         // can't stomp the "Upload complete!" state with a stray 0% progress event.
@@ -155,7 +165,6 @@ export default class extends Controller {
             console.error('Uppy Direct upload collapsed:', error);
             this.uploadActive = false;
             this.updateStatus(`Security transmission failed: ${error.message}`, 'error');
-            this.unlockUI();
         });
     }
 
@@ -300,8 +309,6 @@ export default class extends Controller {
                 'error'
             );
         }
-
-        this.unlockUI();
     }
 
     /**
@@ -324,15 +331,8 @@ export default class extends Controller {
             return;
         }
 
-        this.lockUI();
-
-        // Initialize batch tracking so we only finalize the UI once every file completes
-        this.batchTotal = files.length;
-        this.batchSucceeded = 0;
-        this.batchFailed = 0;
-        this.uploadActive = true;
-
-        // Fire the upload sequence, which will automatically trigger the E2EE pre-processor
+        // Fire the upload sequence, which triggers the E2EE pre-processor. Batch tracking
+        // and UI locking are initialized by the Uppy 'upload' event handler.
         this.uppy.upload();
     }
 
@@ -364,15 +364,6 @@ export default class extends Controller {
 
     // --- UI Helpers ---
 
-    lockUI() {
-        this.submitBtnTarget.disabled = true;
-        this.showElement(this.progressContainerTarget);
-    }
-
-    unlockUI() {
-        this.submitBtnTarget.disabled = false;
-    }
-
     updateProgress(statusText, percentage) {
         this.setStatusLabel(statusText);
         this.progressBarTarget.value = percentage;
@@ -389,9 +380,15 @@ export default class extends Controller {
     updateStatus(message, type) {
         const alertBox = this.uploadStatusAlertTarget;
         if (alertBox) {
+            const alertClass = {
+                success: 'alert-success',
+                error: 'alert-danger',
+                info: 'alert-info'
+            }[type] || 'alert-info';
+
             this.showElement(alertBox);
-            alertBox.classList.remove('alert-danger');
-            alertBox.classList.add(`alert-info`);
+            alertBox.classList.remove('alert-success', 'alert-danger', 'alert-info');
+            alertBox.classList.add(alertClass);
             alertBox.setAttribute('data-type', type);
             alertBox.textContent = message;
         }
@@ -427,25 +424,26 @@ export default class extends Controller {
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center flex-grow-1">
                             <div data-inline-edit-target="display">
-                                <a href="#" data-action="click->inline-edit#toggle" class="ms-1 text-decoration-none">
-                                    <span data-inline-edit-target="output">${file.fileName}</span>
-                                </a>
+                                ${file.fileName}
+                                <button class="badge border-0 bg-info-subtle text-info-emphasis rounded-pill ms-1" data-action="click->inline-edit#toggle">
+                                    <span data-inline-edit-target="output" class="bi bi-pencil me-1"></span> Edit filename
+                                </button>
                             </div>
                             <div data-inline-edit-target="form" class="d-none flex-grow-1 me-2">
                                 <div class="input-group input-group-sm">
                                     <input type="text" class="form-control" data-inline-edit-target="input" value="${file.fileName}">
-                                    <button class="btn btn-success" data-action="click->inline-edit#save">Save</button>
+                                    <button class="btn btn-success" data-action="click->inline-edit#save">Save Change</button>
                                     <button class="btn btn-outline-secondary" data-action="click->inline-edit#toggle">Cancel</button>
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
 <!--                            <span class="badge bg-success rounded-pill me-2">Uploaded</span>-->
-                            <button class="badge bg-danger rounded-pill me-2" style="border: none;"
+                            <button class="badge bg-danger-subtle text-danger-emphasis rounded-pill me-2" style="border: none;"
                                     data-action="click->secure-drop#deleteFile"
                                     data-document-id="${file.documentId}"
                                     data-delete-url="${deleteUrl}">
-                                Delete
+                                <span class="bi bi-trash me-1"></span> Delete file
                             </button>
                         </div>
                     </div>
