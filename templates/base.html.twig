@@ -1,7 +1,8 @@
+{% set currentRoute = app.request.attributes.get('_route') %}
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
 <head>
-    {% if not app.user %}
+    {% if not app.user and not currentRoute matches '{^drop_*}' %}
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18337607403"></script>
         <script>
@@ -60,7 +61,6 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            {% set currentRoute = app.request.attributes.get('_route') %}
             {% block header_navigation %}
                 {% if is_granted('ROLE_USER') %}
                     <div class="collapse navbar-collapse" id="mainNavbar">
