@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
 <head>
-    {% if not app.user and not currentRoute matches '{^drop_*}' %}
+    {% if not app.user or not currentRoute matches '{^drop_*}' %}
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18337607403"></script>
         <script>
