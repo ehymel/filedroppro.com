@@ -5,6 +5,7 @@ namespace App\Tests\Controller;
 use App\Entity\Invitation;
 use App\Entity\Tenant;
 use App\Entity\User;
+use App\Security\TurnstileVerifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -27,6 +28,7 @@ class RegistrationControllerTest extends WebTestCase
 
     private KernelBrowser $client;
     private EntityManagerInterface $em;
+    private FakeTurnstileVerifier $turnstile;
 
     protected function setUp(): void
     {
@@ -34,6 +36,13 @@ class RegistrationControllerTest extends WebTestCase
         // Keep one kernel (and one DB connection) alive across the GET + POST
         // so the manually opened transaction wraps the controller's flush().
         $this->client->disableReboot();
+
+        // The Turnstile gate would otherwise call out to challenges.cloudflare.com
+        // on every POST. Swap in a stand-in that always passes so these tests stay
+        // about the registration flow; the gate itself is covered by
+        // testRegisterIsRejectedWhenTurnstileFails().
+        $this->turnstile = new FakeTurnstileVerifier();
+        static::getContainer()->set(TurnstileVerifier::class, $this->turnstile);
 
         $this->em = static::getContainer()->get('doctrine')->getManager();
         $this->em->getConnection()->beginTransaction();
@@ -98,6 +107,26 @@ class RegistrationControllerTest extends WebTestCase
         // The submitted plain-text password was hashed, not stored verbatim.
         $this->assertNotNull($user->password);
         $this->assertNotSame('SuperSecretPass123', $user->password);
+    }
+
+    public function testRegisterIsRejectedWhenTurnstileFails(): void
+    {
+        $this->turnstile->passes = false;
+
+        $email = $this->uniqueEmail();
+
+        $crawler = $this->client->request('GET', '/register');
+        $form = $crawler->selectButton(self::BUTTON)->form(
+            $this->newFirmValues($email, 'Blocked Firm ' . uniqid())
+        );
+        $this->client->submit($form);
+
+        // The form re-renders with the challenge error instead of redirecting.
+        $this->assertResponseStatusCodeSame(422);
+        $this->assertSelectorTextContains('body', 'Security verification failed');
+
+        // Nothing was persisted: the gate runs before any tenant/user work.
+        $this->assertNull($this->findUser($email), 'No user may be created when Turnstile rejects.');
     }
 
     public function testRegisterNewFirmWithDuplicateNameIsRejected(): void
@@ -344,5 +373,25 @@ class RegistrationControllerTest extends WebTestCase
         unset($values['registration_form[email]']);
 
         return $values;
+    }
+}
+
+/**
+ * Turnstile stand-in for the registration flow. The parent's constructor is
+ * bypassed on purpose: neither the HTTP client nor the secret is touched, so
+ * no request ever reaches challenges.cloudflare.com during the test run.
+ *
+ * Flip $passes to exercise the rejection path — the verdict is read per call,
+ * so it can change after the container has already initialized the service.
+ */
+class FakeTurnstileVerifier extends TurnstileVerifier
+{
+    public bool $passes = true;
+
+    public function __construct() {}
+
+    public function verify(?string $token, ?string $remoteIp = null): bool
+    {
+        return $this->passes;
     }
 }

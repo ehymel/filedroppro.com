@@ -32,6 +32,11 @@
                     }
                 }) }}
 
+                {# Form-level errors (e.g. a failed Turnstile challenge). Field rows
+                   are rendered individually below, so without this the root errors
+                   would never reach the page and the 422 would look like a no-op. #}
+                {{ form_errors(registrationForm) }}
+
                 {# Scenario: User registering with a secure, locked invitation #}
                 {% if hasInvitation %}
                     <p class="mt-1 larger">
@@ -73,9 +78,21 @@
 
                 {{ form_row(registrationForm.agreeTerms) }}
 
-                <button type="submit" class="btn btn-primary m-4">
-                    Register Account & Generate Keys
-                </button>
+                {# Turnstile must live inside the <form> so the injected
+                   cf-turnstile-response hidden input is serialized by the
+                   programmatic form.submit() in registration_controller. #}
+                {# fail-open: signup is a revenue path, so a widget that fails to
+                   load must not permanently block submit. The server-side gate in
+                   RegistrationController still rejects a missing/invalid token. #}
+                <div data-controller="turnstile"
+                     data-turnstile-sitekey-value="{{ cloudflare_turnstile_site_key }}"
+                     data-turnstile-fail-open-value="true">
+                    <div class="m-4" data-turnstile-target="widget"></div>
+
+                    <button type="submit" data-turnstile-target="submit" class="btn btn-primary m-4">
+                        Register Account & Generate Keys
+                    </button>
+                </div>
 
                 {{ form_end(registrationForm) }}
             </div>

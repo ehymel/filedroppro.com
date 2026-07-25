@@ -6,6 +6,7 @@ use App\Entity\Document;
 use App\Entity\DocumentKey;
 use App\Entity\User;
 use App\Entity\UserKey;
+use App\Security\TurnstileVerifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,7 +30,7 @@ class PasswordResetController extends AbstractController
      * Step 1: Request Password Reset Link.
      */
     #[Route('/password/forgot/', name: 'forgot', methods: ['GET', 'POST'])]
-    public function requestReset(Request $request, MailerInterface $mailer): Response
+    public function requestReset(Request $request, MailerInterface $mailer, TurnstileVerifier $turnstileVerifier): Response
     {
         if ($this->getUser()) {
             return $this->redirectToRoute('internal_documents_dashboard');
@@ -39,6 +40,14 @@ class PasswordResetController extends AbstractController
             $submittedToken = $request->request->get('_token');
             if (!$this->isCsrfTokenValid('forgot_password_request', $submittedToken)) {
                 $this->addFlash('danger', 'Invalid security token.');
+                return $this->redirectToRoute('user_password_forgot');
+            }
+
+            if (!$turnstileVerifier->verify(
+                $request->request->get('cf-turnstile-response'),
+                $request->getClientIp()
+            )) {
+                $this->addFlash('danger', 'Security verification failed. Please complete the challenge and try again.');
                 return $this->redirectToRoute('user_password_forgot');
             }
 

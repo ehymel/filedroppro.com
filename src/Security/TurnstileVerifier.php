@@ -17,7 +17,7 @@ class TurnstileVerifier
     ) {
     }
 
-    public function verify(string $token, ?string $remoteIp = null): bool
+    public function verify(?string $token, ?string $remoteIp = null): bool
     {
         if (empty($token)) {
             return false;

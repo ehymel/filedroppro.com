@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Entity\UserKey;
 use App\Entity\Invitation;
 use App\Form\User\RegistrationFormType;
+use App\Security\TurnstileVerifier;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\TenantNotificationService;
@@ -30,7 +31,8 @@ class RegistrationController extends AbstractController
         UserPasswordHasherInterface $userPasswordHasher,
         EntityManagerInterface $entityManager,
         TenantNotificationService $tenantNotificationService,
-        MailerInterface $mailer
+        MailerInterface $mailer,
+        TurnstileVerifier $turnstileVerifier
     ): Response {
         $isNewTenant = false;
         $token = $request->query->get('token');
@@ -87,6 +89,16 @@ class RegistrationController extends AbstractController
         }
 
         $form->handleRequest($request);
+
+        // Gate on Cloudflare Turnstile before any tenant/user work happens. Adding a
+        // root-level error is enough to make isValid() false, so the form re-renders
+        // with the message and the ceremony below never runs.
+        if ($form->isSubmitted() && !$turnstileVerifier->verify(
+            $request->request->get('cf-turnstile-response'),
+            $request->getClientIp()
+        )) {
+            $form->addError(new FormError('Security verification failed. Please complete the challenge and try again.'));
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             // --- 2. Process Tenant & Validation Paths ---
