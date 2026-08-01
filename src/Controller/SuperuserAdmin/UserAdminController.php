@@ -31,6 +31,13 @@ class UserAdminController extends AbstractController
     {
         $template = $request->query->get('ajax') ? '_list.html.twig' : 'list.html.twig';
 
+        // Disable the tenant filter to check across all tenants
+        $filters = $this->userRepository->getEntityManager()->getFilters();
+        $tenantFilterEnabled = $filters->isEnabled('tenant_filter');
+        if ($tenantFilterEnabled) {
+            $filters->disable('tenant_filter');
+        }
+
         return $this->render('admin/user/'.$template, [
             'users' => $this->userRepository->createAlphabeticalUserQueryBuilder()->getQuery()->execute(),
         ]);
