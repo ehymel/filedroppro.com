@@ -46,7 +46,14 @@ readonly class TenantFilterConfigurator
             // The unsubscribe routes are exempt too: the Trial Expired email goes to suspended
             // tenants, so redirecting an admin who happens to be logged in would swallow their
             // opt-out and bounce them to billing instead.
-            if (!in_array($currentRoute, ['internal_billing_dashboard', 'internal_billing_portal', 'internal_billing_subscribe', 'security_logout', 'email_unsubscribe', 'email_unsubscribe_confirm'])) {
+            if (!in_array($currentRoute, [
+                'internal_billing_dashboard',
+                'internal_billing_portal',
+                'internal_billing_subscribe',
+                'security_logout',
+                'email_unsubscribe',
+                'email_unsubscribe_confirm'
+            ]) && !in_array('ROLE_SUPERUSER', $user->roles)) {
 
                 // Redirect them gracefully to the Billing subscription warning screen
                 $response = new RedirectResponse(

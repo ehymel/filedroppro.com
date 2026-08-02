@@ -49,6 +49,11 @@ class SubscriptionVoter extends Voter
             return false;
         }
 
+        // superuser always has access
+        if (in_array('ROLE_SUPERUSER', $user->roles)) {
+            return true;
+        }
+
         $tenant = $user->tenant;
         // 2. If the user is not bound to any tenant, deny access
         if (!$tenant instanceof Tenant) {
