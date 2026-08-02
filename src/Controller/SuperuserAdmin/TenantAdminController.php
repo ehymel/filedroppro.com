@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\SuperuserAdmin;
 
 use App\Repository\TenantRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,30 +15,49 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_SUPERUSER')]
 class TenantAdminController extends AbstractController
 {
-    public function __construct(private readonly TenantRepository $tenantRepository) {}
+    public function __construct(
+        private readonly TenantRepository $tenantRepository,
+        private readonly EntityManagerInterface $em,
+    ) {}
 
     #[Route(path: '/', name: 'list')]
     public function index(): Response
     {
-        $tenants = $this->tenantRepository->findAll();
-
-        $totalBytes = $documentCount = [];
-        foreach ($tenants as $tenant) {
-            $totalBytes[$tenant->id->toString()] = 0;
-            $documentCount[$tenant->id->toString()] = 0;
-
-            foreach($tenant->clients as $client) {
-                foreach($client->documents as $document) {
-                    $documentCount[$tenant->id->toString()]++;
-                    $totalBytes[$tenant->id->toString()] += $document->fileSize;
-                }
-            }
+        // Client is tenant-scoped, so tenant_filter would restrict $tenant->clients to the
+        // logged-in superuser's own tenant. Suspend it to see across all tenants.
+        // suspend()/restore() is used rather than disable()/enable() because enable() builds a
+        // fresh filter instance, losing the tenant_id parameter set by TenantFilterConfigurator.
+        $filters = $this->em->getFilters();
+        $wasEnabled = $filters->isEnabled('tenant_filter');
+        if ($wasEnabled) {
+            $filters->suspend('tenant_filter');
         }
 
-        return $this->render('admin/tenant/manage.html.twig', [
-            'tenants' => $tenants,
-            'totalBytes' => $totalBytes,
-            'documentCount' => $documentCount,
-        ]);
+        try {
+            $tenants = $this->tenantRepository->findAll();
+
+            $totalBytes = $documentCount = [];
+            foreach ($tenants as $tenant) {
+                $totalBytes[$tenant->id->toString()] = 0;
+                $documentCount[$tenant->id->toString()] = 0;
+
+                foreach($tenant->clients as $client) {
+                    foreach($client->documents as $document) {
+                        $documentCount[$tenant->id->toString()]++;
+                        $totalBytes[$tenant->id->toString()] += $document->fileSize;
+                    }
+                }
+            }
+
+            return $this->render('admin/tenant/manage.html.twig', [
+                'tenants' => $tenants,
+                'totalBytes' => $totalBytes,
+                'documentCount' => $documentCount,
+            ]);
+        } finally {
+            if ($wasEnabled) {
+                $filters->restore('tenant_filter');
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Form\Admin\UserAdminForm;
 use App\Repository\LoginRepository;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Pagerfanta\Doctrine\Collections\CollectionAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -23,24 +24,35 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_SUPERUSER')]
 class UserAdminController extends AbstractController
 {
-    public function __construct(private readonly UserRepository $userRepository)
-    {}
+    public function __construct(
+        private readonly UserRepository $userRepository,
+        private readonly EntityManagerInterface $em,
+    ) {}
 
     #[Route(path: '/', name: 'list')]
     public function index(Request $request): Response
     {
         $template = $request->query->get('ajax') ? '_list.html.twig' : 'list.html.twig';
 
-        // Disable the tenant filter to check across all tenants
-        $filters = $this->userRepository->getEntityManager()->getFilters();
-        $tenantFilterEnabled = $filters->isEnabled('tenant_filter');
-        if ($tenantFilterEnabled) {
-            $filters->disable('tenant_filter');
+        // User is tenant-scoped, so tenant_filter would restrict the listing to the logged-in
+        // superuser's own tenant. Suspend it to see across all tenants.
+        // suspend()/restore() is used rather than disable()/enable() because enable() builds a
+        // fresh filter instance, losing the tenant_id parameter set by TenantFilterConfigurator.
+        $filters = $this->em->getFilters();
+        $wasEnabled = $filters->isEnabled('tenant_filter');
+        if ($wasEnabled) {
+            $filters->suspend('tenant_filter');
         }
 
-        return $this->render('admin/user/'.$template, [
-            'users' => $this->userRepository->createAlphabeticalUserQueryBuilder()->getQuery()->execute(),
-        ]);
+        try {
+            return $this->render('admin/user/'.$template, [
+                'users' => $this->userRepository->createAlphabeticalUserQueryBuilder()->getQuery()->execute(),
+            ]);
+        } finally {
+            if ($wasEnabled) {
+                $filters->restore('tenant_filter');
+            }
+        }
     }
 
     #[Route(path: '/edit/{id}', name: 'edit')]
