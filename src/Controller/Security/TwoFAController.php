@@ -14,7 +14,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class TwoFAController extends AbstractController
 {
     #[Route('manage', name: 'manage')]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[IsGranted('IS_AUTHENTICATED_REMEMBERED')]
     public function manage(): Response
     {
         /** @var User $currentUser */
