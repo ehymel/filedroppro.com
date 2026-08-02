@@ -72,6 +72,17 @@ class Tenant extends MappedSuperclassBase
         }
     }
 
+    /**
+     * The highest onboarding drip milestone already emailed to this tenant's admins,
+     * measured in trial days elapsed (see SendOnboardingEmailsCommand::MILESTONES).
+     * Null means nothing has been sent for the current trial yet.
+     *
+     * Keeps app:send-onboarding-emails idempotent when it runs more than once a day,
+     * and lets it catch up on a milestone after a missed run.
+     */
+    #[ORM\Column(nullable: true)]
+    public ?int $lastOnboardingDaySent = null;
+
     #[ORM\Column(type: 'text', nullable: true)]
     public ?string $tenantPublicKey = null;
 
