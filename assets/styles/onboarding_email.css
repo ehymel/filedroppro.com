@@ -143,6 +143,11 @@ p {
 .footer p:last-child {
     margin-bottom: 0;
 }
+.footer a.unsubscribe-link {
+    color: #64748b;
+    font-size: 12px;
+    text-decoration: underline;
+}
 
 /* Suspended Status Block */
 .status-block {

@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Unsubscribe from Onboarding Emails{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row flex-xl-nowrap">
+            <div class="col-xl-6 col-lg-8 col-md-10 mx-auto">
+                <h1>Unsubscribe</h1>
+
+                {% if already_unsubscribed %}
+                    <p class="lead">{{ recipient_email }} is already unsubscribed from FileDrop Pro onboarding emails.</p>
+                    <p>No further onboarding messages will be sent to this address. You will still receive
+                        essential account emails such as password resets and security codes.</p>
+
+                    <a href="{{ path('security_login') }}" class="btn btn-link px-0">Return to Login</a>
+                {% else %}
+                    <p class="lead">Stop sending onboarding emails to {{ recipient_email }}?</p>
+                    <p>You will still receive essential account emails such as password resets and
+                        two-factor security codes. Only the onboarding series stops.</p>
+
+                    {# Posts back to this exact URL so the signature travels with the request. #}
+                    <form action="{{ app.request.requestUri }}" method="POST" class="mt-4">
+                        <button type="submit" class="btn btn-success">Yes, unsubscribe me</button>
+                        <a href="{{ path('security_login') }}" class="btn btn-link">Cancel</a>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

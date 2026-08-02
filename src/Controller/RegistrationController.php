@@ -17,6 +17,7 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Service\UnsubscribeLinkGenerator;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -32,7 +33,8 @@ class RegistrationController extends AbstractController
         EntityManagerInterface $entityManager,
         TenantNotificationService $tenantNotificationService,
         MailerInterface $mailer,
-        TurnstileVerifier $turnstileVerifier
+        TurnstileVerifier $turnstileVerifier,
+        UnsubscribeLinkGenerator $unsubscribeLinkGenerator
     ): Response {
         $isNewTenant = false;
         $token = $request->query->get('token');
@@ -212,6 +214,8 @@ class RegistrationController extends AbstractController
                     $loginUrl = $this->generateUrl('security_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
                     $billingUrl = $this->generateUrl('internal_billing_dashboard', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
+                    $unsubscribeUrl = $unsubscribeLinkGenerator->generate($user);
+
                     $message = new TemplatedEmail()
                         ->from(new Address('onboarding@filedroppro.com', 'FileDrop Pro Onboarding'))
                         ->to($user->email)
@@ -223,7 +227,13 @@ class RegistrationController extends AbstractController
                             'firm_name' => $tenant->firmName,
                             'login_url' => $loginUrl,
                             'billing_url' => $billingUrl,
+                            'unsubscribe_url' => $unsubscribeUrl,
                         ]);
+
+                    // RFC 8058 one-click unsubscribe, matching the rest of the onboarding drip.
+                    $headers = $message->getHeaders();
+                    $headers->addTextHeader('List-Unsubscribe', sprintf('<%s>', $unsubscribeUrl));
+                    $headers->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
 
                     $mailer->send($message);
                 } catch (\Exception $e) {

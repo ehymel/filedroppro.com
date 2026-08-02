@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Entity\Tenant;
 use App\Entity\User;
 use App\Service\StripeBillingService;
+use App\Service\UnsubscribeLinkGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -72,7 +73,8 @@ class SendOnboardingEmailsCommand extends Command
         private readonly EntityManagerInterface $em,
         private readonly StripeBillingService $stripeBillingService,
         private readonly MailerInterface $mailer,
-        private readonly UrlGeneratorInterface $router
+        private readonly UrlGeneratorInterface $router,
+        private readonly UnsubscribeLinkGenerator $unsubscribeLinkGenerator
     ) {
         parent::__construct();
     }
@@ -264,12 +266,45 @@ class SendOnboardingEmailsCommand extends Command
 
     /**
      * Sends a milestone and records it, so a repeat run the same day is a no-op.
-     * Progress is only stored once at least one email is away and is flushed per
-     * workspace, so an interrupted run does not resend what it already delivered.
+     * Progress is flushed per workspace, so an interrupted run does not resend what it
+     * already delivered.
+     *
+     * Three outcomes have to be told apart. A milestone every recipient has opted out of
+     * still counts as done — leaving the pointer alone would re-evaluate, and re-warn about,
+     * that workspace on every run from now on. A milestone that failed to send, or that has
+     * nobody to send to yet, must stay unrecorded so the next run retries it.
      */
     private function dispatchMilestone(Tenant $tenant, int $milestone): void
     {
-        if (!$this->sendEmail($tenant, $milestone)) {
+        $config = self::MILESTONES[$milestone] ?? null;
+
+        if ($config === null) {
+            return;
+        }
+
+        $admins = $this->findAdmins($tenant);
+
+        if ($admins === []) {
+            $this->io->warning(sprintf('Unable to find an active Administrator for workspace "%s". Skipping.', $tenant->firmName));
+            return;
+        }
+
+        $recipients = array_filter($admins, static fn (User $user) => $user->onboardingUnsubscribedAt === null);
+
+        if ($recipients === []) {
+            $this->io->text(sprintf(
+                'Every administrator of workspace "%s" has unsubscribed. Marking %s as handled.',
+                $tenant->firmName,
+                $config['label']
+            ));
+
+            $tenant->lastOnboardingDaySent = $milestone;
+            $this->em->flush();
+
+            return;
+        }
+
+        if (!$this->sendEmail($tenant, $config, $recipients)) {
             return;
         }
 
@@ -278,35 +313,38 @@ class SendOnboardingEmailsCommand extends Command
     }
 
     /**
-     * @return bool whether at least one administrator was successfully emailed
+     * The active administrators of a workspace, opted out or not.
+     *
+     * @return User[]
      */
-    private function sendEmail(Tenant $tenant, int $milestone): bool
+    private function findAdmins(Tenant $tenant): array
     {
-        $config = self::MILESTONES[$milestone] ?? null;
-
-        if ($config === null) {
-            return false;
-        }
-
-        // Locate the primary Administrator of this workspace
         /** @var User[] $tenantUsers */
         $tenantUsers = $this->em->getRepository(User::class)->findActiveForTenant($tenant);
 
         // Filter to find the Administrator(s) possessing ROLE_ADMIN; include ROLE_SUPERUSER for testing purposes
-        $targetAdmins = array_filter($tenantUsers, function (User $user) {
+        return array_filter($tenantUsers, function (User $user) {
             $adminRoles = ['ROLE_ADMIN', 'ROLE_SUPERUSER'];
             return !empty(array_intersect($adminRoles, $user->getRoles()));
         });
+    }
 
-        if (count($targetAdmins) < 1) {
-            $this->io->warning(sprintf('Unable to find an active Administrator for workspace "%s". Skipping.', $tenant->firmName));
-            return false;
-        }
-
+    /**
+     * @param array{label: string, subject: string, template: string} $config
+     * @param User[] $recipients already filtered to those still subscribed
+     *
+     * @return bool whether at least one administrator was successfully emailed
+     */
+    private function sendEmail(Tenant $tenant, array $config, array $recipients): bool
+    {
         $sent = false;
 
-        foreach($targetAdmins as $targetAdmin) {
+        foreach($recipients as $targetAdmin) {
             try {
+                // Per recipient, not hoisted like the login/billing URLs: the signature
+                // covers this administrator's id so it can only opt themselves out.
+                $unsubscribeUrl = $this->unsubscribeLinkGenerator->generate($targetAdmin);
+
                 $message = new TemplatedEmail()
                     ->from(new Address('onboarding@filedroppro.com', 'FileDrop Pro Onboarding'))
                     ->to($targetAdmin->email)
@@ -318,7 +356,14 @@ class SendOnboardingEmailsCommand extends Command
                         'firm_name' => $tenant->firmName,
                         'login_url' => $this->loginUrl,
                         'billing_url' => $this->billingUrl,
+                        'unsubscribe_url' => $unsubscribeUrl,
                     ]);
+
+                // RFC 8058 one-click unsubscribe, so Gmail and Yahoo surface a native
+                // Unsubscribe control next to the sender instead of routing complaints to spam.
+                $headers = $message->getHeaders();
+                $headers->addTextHeader('List-Unsubscribe', sprintf('<%s>', $unsubscribeUrl));
+                $headers->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
 
                 $this->mailer->send($message);
                 $this->emailsSent++;

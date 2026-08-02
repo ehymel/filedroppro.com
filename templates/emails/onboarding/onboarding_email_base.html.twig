@@ -37,6 +37,10 @@
                 <p class="brand-tagline">FileDrop Pro</p>
                 <p>Zero-Knowledge, Zero-Login Secure File Dropboxes. Conforms strictly to the AES-GCM 256 and RSA-OAEP envelope cryptographic standards.</p>
                 <p>You are receiving this onboarding notification because you registered your workspace, {{ firm_name }}, for a free 14-day trial of FileDrop Pro.</p>
+                {# Guarded so the base still renders for any caller that has not supplied a link. #}
+                {% if unsubscribe_url is defined and unsubscribe_url %}
+                    <p><a href="{{ unsubscribe_url }}" class="unsubscribe-link">Unsubscribe from onboarding emails</a></p>
+                {% endif %}
             </columns>
         </row>
     </container>

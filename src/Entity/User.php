@@ -121,6 +121,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     public string $status = 'pending_approval';
 
     /**
+     * When this recipient opted out of the marketing onboarding drip, or null if they
+     * are still subscribed. Set from the signed unsubscribe link carried in the footer
+     * of every onboarding email (see EmailPreferencesController).
+     *
+     * This gates the onboarding drip ONLY. Transactional mail (password resets, 2FA
+     * codes, key-sync notices) must always be sent regardless of this value.
+     */
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $onboardingUnsubscribedAt = null;
+
+    /**
      * A visual identifier that represents this user.
      *
      * @see UserInterface

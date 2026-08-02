@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Unsubscribed{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row flex-xl-nowrap">
+            <div class="col-xl-6 col-lg-8 col-md-10 mx-auto">
+                <h1>You are unsubscribed</h1>
+
+                <p class="lead">{{ recipient_email }} will no longer receive FileDrop Pro onboarding emails.</p>
+                <p>Essential account emails — password resets, two-factor security codes and key
+                    synchronization notices — will still be delivered, as they are required to keep
+                    your workspace secure.</p>
+
+                <a href="{{ path('security_login') }}" class="btn btn-link px-0">Return to Login</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
