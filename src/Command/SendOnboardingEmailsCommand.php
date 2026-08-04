@@ -14,6 +14,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\Header\MetadataHeader;
+use Symfony\Component\Mailer\Header\TagHeader;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -364,6 +366,10 @@ class SendOnboardingEmailsCommand extends Command
                 $headers = $message->getHeaders();
                 $headers->addTextHeader('List-Unsubscribe', sprintf('<%s>', $unsubscribeUrl));
                 $headers->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+
+                // Add tagging for mailtrap
+                $headers->add(new TagHeader('onboarding'));
+                $headers->add(new MetadataHeader('tenant', $tenant->firmName));
 
                 $this->mailer->send($message);
                 $this->emailsSent++;
